@@ -1,0 +1,12 @@
+export( "isdm", "makeBoundary", "makeMesh", "checkMesh")
+importFrom( "raster", "extent", "rasterFromXYZ", "extract", "union", "coordinates", "plot", "buffer", "values")
+importFrom( "INLA", "inla", "inla.stack.index","inla.stack", "inla.sp2segment", "inla.mesh.2d", "inla.spde.make.A", "inla.mesh.projector","inla.spde2.pcmatern", "inla.stack.data", "inla.stack.A", "inla.nonconvex.hull")
+importFrom( "deldir", "deldir", "tile.list")
+importFrom( "rgeos","union", "area.poly", "intersect")
+importFrom( "sp", "SpatialPointsDataFrame", "CRS","plot", "over", "SpatialPoints", "SpatialPolygons", "Polygons", "Polygon")
+importFrom( "parallel", "detectCores")
+importFrom( "methods", "as")
+importFrom( "stats","terms","update","dist")
+importFrom("graphics", "abline", "hist", "legend", "lines", "points")
+
+importFrom( "Matrix", "Diagonal")
