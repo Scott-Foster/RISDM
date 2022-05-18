@@ -4,6 +4,8 @@
 
 #Complex boundary taken from victoria.  Project and extent used for simple too.
 
+library( RISDM)
+
 library( raster)
 library( "RandomFields")
 RFoptions(install="no")
@@ -24,7 +26,7 @@ plot( bdry.ras)
 bdry.ras <- aggregate( bdry.ras, 10, mean, na.rm=TRUE)
 plot( bdry.ras)
 
-source( "~/ABARES/estimationCode/R/simulate2.R")
+#source( "~/ABARES/estimationCode/R/simulate2.R")
 
 my.coefs <- list(dist=c(-1,1,-1), bias=c(-2,-1.5))
 
@@ -42,13 +44,13 @@ plot( simDat1$covarBrick)
 dev.off()
 
 ##using new code
-source( "~/ABARES/estimationCode/R/integratedAnalysis_ONgrid7.R")
-source( "~/ABARES/estimationCode/R/predictMethod1.R")
-source( "~/ABARES/estimationCode/R/DoubleCountDataPrep2.R")
-source( "~/ABARES/estimationCode/R/Pub_drawPosteriorSamps7.R")
-source( "~/ABARES/estimationCode/R/helperFuns6.R")
-source( "~/ABARES/estimationCode/R/isdmUtils_ONgrid6.R")
-source( "~/ABARES/estimationCode/R/bookMeshDual.R")
+# source( "~/ABARES/estimationCode/R/integratedAnalysis_ONgrid7.R")
+# source( "~/ABARES/estimationCode/R/predictMethod1.R")
+# source( "~/ABARES/estimationCode/R/DoubleCountDataPrep2.R")
+# source( "~/ABARES/estimationCode/R/Pub_drawPosteriorSamps7.R")
+# source( "~/ABARES/estimationCode/R/helperFuns6.R")
+# source( "~/ABARES/estimationCode/R/isdmUtils_ONgrid6.R")
+# source( "~/ABARES/estimationCode/R/bookMeshDual.R")
 
 meshy1 <- makeMesh( ras=simDat1$covarBrick[[1]], max.n=c(2000,400), dep.range=10000, expans.mult=4, offset=50000, expandRegion=TRUE)
 
