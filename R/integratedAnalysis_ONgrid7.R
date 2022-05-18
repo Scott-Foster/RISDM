@@ -4,10 +4,10 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
                                 mesh=NULL,
 #                                boundary=NULL,
                                 responseNames=NULL,
-                                sampleAreaNames=NULL,  #a character vector of max length 3. Elements are named "PA" and/or "AA" and/or "DC". Refers to one of the cols in PAdat, AAdat, DCdat respectively
+                                sampleAreaNames=NULL, 
                                 distributionFormula=NULL,
                                 biasFormula=NULL,
-                                artefactFormulas=list( PA=~1, AA=~1, DC=~1),  #an intercept for each data type.
+                                artefactFormulas=list( PO=NULL, PA=~1, AA=~1, DC=~1),  #an intercept for each data type.
                                 DCobserverInfo=list( SurveyID="surveyID", Obs1="Obs1", Obs2="Obs2", Both="Both"), #info for observer stuff
                                 control=list()) {
 
@@ -28,14 +28,6 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
     observationList$DCdat <- prepareDCdata( DCdat=observationList$DCdat, DCobserverInfo=DCobserverInfo, sampArea=sampleAreaNames["DC"], control$DCmethod)
     if( control$DCmethod == "TaylorsLinApprox")
       artefactFormulas$DC <- update( artefactFormulas$DC, paste0("~.+", DCobserverInfo$SurveyID,":(alpha1Coef+alpha2Coef)"))
-#    tmpDCoffset <- rep( observationList$DCdat[,sampleAreaNames['DC']], times=3)
-#    observationList$DCdat <- cbind( observationList$DCdat, tmpDCoffset)
-#    colnames( observationList$DCdat)[ncol( observationList$DCdat)] <- sampleAreaNames['DC']
-#    #add the offset for DC expansion 
-#    if( control$DCmethod == "TaylorsLinAPprox")
-#      observationList$DCdat[,sampleAreaNames['DC']] <- exp( log( observationList$DCdat[,sampleAreaNames['DC']]) + observationList$DCdat$expansOffset)
-#    if( control$DCmethod == "plugin")
-#      observationList$DCdat[,sampleAreaNames['DC']] <- observationList$DCdat[,sampleAreaNames['DC']] *
   }
 
   #make the complete formula for the INLA call
@@ -51,15 +43,16 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
 #  sampleAreaNames <- tmp$names
   observationList <- tmp$dat
     
-  
   #create a mesh for inference and prediction
   #Make the mesh and get the node weights (produces warnings on my machine, but only depreciated warnings)
-  FullMesh <- MakeSpatialRegion( data=NULL, coords = c("x", "y"), mesh=mesh, bdry=mesh$risdmBoundary$poly, 
-                                 dataBrick=covarBrick, varNames=rasterVarNames, proj = raster::crs( covarBrick))
+  FullMesh <- MakeSpatialRegion( mesh=mesh, dataBrick=covarBrick, varNames=rasterVarNames)
 
   #set up INLA data stacks
   stck <- makeCombinedStack( observationList, covarBrick, FullMesh, control, varNames, rasterVarNames, sampleAreaNames, responseNames)
 
+  #wts for loglikelihood to attempt to exclude the influence on PO data likelihood of obs outside region (hull and expansion)
+  loglWts <- makeLoglWts( stck)
+  
   #make a family vector for the INLA call.  Also make the link list in the INLA call
   famLink <- makeFamLink( attr( stck, "ind"))
 
@@ -85,6 +78,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
                control.fixed = my.control.fixed,  #priors etc for the fixed effects.
                Ntrials = INLA::inla.stack.data(stck)$Ntrials, 
                E = INLA::inla.stack.data(stck)$e,
+               weights=loglWts,
                offset = INLA::inla.stack.data(stck)$offy,
                num.threads = control$n.threads,
                control.compute = list(config=TRUE, waic = control$calcICs, dic = control$calcICs, return.marginals = FALSE, return.marginals.predictor = FALSE))

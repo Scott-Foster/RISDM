@@ -7,15 +7,20 @@ predict.isdm <- function( fit, covarRaster, S=500, DCaverage=TRUE){
   samples <- draw.posterior.samps(fit$mod, B=S, what="effects", field="isdm.spat.XXX")
   
   #a data.frame containing prediciton points (no NAs).
+  #add cell areas first
+  covarRaster <- addLayer( covarRaster, raster::raster( terra::cellSize( terra::rast( covarRaster))))
+  names( covarRaster)[nlayers( covarRaster)] <- "myCellAreas"
   #get the coordinates of the prediction points
   predcoords <- raster::coordinates( covarRaster)
   #extract the covariates
   rasterVarNames <- getVarNames( fit$distributionFormula, NULL, NULL)
   covarData <- as.data.frame( raster::extract( covarRaster, predcoords[,1:2])[,rasterVarNames, drop=FALSE])
+  myCellAreas <- as.matrix( raster::extract( covarRaster, predcoords[,1:2])[,"myCellAreas", drop=FALSE])
   #cut down to just those areas without NAs.
   noNAid <- apply( covarData, 1, function(x) !any( is.na( x)))
   predcoords <- predcoords[noNAid,]
   covarData <- covarData[noNAid,, drop=FALSE]
+  myCellAreas <- myCellAreas[noNAid,,drop=FALSE]
   if( any( grepl( paste0("Intercept.DC:",attr(fit,"DCobserverInfo")$SurveyID), fit$mod$names.fixed))){
     covarData$Intercept.DC <- 1
     nDClevs <- length( attr( fit, "DCSurveyIDLevels"))
@@ -41,9 +46,9 @@ predict.isdm <- function( fit, covarRaster, S=500, DCaverage=TRUE){
   #the model matrix
   myForm <- fit$distributionFormula
   if( "Intercept.DC" %in% colnames( covarData))
-    myForm <- update( myForm, paste0("~.+Intercept.DC/",attr(fit,"DCobserverInfo")$SurveyID))
+    myForm <- update( myForm, paste0("~.-1+Intercept.DC/",attr(fit,"DCobserverInfo")$SurveyID))
   else
-    myForm <- update( myForm, paste0("~.+",colnames( covarData)[grep( "Intercept.", colnames( covarData))]))
+    myForm <- update( myForm, paste0("~.-1+",colnames( covarData)[grep( "Intercept.", colnames( covarData))]))
   
   X <- model.matrix( myForm, data=covarData)
   
@@ -58,7 +63,7 @@ predict.isdm <- function( fit, covarRaster, S=500, DCaverage=TRUE){
   areaGrid <- prod( raster::res( covarRaster))  #assumed to be the same for all cells (not lat long)
 
   #predictions due to only fixed effects
-  eta <- X %*% samples$fixedEffects + log( areaGrid)
+  eta <- X %*% samples$fixedEffects + log( as.numeric( myCellAreas))
   
   #adding in the random effects, if present
   if( length( samples$fieldAtNodes[[1]])!=0){

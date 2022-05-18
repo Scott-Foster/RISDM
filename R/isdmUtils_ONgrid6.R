@@ -5,11 +5,11 @@ checkInput <- function( respNames, biasForm, arteForm, DCobsInfo, obsList){
   
   if( all( is.null( respNames)))
     stop("No response specified.  Please do so through responseNames argument.")
-  if( length( respNames)<1 | length( respNames)>3)
-    stop("Please specify responseNames as a named vector (no response required for PO or DC, see DCobserverInfo).  See help for guidance.")
+  if( length( respNames)<1 | length( respNames)>2)
+    stop("Please specify responseNames as a named vector (no response required for PO or DC, see DCobserverInfo). See help for guidance.")
   
   if( length( arteForm)<1 | length( arteForm)>3)
-    stop("Please specify artefactFormulas as a named list of length 3 or less.  See help for guidance.")
+    stop("Please specify artefactFormulas as a named list of length 3 or less. No artefact formula accepted for PO. See help for guidance.")
   
   if( length( DCobsInfo) != 4)
     stop("Please specify DCobserverInfo as a named list of exactly length 4.  See help for guidance.")
@@ -172,8 +172,8 @@ makeCombinedStack <- function( obsList, covarBrick, Mesh, contr, varNames, raste
   stck <- NULL
   for( ss in which( ind==1)){
     tmp <- switch( names( ind)[ss],  #obtuse way to get it, but it preserves the names
-                   PO = MakePPPstack( observs=obsList$POdat, Mesh=Mesh, presname=contr$presence, ind=ind, 
-                                      varNames=rasterVarNames),
+                   PO = MakePPPstack( observs=obsList$POdat, covarBrick=covarBrick, Mesh=Mesh, presname=contr$presence, 
+                                      varNames=varNames, ind=ind),
                    PA = MakePAstack( observs=obsList$PAdat, mesh=Mesh$mesh, presname=responseNames["PA"], tag = "PA", 
                                      varNames=varNames, sampleAreaName=sampleAreaNames["PA"], ind=ind),
                    AA = MakeAAStack( observs=obsList$AAdat, mesh=Mesh$mesh, abundname=responseNames["AA"], tag="AA", 
@@ -420,8 +420,51 @@ MakePAstack=function( observs, mesh = NULL, presname = "GroupSize", tag = "PA", 
   return( stk.binom)
 }
 
-MakePPPstack <- function( observs, Mesh, presname="presence", tag="PO", ind=1, varNames) {
+MakePPPstack <- function( observs, covarBrick, Mesh, presname="presence", tag="PO", varNames, ind) {
 
+  ##update 17-May-22  Going on the grid -- increase robustness (hopefully) with little increase in computation (for coarse enought grid)
+  
+  tmp <- raster::rasterize( x=coordinates( observs), y=covarBrick, background=0, fun='count')
+  tmp <- raster::addLayer( tmp, raster::raster( terra::cellSize( terra::rast( tmp))))
+  names( tmp) <- c( "count", "cellArea")
+  
+  observs <- SpatialPointsDataFrame( coords=coordinates( tmp), data=cbind( as.data.frame( tmp), as.data.frame( covarBrick)))
+  abundname <- 'count'
+  sampleAreaName <- "cellArea"
+  
+  ### This is copied from makeAAStack.  Changes here or there will need to be transfered
+  y.pp <- as.integer( observs@data[,abundname])
+  
+  #the area sampled
+  offy <- observs@data[,sampleAreaName]
+  
+  #covariates 'n' stuff
+  tmp <- varNames %in% colnames( observs@data)
+  if( ! all( tmp))
+    warning( "Not all bias covariates in PO data. Missing: ", paste( varNames[!tmp], " "), "Creating variable and padding with NAs.")
+  tmptmp <- matrix( NA, nrow=nrow( observs@data), ncol=sum( !tmp), dimnames=list( NULL, varNames[!tmp]))
+  observs@data <- cbind( observs@data, as.data.frame( tmptmp))
+  
+  covars <- as.data.frame( observs@data[,varNames])
+  
+  #still need to think about what is going to be the reference level for the overall prevalence
+  #  if( sum( ind) > 1)
+  covars$Intercept.PO <- 1
+  
+  resp <- matrix( NA, nrow=nrow( covars), ncol=sum( ind))
+  colnames( resp) <- names( ind[ind!=0])  #name the variables
+  resp[,"PO"] <- y.pp
+  
+  # Projector matrix from mesh to data.
+  projmat <- INLA::inla.spde.make.A( Mesh$mesh, as.matrix( raster::coordinates( observs))) # from mesh to point observations
+  
+  #make the stack
+  stk.po <- INLA::inla.stack(data=list(resp=resp, e=rep( 1, nrow( covars)), offy=log( offy)),
+                                A=list(1,projmat), tag=tag,
+                                effects=list( covars, list(isdm.spat.XXX=1:Mesh$mesh$n)))
+
+  return( stk.po)
+  
   #observs is a SpatialPointsDataFrame containing a row for each presence and quadrature point. Data must contain all covariates needed
   #for the model.
   #mesh is the mesh for spde model containing mesh object, the spde object (not used here though), the area of the in-region Voronoi polygons, and the covariate data
@@ -432,17 +475,26 @@ MakePPPstack <- function( observs, Mesh, presname="presence", tag="PO", ind=1, v
   #following Simpson et al 2016 (off the grid), as described in https://becarioprecario.bitbucket.io/spde-gitbook/ch-lcox.html
   #originally following Isaac's et al code, but they don't follow the same recipe quite...  This seems much more in line with Simpson et al,
   #as it incorporates mesh nodes (background points) into the observation model too (doing the point process integration).
-  
-  #Note that the tesselation areas (e.pp from Mesh$w are calcualted using a different method (deldir))
-  #This shouldn't matter, and is faster, and based on Voronoi polygons rather than GIS polygons 
-  #   (see above website Fig 4.3 for some probably effective but odd shapes...)
 
+  
+  
+    
   #the working variate
   y.pp <- c( rep( 0, Mesh$mesh$n), rep( 1, nrow( observs)))
 
-  #its weights
+  #exposure for the observations
   e.pp <- c( Mesh$w, rep( 0, nrow( observs)))
 
+  #hack...
+  #'fixing up' (fingers crossed) the fact that covariates aren't available at mesh nodes outside of study region...
+  na.id <- which( apply( Mesh$covars, 1, function(x) any( is.na( x))))
+  # y.pp[na.id] <- 0 #should already be done
+  # e.pp[na.id] <- 0 #should already be done
+  po.offy <- rep( 0, length( y.pp))
+#  po.offy[na.id] <- -1e5  
+  for( cc in colnames( Mesh$covars))
+    Mesh$covars[na.id,cc] <- mean( Mesh$covars[,cc], na.rm=TRUE) #0#-99999  #arbitrary value that I expect shouldn't matter (wt of zero in logl)
+  
   #projection matrices
   #mesh nodes to mesh nodes
   imat <- Matrix::Diagonal( Mesh$mesh$n, rep( 1, Mesh$mesh$n))
@@ -452,63 +504,65 @@ MakePPPstack <- function( observs, Mesh, presname="presence", tag="PO", ind=1, v
   A.pp <- rbind( imat, lmat)
 
   #covariates 'n' stuff
-  covars <- as.data.frame( rbind( Mesh$covars, as.data.frame( observs)[,varNames]))
-
   #each data type gets its own intercept
-  covars$Intercept.PO <- 1
-
-  resp <- matrix( NA, nrow=nrow( covars), ncol=sum( ind))
+  if( !is.null( colnames( Mesh$covars))){
+    covars <- as.data.frame( rbind( Mesh$covars, as.data.frame( observs)[,colnames( Mesh$covars),drop=FALSE]))
+    covars$Intercept.PO <- 1
+  }
+  else
+    covars <- data.frame( Intercept.PO = rep( 1, length( y.pp)))
+  
+  resp <- matrix( NA, nrow=length( y.pp), ncol=sum( ind))
   colnames( resp) <- names( ind[ind!=0])  #name the variables
   resp[,"PO"] <- y.pp
+  
+  #weights for the logl.  So that out-of-region mesh nodes are not included in logl calculations
+#  loglWts <- rep( 1, nrow( resp))
+#  loglWts[na.id] <- 0
 
   #make the stack
-  stk.pp <- INLA::inla.stack( data = list( resp = resp, e = e.pp, offy=0),
+  stk.pp <- INLA::inla.stack( data = list( resp = resp, e = e.pp, offy=po.offy),
                         A = list(1, A.pp),
                         effects = list(covars, list(isdm.spat.XXX = 1:Mesh$mesh$n)),
                         tag = tag)
+#  attr( stk.pp, "loglWts") <- loglWts
+  
   return( stk.pp)
 
 }
 
-MakeSpatialRegion <- function (data = NULL, coords = c("X", "Y"), mesh, bdry, proj = sp::CRS("+proj=utm"), dataBrick=NULL, varNames=NULL) {
-
-  #largely taken from Isaacs et al.  But large chunks removed.
-  #Note that the approach to calculate the weights, and do the quadrature is quite different
-  #Here, we separate the SPDE mesh and the quadrature points (unlike Isaacs et al). We calculate the weights using ppmData.
+makeLoglWts <- function( stck){
+  wts <- rep( 1, nrow( stck$data$data))
   
-#  #make the boundary into something that INLA will understand.
-#  region.bdry <- INLA::inla.sp2segment( raster::union( bdry))
-#  #make the mesh, may take a while if lots of points and/or mesh configuration that is not well suited to bdry
-#  mesh <- INLA::inla.mesh.2d(boundary = region.bdry, cutoff = meshpars$cutoff, max.edge = meshpars$max.edge, offset = meshpars$offset, max.n = meshpars$max.n)
-  #set up the parameters for the spatial random field.
+  wts[which( stck$data$data$resp==0 & stck$data$data$e==0)] <- 0
+  
+  return( wts)
+}
 
-  #finding the areas of the Voronoi polygons around each of the mesh points.
-  dd <- deldir::deldir(mesh$loc[, 1], mesh$loc[, 2], eps=1e-6)
-  tiles <- deldir::tile.list(dd)  #the polygons
+MakeSpatialRegion <- function ( mesh, dataBrick=NULL, varNames=NULL) {
 
-  #convert the bdry to a single dissolved polygon
-  GPC.polies <- list()
-  lenny <- length( bdry@polygons[[1]]@Polygons)
-  for( ii in 1:lenny)
-    GPC.polies[[ii]] <- as(bdry@polygons[[1]]@Polygons[[ii]]@coords, "gpc.poly")
-  if( lenny > 1){
-    warning( "currently on first to polygon boundary segments are used. FIX IN MakeSpatialRegion")
-    poly.gpc <- rgeos::union( GPC.polies[[1]], GPC.polies[[2]]) #warning
-  }
-  else
-    poly.gpc <- GPC.polies[[1]]
-
-  #Figure out how much of each tile is within bdry.
-  #This could be parallelised.
-  suppressWarnings( w <- sapply(tiles, function(p) rgeos::area.poly(rgeos::intersect(as(cbind(p$x, p$y), "gpc.poly"), poly.gpc))))
-
+  #Deviating from Isaacs et al here.  Taking this from Krainski et al (2019).  Similar to Flagg + Hoegh (2022) but they don't allow for extended
+  #integration areas.  Note that the areas are not based on Voronoi polygons, like ppmData, but rather on the finite element mesh.
+  
+  dmesh <- book.mesh.dual( mesh)
+  #dangerous way to suppress warnings...  But suppressWarning() didn't do it.
+  suppressMessages( sp::proj4string( dmesh) <- sp::proj4string( mesh$risdmBoundary$poly$lower.res))
+  w <- sapply(1:length(dmesh), 
+            function(i) {
+              if (rgeos::gIntersects(dmesh[i, ], mesh$risdmBoundary$poly$lower.res))
+                return(rgeos::gArea(rgeos::gIntersection(dmesh[i, ], mesh$risdmBoundary$poly$lower.res)))
+              else 
+                return(0)
+            }
+  )
+  
   #find the covariate values under the mesh
   covars <- NULL
   if( !is.null( dataBrick)){
     if( ! all( varNames %in% names( dataBrick)))
       stop( "Covariates in formula not supplied in raster data")
     tmp <- ExtractCovarsAtNodes( mesh=mesh, covars=dataBrick)
-    covars <- tmp[,varNames]
+    covars <- tmp[,varNames,drop=FALSE]
   }
 
   return(list(mesh = mesh, w=w, covars=covars))
@@ -520,7 +574,11 @@ ExtractCovarsAtNodes <- function( mesh=NULL, covars=NULL){
   #covars is a raster/brick containing all the covariate values.  Mush contain spatial area for all the mesh nodes
   
   locs <- as.matrix( mesh$loc)
-  covarAtLocs <- raster::extract( covars, locs[,1:2])
+  #blinear to follow Krainski et al and Flagg + Koegh.  Well almost consistent (different packages and methods)
+  #FWIW, I'd use 'simple' to avoid Berkson errors.
+#  covarAtLocs <- raster::extract( covars, locs[,1:2], cellnumbers=TRUE, small=TRUE, buffer=min( res( covars)), fun='median', method='simple')
+  covarAtLocs <- raster::extract( covars, locs[,1:2], cellnumbers=TRUE)#, small=TRUE, buffer=min( res( covars)), fun='median', methd='simple')
+  #raster::extract( covars, locs[,1:2], method="bilinear")  
 
   return( covarAtLocs)
 }

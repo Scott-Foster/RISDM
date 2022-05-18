@@ -1,7 +1,7 @@
 Package: RISDM
 Type: Package
 Title: Integrated Species Distribution Modelling using INLA -- multiple data types
-Version: 0.2.1
+Version: 0.4.1
 Author: CSIRO Project Team
 Maintainer: Scott Foseter <scott.foster@data61.csiro.au>
 Imports:
@@ -13,7 +13,8 @@ Imports:
   deldir,
   methods,
   stats,
-  Matrix
+  Matrix,
+  terra
 Suggests:
   MBHdesign,
   RandomFields,
@@ -21,7 +22,7 @@ Suggests:
   rmarkdown
 VignetteBuilder:
   knitr
-Description: Fits a spatial model (with spatial random effect) to data with multiple types. That is, can take any combination of presence-only, presence-absence and abundance (count) data and fit a SDM. The package is lexible, in that it maintains options that are relevant to the integrated SDM, but also constrained in that it removes the dazzling variety of options available from INLA.
+Description: Fits a spatial model (with spatial random effect) to data with multiple types. That is, can take any combination of presence-only, presence-absence and abundance (count and double count) data and fit a SDM. The package is lexible, in that it maintains options that are relevant to the integrated SDM, but also constrained in that it removes the dazzling variety of options available from INLA.
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
