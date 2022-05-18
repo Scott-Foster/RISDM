@@ -37,20 +37,9 @@ simDat1 <- simulate.isdm( expected.n.PO=3000, n.PA=200, n.AA=300, n.DC=200,
                           rasterBoundary=bdry.ras$vic)
 crs( simDat1$covarBrick) <- crs( bdry.ras$square)
 
-#simDat1$covarBrick <- scale( simDat1$covarBrick)
-
 plot( simDat1$covarBrick)
 
 dev.off()
-
-##using new code
-# source( "~/ABARES/estimationCode/R/integratedAnalysis_ONgrid7.R")
-# source( "~/ABARES/estimationCode/R/predictMethod1.R")
-# source( "~/ABARES/estimationCode/R/DoubleCountDataPrep2.R")
-# source( "~/ABARES/estimationCode/R/Pub_drawPosteriorSamps7.R")
-# source( "~/ABARES/estimationCode/R/helperFuns6.R")
-# source( "~/ABARES/estimationCode/R/isdmUtils_ONgrid6.R")
-# source( "~/ABARES/estimationCode/R/bookMeshDual.R")
 
 meshy1 <- makeMesh( ras=simDat1$covarBrick[[1]], max.n=c(2000,400), dep.range=10000, expans.mult=4, offset=50000, expandRegion=TRUE)
 

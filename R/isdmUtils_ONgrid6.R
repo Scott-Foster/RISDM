@@ -428,7 +428,7 @@ MakePPPstack <- function( observs, covarBrick, Mesh, presname="presence", tag="P
   tmp <- raster::addLayer( tmp, raster::raster( terra::cellSize( terra::rast( tmp))))
   names( tmp) <- c( "count", "cellArea")
   
-  observs <- SpatialPointsDataFrame( coords=coordinates( tmp), data=cbind( as.data.frame( tmp), as.data.frame( covarBrick)))
+  observs <- SpatialPointsDataFrame( coords=coordinates( tmp), data=cbind( raster::as.data.frame( tmp), raster::as.data.frame( covarBrick)))
   abundname <- 'count'
   sampleAreaName <- "cellArea"
   
