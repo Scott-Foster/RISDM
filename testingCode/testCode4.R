@@ -41,7 +41,7 @@ plot( simDat1$covarBrick)
 
 dev.off()
 
-meshy1 <- makeMesh( ras=simDat1$covarBrick[[1]], max.n=c(2000,400), dep.range=10000, expans.mult=4, offset=50000, expandRegion=TRUE)
+meshy1 <- makeMesh( ras=simDat1$covarBrick[[1]], max.n=c(1250,250), dep.range=10000, expans.mult=4, offset=50000, expandRegion=TRUE)
 
 #containers for the square and vic simulations.
 fm1 <- list()

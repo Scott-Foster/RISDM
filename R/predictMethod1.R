@@ -8,8 +8,8 @@ predict.isdm <- function( fit, covarRaster, S=500, DCaverage=TRUE){
   
   #a data.frame containing prediciton points (no NAs).
   #add cell areas first
-  covarRaster <- addLayer( covarRaster, raster::raster( terra::cellSize( terra::rast( covarRaster))))
-  names( covarRaster)[nlayers( covarRaster)] <- "myCellAreas"
+  covarRaster <- raster::addLayer( covarRaster, raster::raster( terra::cellSize( terra::rast( covarRaster))))
+  names( covarRaster)[raster::nlayers( covarRaster)] <- "myCellAreas"
   #get the coordinates of the prediction points
   predcoords <- raster::coordinates( covarRaster)
   #extract the covariates
