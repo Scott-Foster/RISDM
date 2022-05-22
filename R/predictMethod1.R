@@ -93,7 +93,14 @@ predict.isdm <- function( fit, covarRaster, S=500, DCaverage=TRUE){
 PopEstimate <- function( preds, probs=c(0.025,0.975)){
   samplePopN <- colSums( preds$sample.cell.mean)
   quants <- quantile( samplePopN, probs=probs)
-  res <- list( mean=mean( samplePopN), median=median( samplePopN), interval=quants)
+  
+  sample.preds <- matrix( rpois(n=prod( dim( preds$sample.cell.mean)), lambda=preds$sample.cell.mean), 
+                          nrow=nrow( preds$sample.cell.mean), ncol=ncol( preds$sample.cell.mean))
+  samplePopN.pred <- colSums( sample.preds)
+  quants.preds <- quantile( samplePopN.pred, probs=probs)
+  
+  res <- list( mean=mean( samplePopN), median=median( samplePopN), interval=quants,
+               mean.pred=mean( samplePopN.pred), median.pred=median( samplePopN.pred), interval.preds=quants.preds)
   
   return( res)
 }
