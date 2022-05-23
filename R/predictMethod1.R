@@ -4,7 +4,9 @@ predict.isdm <- function( fit, covarRaster, S=500, DCaverage=TRUE){
   
   ####Get (grid of) predictions
   #build predictions
+  message( "INLA::draw.posterior.samps will sometimes produce warnings. These seem to be internally correct -- please ignore (for now).")
   samples <- draw.posterior.samps(fit$mod, B=S, what="effects", field="isdm.spat.XXX")
+  message( "Any warnings from now on should be taken more seriously.")
   
   #a data.frame containing prediciton points (no NAs).
   #add cell areas first
