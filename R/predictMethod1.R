@@ -94,9 +94,9 @@ PopEstimate <- function( preds, probs=c(0.025,0.975)){
   samplePopN <- colSums( preds$sample.cell.mean)
   quants <- quantile( samplePopN, probs=probs)
   
-  sample.preds <- matrix( rpois(n=prod( dim( preds$sample.cell.mean)), lambda=preds$sample.cell.mean), 
+#  sample.preds <- matrix( rpois(n=prod( dim( preds$sample.cell.mean)), lambda=preds$sample.cell.mean), 
                           nrow=nrow( preds$sample.cell.mean), ncol=ncol( preds$sample.cell.mean))
-  samplePopN.pred <- colSums( sample.preds)
+  samplePopN.pred <- rpois( n=length( samplePopN), lambda=samplePopN)
   quants.preds <- quantile( samplePopN.pred, probs=probs)
   
   res <- list( mean=mean( samplePopN), median=median( samplePopN), interval=quants,
