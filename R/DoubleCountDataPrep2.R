@@ -16,7 +16,8 @@ DC_loglikFun <- function( par, dat){
 
 estimatePisDoubleCount <- function( dat){
   #dat is an nx3 matrix with colnames c("obs1","obs2","both")
-  dat <- as.matrix( dat[,c("Obs1","Obs2","Both")])  #make sure that data is in 'right' order and format
+#data should already be ordered by the way that this function is called...
+  #dat <- as.matrix( dat[,c("Obs1","Obs2","Both")])  #make sure that data is in 'right' order and format
   start.vals <- cbind( (dat[,1]+dat[,3]), dat[,2]+dat[,3]) / rowSums( dat, na.rm=TRUE)
   start.vals <- colMeans( start.vals, na.rm=TRUE)
   start.vals <- log( start.vals + 0.01)

@@ -98,7 +98,8 @@ getVarNames <- function( fo, bfo, foList){
 
   varNames <- NULL
   if( !is.null( fo))
-    varNames <- attr( terms( fo), "term.labels")
+    varNames <- setdiff( as.character( attr( terms( fo), "variables")), "list")
+    #varNames <- attr( terms( fo), "term.labels")
   if( !is.null( bfo))
     varNames <- c( varNames, setdiff( as.character( attr( terms( bfo), "variables")), "list"))
   for( ii in names( foList))
@@ -425,6 +426,7 @@ MakePPPstack <- function( observs, covarBrick, Mesh, presname="presence", tag="P
   ##update 17-May-22  Going on the grid -- increase robustness (hopefully) with little increase in computation (for coarse enought grid)
   
   tmp <- raster::rasterize( x=coordinates( observs), y=covarBrick, background=0, fun='count')
+  tmp <- raster::mask( tmp, covarBrick[[1]])
   tmp <- raster::addLayer( tmp, raster::raster( terra::cellSize( terra::rast( tmp))))
   names( tmp) <- c( "count", "cellArea")
   
@@ -544,17 +546,17 @@ MakeSpatialRegion <- function ( mesh, dataBrick=NULL, varNames=NULL) {
   #Deviating from Isaacs et al here.  Taking this from Krainski et al (2019).  Similar to Flagg + Hoegh (2022) but they don't allow for extended
   #integration areas.  Note that the areas are not based on Voronoi polygons, like ppmData, but rather on the finite element mesh.
   
-  dmesh <- book.mesh.dual( mesh)
-  #dangerous way to suppress warnings...  But suppressWarning() didn't do it.
-  suppressMessages( sp::proj4string( dmesh) <- sp::proj4string( mesh$risdmBoundary$poly$lower.res))
-  w <- sapply(1:length(dmesh), 
-            function(i) {
-              if (rgeos::gIntersects(dmesh[i, ], mesh$risdmBoundary$poly$lower.res))
-                return(rgeos::gArea(rgeos::gIntersection(dmesh[i, ], mesh$risdmBoundary$poly$lower.res)))
-              else 
-                return(0)
-            }
-  )
+#  dmesh <- book.mesh.dual( mesh)
+#  #dangerous way to suppress warnings...  But suppressWarning() didn't do it.
+#  suppressMessages( sp::proj4string( dmesh) <- sp::proj4string( mesh$risdmBoundary$poly$lower.res))
+#  w <- sapply(1:length(dmesh), 
+#            function(i) {
+#              if (rgeos::gIntersects(dmesh[i, ], mesh$risdmBoundary$poly$lower.res))
+#                return(rgeos::gArea(rgeos::gIntersection(dmesh[i, ], mesh$risdmBoundary$poly$lower.res)))
+#              else 
+#                return(0)
+#            }
+#  )
   
   #find the covariate values under the mesh
   covars <- NULL
@@ -565,7 +567,8 @@ MakeSpatialRegion <- function ( mesh, dataBrick=NULL, varNames=NULL) {
     covars <- tmp[,varNames,drop=FALSE]
   }
 
-  return(list(mesh = mesh, w=w, covars=covars))
+#  return(list(mesh = mesh, w=w, covars=covars))
+  return(list(mesh = mesh, covars=covars))
 }
 
 ExtractCovarsAtNodes <- function( mesh=NULL, covars=NULL){
