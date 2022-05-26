@@ -40,7 +40,7 @@ checkInput <- function( respNames, biasForm, arteForm, DCobsInfo, obsList){
   return( TRUE)  #if execution makes it this far
 }
 
-uniqueVarNames <- function( obsList, arteForm){
+uniqueVarNames <- function( obsList, arteForm, DCsurvID){
   newForm <- arteForm
   newObs <- obsList
   for( ii in names( newForm)){
@@ -51,9 +51,13 @@ uniqueVarNames <- function( obsList, arteForm){
     newForm[[ii]] <- reformulate( tmp)
     environment( newForm[[ii]]) <- environment( arteForm[[ii]])
     environment( newObs[[dataname]]) <- environment( obsList[[dataname]])
+    
+    if( ii == "DC")
+      if( DCsurvID %in% attr( tt, "term.labels"))
+        DCsurvID <- paste( DCsurvID,"DC",sep="_")
   }
 
-  res <- list( obsList=newObs, arteForm=newForm)
+  res <- list( obsList=newObs, arteForm=newForm, DCsurvID=DCsurvID)
 }
 
 makeFormula <- function( dform, bform, aforms, addRE=TRUE) {

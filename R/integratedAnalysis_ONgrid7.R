@@ -15,9 +15,10 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   flag <- checkInput( responseNames, biasFormula, artefactFormulas, DCobserverInfo, observationList)
   
   #make variable names in artefact models unique -- so that factor levels etc are not shared between data types
-  tmp <- uniqueVarNames( observationList, artefactFormulas)
+  tmp <- uniqueVarNames( observationList, artefactFormulas, DCobserverInfo$SurveyID)
   artefactFormulas <- tmp$arteForm
   observationList <- tmp$obsList
+  DCobserverInfo$SurveyID <- tmp$DCsurvID
   
   #set up FULL control list (priors, nthreads, indexes etc)
   control <- makeControl( control)
