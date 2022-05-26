@@ -14,6 +14,11 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   #preliminary checks.  Very loose ATM
   flag <- checkInput( responseNames, biasFormula, artefactFormulas, DCobserverInfo, observationList)
   
+  #make variable names in artefact models unique -- so that factor levels etc are not shared between data types
+  tmp <- uniqueVarNames( observationList, artefactFormulas)
+  artefactFormulas <- tmp$arteForm
+  observationList <- tmp$obsList
+  
   #set up FULL control list (priors, nthreads, indexes etc)
   control <- makeControl( control)
 

@@ -40,6 +40,22 @@ checkInput <- function( respNames, biasForm, arteForm, DCobsInfo, obsList){
   return( TRUE)  #if execution makes it this far
 }
 
+uniqueVarNames <- function( obsList, arteForm){
+  newForm <- arteForm
+  newObs <- obsList
+  for( ii in names( newForm)){
+    tt <- terms( newForm[[ii]])
+    tmp <- paste( attr( tt, "term.labels"), ii, sep="_")
+    dataname <- paste0(ii,"dat")
+    colnames( newObs[[dataname]])[colnames( newObs[[dataname]]) %in% attr( tt, "term.labels")] <- tmp
+    newForm[[ii]] <- reformulate( tmp)
+    environment( newForm[[ii]]) <- environment( arteForm[[ii]])
+    environment( newObs[[dataname]]) <- environment( obsList[[dataname]])
+  }
+
+  res <- list( obsList=newObs, arteForm=newForm)
+}
+
 makeFormula <- function( dform, bform, aforms, addRE=TRUE) {
   #not going to use a combined intercept.  Rather let each data type have its own
   
