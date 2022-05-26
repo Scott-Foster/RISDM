@@ -45,16 +45,19 @@ uniqueVarNames <- function( obsList, arteForm, DCsurvID){
   newObs <- obsList
   for( ii in names( newForm)){
     tt <- terms( newForm[[ii]])
-    tmp <- paste( attr( tt, "term.labels"), ii, sep="_")
-    dataname <- paste0(ii,"dat")
-    colnames( newObs[[dataname]])[colnames( newObs[[dataname]]) %in% attr( tt, "term.labels")] <- tmp
-    newForm[[ii]] <- reformulate( tmp)
-    environment( newForm[[ii]]) <- environment( arteForm[[ii]])
-    environment( newObs[[dataname]]) <- environment( obsList[[dataname]])
+    tmp.labels <- attr( tt, "term.labels")
+    if( length( tmp.labels) > 0){
+      tmp <- paste( tmp.labels, ii, sep="_")
+      dataname <- paste0(ii,"dat")
+      colnames( newObs[[dataname]])[colnames( newObs[[dataname]]) %in% attr( tt, "term.labels")] <- tmp
+      newForm[[ii]] <- reformulate( tmp)
+      environment( newForm[[ii]]) <- environment( arteForm[[ii]])
+      environment( newObs[[dataname]]) <- environment( obsList[[dataname]])
     
-    if( ii == "DC")
-      if( DCsurvID %in% attr( tt, "term.labels"))
-        DCsurvID <- paste( DCsurvID,"DC",sep="_")
+      if( ii == "DC")
+        if( DCsurvID %in% attr( tt, "term.labels"))
+          DCsurvID <- paste( DCsurvID,"DC",sep="_")
+    }
   }
 
   res <- list( obsList=newObs, arteForm=newForm, DCsurvID=DCsurvID)
