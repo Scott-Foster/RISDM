@@ -56,13 +56,20 @@ predict.isdm <- function( fit, covarRaster, S=500, DCaverage=TRUE){
   
   #sorting the design matrix and the effects so that they match
   fix.names <- fit$mod$names.fixed
+  #those (factor levels) that are made when producing (constrained/unconstrained) design matrix
+  missedLevels <- setdiff( colnames( X), fix.names)
+  if( length( missedLevels)>0){
+    fix.names <- c( fix.names, missedLevels)
+    samples$fixedEffects <- rbind( samples$fixedEffects, matrix( 0, nrow=length( missedLevels), ncol=ncol( samples$fixedEffects)))
+  }
+  
   fix.subset <- which( fix.names %in% colnames( X))
   fix.names.ord <- order( fix.names[fix.subset])
   samples$fixedEffects <- samples$fixedEffects[fix.subset[fix.names.ord],]
   X <- X[,order( colnames( X))]
   
   #the size of a grid cell
-  areaGrid <- prod( raster::res( covarRaster))  #assumed to be the same for all cells (not lat long)
+#  areaGrid <- prod( raster::res( covarRaster))  #assumed to be the same for all cells (not lat long)
 
   #predictions due to only fixed effects
   eta <- X %*% samples$fixedEffects + log( as.numeric( myCellAreas))
