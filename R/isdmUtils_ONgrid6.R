@@ -331,6 +331,7 @@ MakeDCStack=function( observs, mesh = NULL, DCname = "DCabund", tag = "DC", varN
   observs@data <- cbind( observs@data, as.data.frame( tmptmp))
   
   covars <- as.data.frame( observs@data[,varNames])
+  colnames( covars) <- varNames
   
   covars$Intercept.DC <- 1
   
@@ -375,6 +376,7 @@ MakeAAStack=function( observs, mesh = NULL, abundname = "abund", tag = "AA", var
   observs@data <- cbind( observs@data, as.data.frame( tmptmp))
     
   covars <- as.data.frame( observs@data[,varNames])
+  colnames( covars) <- varNames
   #  covars$Intercept <- 1
 
   #still need to think about what is going to be the reference level for the overall prevalence
@@ -425,6 +427,7 @@ MakePAstack=function( observs, mesh = NULL, presname = "GroupSize", tag = "PA", 
   observs@data <- cbind( observs@data, as.data.frame( tmptmp))
   
   covars <- as.data.frame( observs@data[,varNames])
+  colnames( covars) <- varNames
 
   #intercept added for each data type
   covars$Intercept.PA <- 1
@@ -471,6 +474,7 @@ MakePPPstack <- function( observs, covarBrick, Mesh, presname="presence", tag="P
   observs@data <- cbind( observs@data, as.data.frame( tmptmp))
   
   covars <- as.data.frame( observs@data[,varNames])
+  colnames( covars) <- varNames
   
   #still need to think about what is going to be the reference level for the overall prevalence
   #  if( sum( ind) > 1)
