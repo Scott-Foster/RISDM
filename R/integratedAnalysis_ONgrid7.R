@@ -73,8 +73,6 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
                               # PC-prior on sigma: P(sigma > 1) = 0.01
                               prior.sigma = control$prior.space.sigma)
 
-  print( class( my.spde))
-  
   #the INLA call...
   mod <- INLA::inla( fullForm, #the formula (combined distribution and bias formulas)
                family = famLink$fam,  #the families for the different data types.
