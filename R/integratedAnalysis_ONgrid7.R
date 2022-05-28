@@ -80,6 +80,8 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   print( environment( INLA::inla.stack.data( stck)))
   
   print( str( my.spde))
+  
+  environment( my.spde) <- environment( fullForm)
 
   #the INLA call...
   mod <- INLA::inla( fullForm, #the formula (combined distribution and bias formulas)
