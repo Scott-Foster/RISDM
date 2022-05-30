@@ -28,36 +28,13 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   covarData <- covarData[noNAid,, drop=FALSE]
   myCellAreas <- myCellAreas[noNAid,,drop=FALSE]
   
-  if( !is.null( intercept.terms))
-    for( ii in 1:length( intercept.terms)){
+  if( !is.null( intercept.terms)){
+    intercept.terms.legal <- gsub( pattern=":", replacement="XCOLONX", x=intercept.terms)
+    for( ii in 1:length( intercept.terms.legal)){
       covarData$tmptmptmptmp <- 1
-      colnames( covarData)[ ncol( covarData)] <- intercept.terms[ii]
+      colnames( covarData)[ ncol( covarData)] <- intercept.terms.legal[ii]
     }
-#  else{
-#    if( "Intercept.DC" %in% fit$mod$names.fixed){
-#      covarData$Intercept.DC <- 1
-#      intercept.terms <- "Intercept.DC"
-#    }
-#    else{
-#      if( "Intercept.AA" %in% fit$mod$names.fixed){
-#	covarData$Intercept.AA <- 1
-#	intercept.terms <- "intercept.AA"
-#      }
-#      else {
-#	if( "Intercept.PA" %in% fit$mod$names.fixed){
-#	  covarData$Intercept.PA <- 1
-#	  intercept.terms <- "Intercept.PA"
-#	}
-#	else {
-#	  if( "Intercept.PO" %in% fit$mod$names.fixed){
-#	    covarData$Intercept.PO <- 1
-#	    intercept.terms <- "Intercept.PO"
-#	  }
-#	}
-#      }
-#    }
-#  }
-  
+  }
   
   #the model matrix
   myForm <- fit$distributionFormula
@@ -65,7 +42,7 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
 #    myForm <- update( myForm, paste0("~.-1+Intercept.DC/",attr(fit,"DCobserverInfo")$SurveyID))
 #  else
   if( !is.null( intercept.terms))
-    myForm <- update( myForm, paste0("~.-1+",paste( intercept.terms, collapse="+")))  #colnames( covarData)[grep( "Intercept.", colnames( covarData))]))
+    myForm <- update( myForm, paste0("~.-1+",paste( intercept.terms.legal, collapse="+")))  #colnames( covarData)[grep( "Intercept.", colnames( covarData))]))
   
   X <- model.matrix( myForm, data=covarData)
   
@@ -113,13 +90,13 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covarRaster)))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.upper), crs=raster::crs( covarRaster)))
   
-  res <- list( mean.field=muRaster, samples.all=mu.all, predLocats=predcoords)
+  res <- list( mean.field=muRaster, cell.samples=mu.all, samples=samples, predLocats=predcoords)
   
   return( res)
 }
 
 PopEstimate <- function( preds, probs=c(0.025,0.975)){
-  samplePopN <- colSums( preds$sample.cell.mean)
+  samplePopN <- colSums( preds$cell.samples)
   quants <- quantile( samplePopN, probs=probs)
   
 #  sample.preds <- matrix( rpois(n=prod( dim( preds$sample.cell.mean)), lambda=preds$sample.cell.mean), 
