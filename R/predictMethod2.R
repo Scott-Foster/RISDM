@@ -45,6 +45,8 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
     myForm <- update( myForm, paste0("~.-1+",paste( intercept.terms.legal, collapse="+")))  #colnames( covarData)[grep( "Intercept.", colnames( covarData))]))
   
   X <- model.matrix( myForm, data=covarData)
+  #undoing the hack from before.
+  colnames( X) <- gsub( "XCOLONX", ":", colnames( X))
   
   #sorting the design matrix and the effects so that they match
   fix.names <- fit$mod$names.fixed
