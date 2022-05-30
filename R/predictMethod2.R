@@ -8,7 +8,7 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   
   ####Get (grid of) predictions
   #build predictions
-  message( "INLA::draw.posterior.samps will sometimes produce warnings. These seem to be internally correct -- please ignore (for now).")
+  message( "INLA::draw.posterior.samps will sometimes produce warnings. These seem to be internally corrected within INLA -- please ignore (for now).")
   samples <- draw.posterior.samps(fit$mod, B=S, what="effects", field="isdm.spat.XXX")
   message( "Any warnings from now on should be taken more seriously.")
   
@@ -33,29 +33,39 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
       covarData$tmptmptmptmp <- 1
       colnames( covarData)[ ncol( covarData)] <- intercept.terms[ii]
     }
-  else{
-    if( "Intercept.DC" %in% fit$mod$names.fixed) 
-      covarData$Intercept.DC <- 1
-    else{
-      if( "Intercept.AA" %in% fit$mod$names.fixed)
-	covarData$Intercept.AA <- 1
-      else {
-	if( "Intercept.PA" %in% fit$mod$names.fixed)
-	  covarData$Intercept.PA <- 1
-	else {
-	  if( "Intercept.PO" %in% fit$mod$names.fixed)
-	    covarData$Intercept.PO <- 1
-	}
-      }
-    }
-  }
+#  else{
+#    if( "Intercept.DC" %in% fit$mod$names.fixed){
+#      covarData$Intercept.DC <- 1
+#      intercept.terms <- "Intercept.DC"
+#    }
+#    else{
+#      if( "Intercept.AA" %in% fit$mod$names.fixed){
+#	covarData$Intercept.AA <- 1
+#	intercept.terms <- "intercept.AA"
+#      }
+#      else {
+#	if( "Intercept.PA" %in% fit$mod$names.fixed){
+#	  covarData$Intercept.PA <- 1
+#	  intercept.terms <- "Intercept.PA"
+#	}
+#	else {
+#	  if( "Intercept.PO" %in% fit$mod$names.fixed){
+#	    covarData$Intercept.PO <- 1
+#	    intercept.terms <- "Intercept.PO"
+#	  }
+#	}
+#      }
+#    }
+#  }
+  
   
   #the model matrix
   myForm <- fit$distributionFormula
 #  if( "Intercept.DC" %in% colnames( covarData))
 #    myForm <- update( myForm, paste0("~.-1+Intercept.DC/",attr(fit,"DCobserverInfo")$SurveyID))
 #  else
-  myForm <- update( myForm, paste0("~.-1+",paste( intercept.terms, collapse="+")))  #colnames( covarData)[grep( "Intercept.", colnames( covarData))]))
+  if( !is.null( intercept.terms))
+    myForm <- update( myForm, paste0("~.-1+",paste( intercept.terms, collapse="+")))  #colnames( covarData)[grep( "Intercept.", colnames( covarData))]))
   
   X <- model.matrix( myForm, data=covarData)
   
@@ -83,7 +93,7 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   #adding in the random effects, if present
   if( length( samples$fieldAtNodes[[1]])!=0){
     #projector matrix( linking prediction points to mesh)
-    A.prd <- INLA::inla.spde.make.A( fit$mesh, loc=predcoordsExpand)
+    A.prd <- INLA::inla.spde.make.A( fit$mesh, loc=predcoords)
     eta <- eta + A.prd %*% samples$fieldAtNodes
   }
   mu.all <- as.matrix( exp( eta))
@@ -95,9 +105,13 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
 #    mu.cell.mean <- mu.all
   mu.mean <- rowMeans( mu.all)  #mu.cell.mean)
   mu.sd <- apply( mu.all, 1, sd)  #mu.cell.mean, 1, sd)
-    
+  mu.lower <- apply( mu.all, 1, quantile, probs=0.025)
+  mu.upper <- apply( mu.all, 1, quantile, probs=0.975)
+      
   muRaster <- raster::rasterFromXYZ( cbind( predcoords, mu.mean), crs=raster::crs( covarRaster))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.sd), crs=raster::crs( covarRaster)))
+  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covarRaster)))
+  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.upper), crs=raster::crs( covarRaster)))
   
   res <- list( mean.field=muRaster, samples.all=mu.all, predLocats=predcoords)
   
