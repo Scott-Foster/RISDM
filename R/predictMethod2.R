@@ -78,6 +78,7 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   }
   mu.all <- as.matrix( exp( eta))
   mu.mean <- rowMeans( mu.all)  #mu.cell.mean)
+  mu.median <- apply( mu.all, 1, median)
   mu.sd <- apply( mu.all, 1, sd)  #mu.cell.mean, 1, sd)
   mu.lower <- apply( mu.all, 1, quantile, probs=0.025)
   mu.upper <- apply( mu.all, 1, quantile, probs=0.975)
@@ -98,10 +99,9 @@ PopEstimate <- function( preds, probs=c(0.025,0.975), intercept.terms=NULL){
     stop( "intercept.terms specified are not part of the model. Please check call and model.")
   
   if( is.null( intercept.terms)){
-    message( "Assuming that Intercept terms have already been included in predictions.  See ?predict.isdm for how to include them.")
+    message( "Assuming that Intercept terms have already been included in predictions.  Is this what you want? See ?predict.isdm for how to include them.")
   }
   else{
-    message("Adding specified intercept terms.")
     int.contr <- preds$fixedSamples[preds$fixed.names %in% intercept.terms,,drop=FALSE]
     int.contr <- colSums( int.contr)
     int.contr <- exp( int.contr)
@@ -112,8 +112,6 @@ PopEstimate <- function( preds, probs=c(0.025,0.975), intercept.terms=NULL){
   samplePopN <- colSums( preds$cell.samples)
   quants <- quantile( samplePopN, probs=probs)
   
-#  sample.preds <- matrix( rpois(n=prod( dim( preds$sample.cell.mean)), lambda=preds$sample.cell.mean), 
-#                          nrow=nrow( preds$sample.cell.mean), ncol=ncol( preds$sample.cell.mean))
   samplePopN.pred <- rpois( n=length( samplePopN), lambda=samplePopN)
   quants.preds <- quantile( samplePopN.pred, probs=probs)
   

@@ -81,33 +81,10 @@ makeFormula <- function( dform, bform, aforms, addRE=TRUE) {
     if( !is.null( tmpForm)){
       addTerms <- as.character( tmpForm)
       addTerms <- addTerms[length(addTerms)]
-      #formmy <- update( formmy, paste0("~.+Intercept.",ii,"/",addTerms))
-#      if( ii != "DC")
-        formmy <- update( formmy, paste0("~.+Intercept.",ii,"/(",addTerms,")"))
-#      else
-#        formmy <- update( formmy, paste0("~.+Intercept.",ii,":(",addTerms,")"))
+      formmy <- update( formmy, paste0("~.+Intercept.",ii,"/(",addTerms,")"))
     }
   }
-  
-  #   
-  #   
-  #   if( !is.null( bforms[[ii]])){
-  #     tmpForm <- update( bforms[[ii]], "~.-0-1")
-  #     addTerms <- as.character( tmpForm)
-  #     addTerms <- addTerms[length(addTerms)]
-  #     #formmy <- update( formmy, paste0("~.+Intercept.",ii,"/",addTerms))
-  #     formmy <- update( formmy, paste0("~.+Intercept.",ii,"/(",addTerms,")"))
-  #   }
-  # }
-  # #DC doesn't want/need an intercept at all.  Treat it as a special case
-  # if( !is.null( bforms[["DC"]])){
-  #   tmpForm <- update( bforms[["DC"]], "~.-0-1")
-  #   addTerms <- as.character( tmpForm)
-  #   addTerms <- addTerms[length(addTerms)]
-  #   formmy <- update( formmy, paste0("~.+Intercept.DC:(",addTerms,")"))
-  # }
-  # 
-  
+    
   if( addRE)
     formmy <- update( formmy, "~ . + f(isdm.spat.XXX,model=my.spde)") #index is always assumed to be "isdm.spat.XXX" and spde model is always "my.spde"
   if( length( formmy)==3)
