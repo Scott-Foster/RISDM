@@ -67,9 +67,6 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   samples$fixedEffects <- samples$fixedEffects[fix.subset[fix.names.ord],]
   X <- X[,order( colnames( X))]
   
-  #the size of a grid cell
-#  areaGrid <- prod( raster::res( covarRaster))  #assumed to be the same for all cells (not lat long)
-
   #predictions due to only fixed effects
   eta <- X %*% samples$fixedEffects + log( as.numeric( myCellAreas))
   
@@ -80,12 +77,6 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
     eta <- eta + A.prd %*% samples$fieldAtNodes
   }
   mu.all <- as.matrix( exp( eta))
-#  if( nDClevs>0){
-#    cellIDs <- rep( 1:(nrow( covarData) %/% 3), each=nDClevs)
-#    mu.cell.mean <- apply( mu.all, 2, function(xx) tapply( xx, cellIDs, mean))
-#  }
-#  else
-#    mu.cell.mean <- mu.all
   mu.mean <- rowMeans( mu.all)  #mu.cell.mean)
   mu.sd <- apply( mu.all, 1, sd)  #mu.cell.mean, 1, sd)
   mu.lower <- apply( mu.all, 1, quantile, probs=0.025)
@@ -96,12 +87,19 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covarRaster)))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.upper), crs=raster::crs( covarRaster)))
   
-  res <- list( mean.field=muRaster, cell.samples=mu.all, samples=samples, fixedSamples=allFixedEffectSamples, predLocats=predcoords)
+  res <- list( mean.field=muRaster, cell.samples=mu.all, samples=samples, fixedSamples=allFixedEffectSamples, fixed.names=fit$mod$names.fixed, predLocats=predcoords)
   
   return( res)
 }
 
-PopEstimate <- function( preds, probs=c(0.025,0.975)){
+PopEstimate <- function( preds, probs=c(0.025,0.975), intercept.terms=NULL){
+
+  if( is.null( intercept.terms))
+    message( "Assuming that Intercept terms have already been included in predictions.  See ?predict.isdm for how to include them.")
+  else{
+    message("To do")
+  }
+
   samplePopN <- colSums( preds$cell.samples)
   quants <- quantile( samplePopN, probs=probs)
   
