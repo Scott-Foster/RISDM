@@ -10,9 +10,9 @@
 
 
 #function to draw samples from posterior (hyperparams independet of fixed, unfortunately)
-draw.posterior.samps <- function(inla.fm, B=100, what="params", field="iSpat") 
+draw.posterior.samps <- function(inla.fm, B=100, what="params", field="iSpat",n.threads=parallel::detectCores()-1) 
 {
-  #Arguemtn "what" is either "params", in which case function will return the fixed effects and hyper-params (all in one matrix)
+  #Argument "what" is either "params", in which case function will return the fixed effects and hyper-params (all in one matrix)
   #or it is "effects" in which case it returns a matrix of fixed effects and a matrix of random effects.
   if( what=="params"){
     p.fixed <- nrow( inla.fm$summary.fixed)
@@ -39,7 +39,7 @@ draw.posterior.samps <- function(inla.fm, B=100, what="params", field="iSpat")
   #else not needed as return already called.
   p.fixed <- nrow( inla.fm$summary.fixed)
   #take the sample
-  tmp <- INLA::inla.posterior.sample( n=B, result=inla.fm, num.threads=parallel::detectCores(), add.names=FALSE)
+  tmp <- INLA::inla.posterior.sample( n=B, result=inla.fm, num.threads=n.threads, add.names=FALSE)
   #table( Reduce( rbind, strsplit(rownames( tmp[[1]]$latent), ":"))[,1])
   iSpat.id <- grep( field, rownames( tmp[[1]]$latent))
   res  <- list()

@@ -1,6 +1,6 @@
 
 #Function to get prediction from a fitted INLA model.
-predict.isdm <- function( fit, covarRaster, S=500, intercept=NULL, n.threads=NULL){
+predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threads=NULL){
   
   ####determine the number of threads to use.  Default is to use the same as the fit
   if( is.null( n.threads))
@@ -27,40 +27,42 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept=NULL, n.threads=NUL
   predcoords <- predcoords[noNAid,]
   covarData <- covarData[noNAid,, drop=FALSE]
   myCellAreas <- myCellAreas[noNAid,,drop=FALSE]
-  if( any( grepl( paste0("Intercept.DC:",attr(fit,"DCobserverInfo")$SurveyID), fit$mod$names.fixed))){
-    covarData$Intercept.DC <- 1
-    nDClevs <- length( attr( fit, "DCSurveyIDLevels"))
-    tmp <- covarData[rep( 1:nrow( covarData), each=nDClevs),, drop=FALSE]
-    tmp$tmptmptmp <- as.factor( rep( attr( fit, "DCSurveyIDLevels"), each=nrow( covarData)))
-    colnames(tmp)[colnames( tmp)=="tmptmptmp"] <- attr(fit,"DCobserverInfo")$SurveyID
-    covarData <- tmp
-    rm(tmp)
-    predcoordsExpand <- predcoords[rep( 1:nrow( predcoords), each=nDClevs),]
-  }
-  else {
-    nDClevs <- 0
-    predcoordsExpand <- predcoords
-    if( "Intercept.AA" %in% fit$mod$names.fixed)
-      covarData$Intercept.AA <- 1
-    else {
-      if( "Intercept.PA" %in% fit$mod$names.fixed)
-        covarData$Intercept.PA <- 1
+  
+  if( !is.null( intercept.terms))
+    for( ii in 1:length( intercept.terms)){
+      covarData$tmptmptmptmp <- 1
+      colnames( covarData)[ ncol( covarData)] <- intercept.terms[ii]
+    }
+  else{
+    if( "Intercept.DC" %in% fit$mod$names.fixed) 
+      covarData$Intercept.DC <- 1
+    else{
+      if( "Intercept.AA" %in% fit$mod$names.fixed)
+	covarData$Intercept.AA <- 1
       else {
-        if( "Intercept.PO" %in% fit$mod$names.fixed)
-          covarData$Intercept.PO <- 1
-      }}}
+	if( "Intercept.PA" %in% fit$mod$names.fixed)
+	  covarData$Intercept.PA <- 1
+	else {
+	  if( "Intercept.PO" %in% fit$mod$names.fixed)
+	    covarData$Intercept.PO <- 1
+	}
+      }
+    }
+  }
+  
   #the model matrix
   myForm <- fit$distributionFormula
-  if( "Intercept.DC" %in% colnames( covarData))
-    myForm <- update( myForm, paste0("~.-1+Intercept.DC/",attr(fit,"DCobserverInfo")$SurveyID))
-  else
-    myForm <- update( myForm, paste0("~.-1+",colnames( covarData)[grep( "Intercept.", colnames( covarData))]))
+#  if( "Intercept.DC" %in% colnames( covarData))
+#    myForm <- update( myForm, paste0("~.-1+Intercept.DC/",attr(fit,"DCobserverInfo")$SurveyID))
+#  else
+  myForm <- update( myForm, paste0("~.-1+",paste( intercept.terms, collapse="+")))  #colnames( covarData)[grep( "Intercept.", colnames( covarData))]))
   
   X <- model.matrix( myForm, data=covarData)
   
   #sorting the design matrix and the effects so that they match
   fix.names <- fit$mod$names.fixed
   #those (factor levels) that are made when producing (constrained/unconstrained) design matrix
+  #update 30/5/2022 -- this shouldn't do anything?
   missedLevels <- setdiff( colnames( X), fix.names)
   if( length( missedLevels)>0){
     fix.names <- c( fix.names, missedLevels)
@@ -85,20 +87,19 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept=NULL, n.threads=NUL
     eta <- eta + A.prd %*% samples$fieldAtNodes
   }
   mu.all <- as.matrix( exp( eta))
-  if( nDClevs>0){
-    cellIDs <- rep( 1:(nrow( covarData) %/% 3), each=nDClevs)
-    mu.cell.mean <- apply( mu.all, 2, function(xx) tapply( xx, cellIDs, mean))
-  }
-  else
-    mu.cell.mean <- mu.all
-  mu.mean <- rowMeans( mu.cell.mean)
-  mu.sd <- apply( mu.cell.mean, 1, sd)
-  
-  
+#  if( nDClevs>0){
+#    cellIDs <- rep( 1:(nrow( covarData) %/% 3), each=nDClevs)
+#    mu.cell.mean <- apply( mu.all, 2, function(xx) tapply( xx, cellIDs, mean))
+#  }
+#  else
+#    mu.cell.mean <- mu.all
+  mu.mean <- rowMeans( mu.all)  #mu.cell.mean)
+  mu.sd <- apply( mu.all, 1, sd)  #mu.cell.mean, 1, sd)
+    
   muRaster <- raster::rasterFromXYZ( cbind( predcoords, mu.mean), crs=raster::crs( covarRaster))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.sd), crs=raster::crs( covarRaster)))
   
-  res <- list( mean.field=muRaster, sample.cell.mean=mu.cell.mean, samples.all=mu.all, predLocats=predcoords)
+  res <- list( mean.field=muRaster, samples.all=mu.all, predLocats=predcoords)
   
   return( res)
 }

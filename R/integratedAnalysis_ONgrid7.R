@@ -108,6 +108,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   }
   else
     attr( res, "DCobserverInfo") <- attr( res, "DCSurveyIDLevels") <- NULL
+  attr( res, "n.threads") <- control$n.threads
 
   class( res) <- "isdm"
   
