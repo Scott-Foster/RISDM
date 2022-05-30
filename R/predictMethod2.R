@@ -5,6 +5,9 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   ####determine the number of threads to use.  Default is to use the same as the fit
   if( is.null( n.threads))
     n.threads <- attr( fit, 'n.threads')
+    
+  if( !all( intercept.terms %in% fit$mod$names.fixed))
+    error( "One or more of the intercept.terms supplied is not in the model.  Please check.")
   
   ####Get (grid of) predictions
   #build predictions
