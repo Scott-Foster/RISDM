@@ -13,6 +13,7 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   #build predictions
   message( "INLA::draw.posterior.samps will sometimes produce warnings. These seem to be internally corrected within INLA -- please ignore (for now).")
   samples <- draw.posterior.samps(fit$mod, B=S, what="effects", field="isdm.spat.XXX")
+  allFixedEffectSamples <- samples$fixedEffects
   message( "Any warnings from now on should be taken more seriously.")
   
   #a data.frame containing prediciton points (no NAs).
@@ -95,7 +96,7 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covarRaster)))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.upper), crs=raster::crs( covarRaster)))
   
-  res <- list( mean.field=muRaster, cell.samples=mu.all, samples=samples, predLocats=predcoords)
+  res <- list( mean.field=muRaster, cell.samples=mu.all, samples=samples, fixedSamples=allFixedEffectSamples, predLocats=predcoords)
   
   return( res)
 }
