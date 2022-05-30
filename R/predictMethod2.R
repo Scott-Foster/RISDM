@@ -94,10 +94,19 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
 
 PopEstimate <- function( preds, probs=c(0.025,0.975), intercept.terms=NULL){
 
-  if( is.null( intercept.terms))
+  if( !all( intercept.terms %in% preds$fixed.names))
+    stop( "intercept.terms specified are not part of the model. Please check call and model.")
+  
+  if( is.null( intercept.terms)){
     message( "Assuming that Intercept terms have already been included in predictions.  See ?predict.isdm for how to include them.")
+  }
   else{
-    message("To do")
+    message("Adding specified intercept terms.")
+    int.contr <- preds$fixedSamples[preds$fixed.names %in% intercept.terms,,drop=FALSE]
+    int.contr <- colSums( int.contr)
+    int.contr <- exp( int.contr)
+    tmp <- sweep( x=preds$cell.samples, MARGIN=2, STATS=int.contr, FUN="*")
+    preds$cell.samples <- tmp
   }
 
   samplePopN <- colSums( preds$cell.samples)
