@@ -1,6 +1,6 @@
 
 #Function to get prediction from a fitted INLA model.
-predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threads=NULL){
+predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threads=NULL, includeRandom=TRUE, includeFixed=TRUE){
   
   ####determine the number of threads to use.  Default is to use the same as the fit
   if( is.null( n.threads))
@@ -67,11 +67,15 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   samples$fixedEffects <- samples$fixedEffects[fix.subset[fix.names.ord],]
   X <- X[,order( colnames( X))]
   
+  #predictions start with cell area
+  eta <- log( as.numeric( myCellAreas))
+  
   #predictions due to only fixed effects
-  eta <- X %*% samples$fixedEffects + log( as.numeric( myCellAreas))
+  if( includeFixed==TRUE)
+    eta <- eta + X %*% samples$fixedEffects
   
   #adding in the random effects, if present
-  if( length( samples$fieldAtNodes[[1]])!=0){
+  if( length( samples$fieldAtNodes[[1]])!=0 & includeRandom==TRUE){
     #projector matrix( linking prediction points to mesh)
     A.prd <- INLA::inla.spde.make.A( fit$mesh, loc=predcoords)
     eta <- eta + A.prd %*% samples$fieldAtNodes
