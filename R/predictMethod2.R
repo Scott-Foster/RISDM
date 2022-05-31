@@ -2,6 +2,9 @@
 #Function to get prediction from a fitted INLA model.
 predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threads=NULL, includeRandom=TRUE, includeFixed=TRUE){
   
+  if( !includeRandom & ! includeFixed)
+    stop( "Neither fixed nor random included in model predictions. Please choose one or (probably) both.")
+  
   ####determine the number of threads to use.  Default is to use the same as the fit
   if( is.null( n.threads))
     n.threads <- attr( fit, 'n.threads')
