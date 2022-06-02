@@ -1,3 +1,47 @@
+
+checkInput <- function( respNames, biasForm, arteForm, DCobsInfo, obsList){
+  
+  #checking the input for obvious inconsistencies
+  
+  if( all( is.null( respNames)))
+    stop("No response specified.  Please do so through responseNames argument.")
+  if( length( responseNames)<1 | length( responseNames)>3)
+    stop("Please specify responseNames as a named vector (no response required for PO or DC, see DCobserverInfo).  See help for guidance.")
+  
+  if( !is.formula( biasForm))
+    stop("Please specify biasFormulas as a formula.  See help for guidance.")
+
+  if( length( arteForm)<1 | length( arteForm)>3)
+    stop("Please specify artefactFormulas as a named list of length 3 or less.  See help for guidance.")
+  
+  if( length( DCobserverInfo) != 4)
+    stop("Please specify DCobserverInfo as a named list of exactly length 4.  See help for guidance.")
+  
+  if( all( is.null( obsList)))
+    stop("No data specified.  Please do so through observationList argument.")
+  
+  #are the pieces available for PO?
+  if( any( c( is.null( obsList$POdat), is.null( biasForm))))
+    if ( !all( c( is.null( obsList$POdat), is.null( biasForm))))
+      stop("To include PO data, you *must* supply observationList$POdat (argument) AND a biasFormula")
+  #are the pieces available for PA?
+  if( any( c( is.null( obsList$PAdat), is.na( respNames["PA"]), is.null( arteForm[["PA"]]))))
+    if( !all( c( is.null( obsList$PAdat), is.na( respNames["PA"]), is.null( arteForm[["PA"]]))))
+      stop("To include PA data, you *must* supply observationList$PAdat (argument) AND an entry in responseNames AND an entry in artefactFormulas")
+  #are the pieces available for AA?
+  if( any( c( is.null( obsList$AAdat), is.na( respNames["AA"]), is.null( arteForm[["AA"]]))))
+    if( !all( c( is.null( obsList$AAdat), is.na( respNames["AA"]), is.null( arteForm[["AA"]]))))
+      stop("To include AA data, you *must* supply observationList$AAdat (argument) AND an entry in responseNames AND an entry in artefactFormulas")
+  #are the pieces available for DC?
+  if( any( c( is.null( obsList$DCdat), is.null( biasForm[["DC"]]), is.null( DCobserverInfo)))){
+    if( !all( c( is.null( obsList$DCdat), is.null( biasForm[["DC"]]))))
+      stop("To include DC data, you *must* supply observationList$DCdat (argument) AND an entry in biasFormulas AND the information about observers (DCobserverInfo")
+    else
+      rm( DCobserverInfo)
+  }
+  
+  return( TRUE)  #if execution makes it this far
+}
 getVarNames <- function( fo, foList){
 
   varNames <- NULL
@@ -5,14 +49,17 @@ getVarNames <- function( fo, foList){
     varNames <- attr( terms( fo), "term.labels")
   for( ii in names( foList))
     if( !is.null( foList[[ii]]))
-      varNames <- c( varNames, attr( terms( foList[[ii]]), "term.labels"))
+      varNames <- c( varNames, setdiff( as.character( attr( terms( foList[[ii]]), "variables")), "list"))
+#      varNames <- c( varNames, attr( terms( foList[[ii]]), "term.labels"))
 
     varNames <- unique( varNames)
 
     return( varNames)
 }
 
-makeFormula <- function( dform, bforms) {
+makeFormula <- function( dform, bforms, addRE=TRUE) {
+  #not going to use a combined intercept.  Rather let each data type have its own
+  
   #try/do add the bias specific terms to each of the different data types.  Do so by including a nested effect within intercept types
   formmy  <- dform
   for( ii in c("PO","PA","AA")){
@@ -24,9 +71,15 @@ makeFormula <- function( dform, bforms) {
       formmy <- update( formmy, paste0("~.+Intercept.",ii,"/(",addTerms,")"))
     }
   }
-  #not going to use a combined intercept.  Rather let each data type have its own
-  #formmy <- update( formmy, "~ Intercept + .")
-  formmy <- update( formmy, "~ . + f(i,model=my.spde)") #index is always assumed to be "i" and spde model is always "my.spde"
+  #DC doesn't want/need an intercept at all.  Treat it as a special case
+  if( !is.null( bforms[["DC"]])){
+    tmpForm <- update( bforms[["DC"]], "~.-0-1")
+    addTerms <- as.character( tmpForm)
+    addTerms <- addTerms[length(addTerms)]
+    formmy <- update( formmy, paste0("~.+Intercept.DC:(",addTerms,")"))
+  }
+  if( addRE)
+    formmy <- update( formmy, "~ . + f(isdm.spat.XXX,model=my.spde)") #index is always assumed to be "isdm.spat.XXX" and spde model is always "my.spde"
   if( length( formmy)==3)
     warning( "Ignoring distributionFormula's outcome and replacing with 'resp' (data generated internally)" )
   formmy <- update( formmy, "resp~.")
@@ -56,6 +109,10 @@ makeFamLink <- function( ind) {
     fammy["AA"] <- "poisson"
     linkky[["AA"]] <- list(link="log")
   }
+  if( ind["DC"]==1){
+    fammy["DC"] <- "poisson"
+    linkky[["DC"]] <- list(link="log")
+  }
   #remove the NA entries
   fammy <- fammy[!is.na( fammy)]
 
@@ -66,7 +123,8 @@ makeFamLink <- function( ind) {
     linkID <- which( names( fammy) == "AA")
   if( is.na( linkID) & ( "PA" %in% names( fammy)))
     linkID <- which( names( fammy) == "PA")
-
+  if( is.na( linkID) & ( "DC" %in% names( fammy)))
+    linkID <- which( names( fammy) == "DC")
   #  if( length( fammy)==1)
   #    linkky <- linkky[[1]]  #remove a level of the listing for INLA call.
 
@@ -77,10 +135,10 @@ makeFamLink <- function( ind) {
   return( res)
 }
 
-makeCombinedStack <- function( POdat, PAdat, AAdat, covarBrick, Mesh, contr, varNames, rasterVarNames, sampleAreaNames, responseNames) {
+makeCombinedStack <- function( POdat, PAdat, AAdat, DCdat, covarBrick, Mesh, contr, varNames, rasterVarNames, sampleAreaNames, responseNames) {
 
   #indicator for presence of data sets
-  ind <- c( PO=0, PA=0, AA=0) #for PO, PA, AA  Others to come later...
+  ind <- c( PO=0, PA=0, AA=0, DC=0) #for PO, PA, AA  Others to come later...
 
   if( !is.null( POdat)){
     ind["PO"] <- 1
@@ -103,7 +161,12 @@ makeCombinedStack <- function( POdat, PAdat, AAdat, covarBrick, Mesh, contr, var
     tmp <- as.data.frame( cbind( AAdat, raster::extract( x=covarBrick, AAdat[,contr$coord.names])))
     AAdat <- sp::SpatialPointsDataFrame( coords=tmp[,contr$coord.names], data=tmp)
   }
-
+  if( !is.null( DCdat)){
+    ind["DC"] <- 1
+    tmp <- as.data.frame( cbind( DCdat, raster::extract( x=covarBrick, DCdat[,contr$coord.names])))
+    DCdat <- sp::SpatialPointsDataFrame( coords=tmp[,contr$coord.names], data=tmp)
+  }
+  
   if( ! all( names( ind)[ind==1] %in% names( responseNames)))
     stop( "Data supplied with no response variable.  Please check responseNames argument and make sure it matches the data input.")
   if( ! all( names( responseNames) %in% names( ind)[ind==1]))
@@ -118,17 +181,18 @@ makeCombinedStack <- function( POdat, PAdat, AAdat, covarBrick, Mesh, contr, var
     tmp <- switch( names( ind)[ss],  #obtuse way to get it, but it preserves the names
                    PO = MakePPPstack( observs=POdat, Mesh=Mesh, presname=contr$presence, ind=ind, varNames=rasterVarNames),
                    PA = MakePAstack( observs=PAdat, mesh=Mesh$mesh, presname=responseNames["PA"], tag = "PA", varNames=varNames, sampleAreaName=sampleAreaNames["PA"], ind=ind),
-                   AA = MakeAAStack( observs=AAdat, mesh=Mesh$mesh, abundname=responseNames["AA"], tag="AA", varNames=varNames, sampleAreaName=sampleAreaNames["AA"], ind=ind))
+                   AA = MakeAAStack( observs=AAdat, mesh=Mesh$mesh, abundname=responseNames["AA"], tag="AA", varNames=varNames, sampleAreaName=sampleAreaNames["AA"], ind=ind),
+                   DC = MakeDCStack( observs=DCdat, mesh=Mesh$mesh, DCname=responseNames["DC"], tag="DC", varNames=varNames, sampleAreaName=sampleAreaNames["DC"], ind=ind))
     if( is.null( stck))
       stck <- tmp
     else
       stck <- INLA::inla.stack( stck, tmp)
   }
-  pred.stck <- MakePredictionStack( mesh=Mesh$mesh, covar_raster_data=covarBrick, tag='pred', varNames=rasterVarNames, ind=ind)
-  stck <- INLA::inla.stack( stck, pred.stck$stk)
+#  pred.stck <- MakePredictionStack( mesh=Mesh$mesh, covar_raster_data=covarBrick, tag='pred', varNames=rasterVarNames, ind=ind)
+#  stck <- INLA::inla.stack( stck, pred.stck$stk)
 
   attr( stck, "ind") <- ind
-  attr( stck, "predcoords") <- pred.stck$predcoords
+#  attr( stck, "predcoords") <- pred.stck$predcoords
 
   return( stck)
 }
@@ -137,10 +201,10 @@ makeControl <- function( contr) {
 
   if( ! "n.threads" %in% names( contr))  #number of cores to use.  Default is greedy but not super-super greedy
     contr$n.threads <- parallel::detectCores()-1
-  if( ! "tag.pred" %in% names( contr))  #how to reference the predictions in the output
-    contr$tag.pred <- "pred"
-  if( ! "spat.index" %in% names( contr))  #name for the spatial term
-    contr$spat.index <- "i"
+#  if( ! "tag.pred" %in% names( contr))  #how to reference the predictions in the output
+#    contr$tag.pred <- "pred"
+#  if( ! "spat.index" %in% names( contr))  #name for the spatial term
+#    contr$spat.index <- "i"
   if( ! "coord.names" %in% names( contr))
     contr$coord.names <- c("Easting","Northing")
 #  if( ! "Meshpars" %in% names( contr))   #constraints on mesh creation
@@ -159,11 +223,13 @@ makeControl <- function( contr) {
     contr$prior.space.sigma <- c(1, 0.01)
   if( !"verbose" %in% names( contr))
     contr$verbose <- FALSE
-
+  if( !"addRandom" %in% names( contr))
+    contr$addRandom <- TRUE
+  
   #add to as we go along
   if( !all( names( contr) %in% c("n.threads","tag.pred","spat.index", "coord.names", "verbose",
                                  #"Meshpars",
-                                 "prior.mean","int.prec","other.prec", "calcICs", "prior.range", "prior.space.sigma")))
+                                 "prior.mean","int.prec","other.prec", "calcICs", "prior.range", "prior.space.sigma", "addRandom")))
     warning( "There are control parameters specified that are not used.")
   return( contr)
 }
@@ -176,35 +242,35 @@ makeControl <- function( contr) {
 
 # An INLA stack onto which new data can be projected
 
-MakePredictionStack <- function( mesh, covar_raster_data, tag='pred', varNames, ind) {
-
-  #get the coordinates of the prediction points
-  predcoords <- raster::coordinates( covar_raster_data)
-  #extract the covariates
-  covarData <- raster::extract( covar_raster_data, predcoords[,1:2])[,varNames]
-
-  #find the na positions and remove them.
-  na.id <- apply( covarData, 1, function(x) any( is.na( x)))
-  predcoords <- predcoords[!na.id,]
-  covarData <- as.data.frame( covarData[!na.id,])
-
-  #  covarData$Intercept <- 1
-  covarData <- cbind( covarData, 1)
-  for( ii in c("PO","AA","PA")){  #ordered in decreasing preference for prediction levels
-    if( ind[ii]==1)
-      colnames( covarData)[ncol(covarData)] <- paste0("Intercept.",ii)
-  }
-
-  resp <- matrix( NA, nrow=nrow( covarData), ncol=sum( ind))
-
-  projgrid <- INLA::inla.mesh.projector( mesh, predcoords)
-
-  # stack the predicted data
-  stk <- INLA::inla.stack(list(resp=resp, e=rep(0, nrow(covarData))),
-                    A=list(1,projgrid$proj$A), tag=tag, effects=list(covarData, list(i=1:mesh$n)))
-  pred=list(stk=stk, predcoords=predcoords)
-  return( pred)
-}
+# MakePredictionStack <- function( mesh, covar_raster_data, tag='pred', varNames, ind) {
+# 
+#   #get the coordinates of the prediction points
+#   predcoords <- raster::coordinates( covar_raster_data)
+#   #extract the covariates
+#   covarData <- raster::extract( covar_raster_data, predcoords[,1:2])[,varNames]
+# 
+#   #find the na positions and remove them.
+#   na.id <- apply( covarData, 1, function(x) any( is.na( x)))
+#   predcoords <- predcoords[!na.id,]
+#   covarData <- as.data.frame( covarData[!na.id,])
+# 
+#   #  covarData$Intercept <- 1
+#   covarData <- cbind( covarData, 1)
+#   for( ii in c("PO","AA","PA")){  #ordered in decreasing preference for prediction levels
+#     if( ind[ii]==1)
+#       colnames( covarData)[ncol(covarData)] <- paste0("Intercept.",ii)
+#   }
+# 
+#   resp <- matrix( NA, nrow=nrow( covarData), ncol=sum( ind))
+# 
+#   projgrid <- INLA::inla.mesh.projector( mesh, predcoords)
+# 
+#   # stack the predicted data
+#   stk <- INLA::inla.stack(list(resp=resp, e=rep(0, nrow(covarData))),
+#                     A=list(1,projgrid$proj$A), tag=tag, effects=list(covarData, list(i=1:mesh$n)))
+#   pred=list(stk=stk, predcoords=predcoords)
+#   return( pred)
+# }
 
 # Function to create stack for ABUNDANCE absence points
 
@@ -216,6 +282,39 @@ MakePredictionStack <- function( mesh, covar_raster_data, tag='pred', varNames, 
 
 # An INLA stack with binomial data: include Ntrials, which is the number of trials
 
+MakeDCStack=function( observs, mesh = NULL, DCname = "DCabund", tag = "DC", varNames, sampleAreaName, ind) {
+  
+  #casting to numeric
+  y.pp <- as.integer( observs@data[,DCname])
+  
+  #the area sampled
+  offy <- observs@data[,sampleAreaName]
+  
+  #covariates 'n' stuff
+  tmp <- varNames %in% colnames( observs@data)
+  if( ! all( tmp))
+    warning( "Not all bias covariates in DC data. Missing: ", paste(varNames[!tmp], sep=" "), "Creating variable and padding with NAs.")
+  tmptmp <- matrix( NA, nrow=nrow( observs@data), ncol=sum( !tmp), dimnames=list( NULL, varNames[!tmp]))
+  observs@data <- cbind( observs@data, as.data.frame( tmptmp))
+  
+  covars <- as.data.frame( observs@data[,varNames])
+  
+  covars$Intercept.DC <- 1
+  
+  resp <- matrix( NA, nrow=nrow( covars), ncol=sum( ind))
+  colnames( resp) <- names( ind[ind!=0])  #name the variables
+  resp[,"DC"] <- y.pp
+  
+  # Projector matrix from mesh to data.
+  projmat <- INLA::inla.spde.make.A(mesh, as.matrix( raster::coordinates( observs))) # from mesh to point observations
+  
+  #make the stack
+  stk.DCabund <- INLA::inla.stack(data=list(resp=resp, e=rep( 1, nrow( covars)), offy=log( offy)),
+                                A=list(1,projmat), tag=tag,
+                                effects=list( covars, list(isdm.spat.XXX=1:mesh$n)))
+  
+  return( stk.DCabund)
+}
 
 MakeAAStack=function( observs, mesh = NULL, abundname = "abund", tag = "AA", varNames, sampleAreaName, ind) {
 
@@ -226,6 +325,12 @@ MakeAAStack=function( observs, mesh = NULL, abundname = "abund", tag = "AA", var
   offy <- observs@data[,sampleAreaName]
 
   #covariates 'n' stuff
+  tmp <- varNames %in% colnames( observs@data)
+  if( ! all( tmp))
+    warning( "Not all bias covariates in AA data. Missing: ", paste( varNames[!tmp], " "), "Creating variable and padding with NAs.")
+  tmptmp <- matrix( NA, nrow=nrow( observs@data), ncol=sum( !tmp), dimnames=list( NULL, varNames[!tmp]))
+  observs@data <- cbind( observs@data, as.data.frame( tmptmp))
+    
   covars <- as.data.frame( observs@data[,varNames])
   #  covars$Intercept <- 1
 
@@ -238,12 +343,12 @@ MakeAAStack=function( observs, mesh = NULL, abundname = "abund", tag = "AA", var
   resp[,"AA"] <- y.pp
 
   # Projector matrix from mesh to data.
-  projmat <- INLA::inla.spde.make.A(mesh, as.matrix( coordinates( observs))) # from mesh to point observations
+  projmat <- INLA::inla.spde.make.A( mesh, as.matrix( raster::coordinates( observs))) # from mesh to point observations
 
   #make the stack
   stk.abund <- INLA::inla.stack(data=list(resp=resp, e=rep( 1, nrow( covars)), offy=log( offy)),
                           A=list(1,projmat), tag=tag,
-                          effects=list( covars, list(i=1:mesh$n)))
+                          effects=list( covars, list(isdm.spat.XXX=1:mesh$n)))
 
   return( stk.abund)
 }
@@ -270,11 +375,15 @@ MakePAstack=function( observs, mesh = NULL, presname = "GroupSize", tag = "PA", 
   offy <- observs@data[,sampleAreaName]
 
   #covariates 'n' stuff
+  tmp <- varNames %in% colnames( observs@data)
+  if( ! all( tmp))
+    warning( "Not all bias covariates in PA data. Missing: ", paste( varNames[!tmp], " "), "Creating variable and padding with NAs.")
+  tmptmp <- matrix( NA, nrow=nrow( observs@data), ncol=sum( !tmp), dimnames=list( NULL, varNames[!tmp]))
+  observs@data <- cbind( observs@data, as.data.frame( tmptmp))
+  
   covars <- as.data.frame( observs@data[,varNames])
-  #  covars$Intercept <- 1  #added as datatype specific terms
 
-  #still need to think about what is going to be the reference level for the overall prevalence
-  #  if( sum( ind) > 1)
+  #intercept added for each data type
   covars$Intercept.PA <- 1
 
   resp <- matrix( NA, nrow=nrow( covars), ncol=sum( ind))
@@ -282,12 +391,12 @@ MakePAstack=function( observs, mesh = NULL, presname = "GroupSize", tag = "PA", 
   resp[,"PA"] <- y.pp
 
   # Projector matrix from mesh to data.
-  projmat <- INLA::inla.spde.make.A(mesh, as.matrix( coordinates( observs))) # from mesh to point observations
+  projmat <- INLA::inla.spde.make.A( mesh, as.matrix( raster::coordinates( observs))) # from mesh to point observations
 
   #make the stack
-  stk.binom <- INLA::inla.stack(data=list(resp=resp, Ntrials=ntrials, offy=log( offy)),
+  stk.binom <- INLA::inla.stack( data=list( resp=resp, Ntrials=ntrials, offy=log( offy)),
                           A=list(1,projmat), tag=tag,
-                          effects=list( covars, list(i=1:mesh$n)))
+                          effects=list( covars, list(isdm.spat.XXX=1:mesh$n)))
 
   return( stk.binom)
 }
@@ -301,7 +410,13 @@ MakePAstack=function( observs, mesh = NULL, presname = "GroupSize", tag = "PA", 
 
 MakePPPstack <- function( observs, Mesh, presname="presence", tag="PO", ind=1, varNames) {
 
-  #following Simpson et al 2016 (off the grid), as described in https://becarioprecario.bitbucket.io/spde-gitbook/ch-lcox.html and Isaac's et al code
+  #following Simpson et al 2016 (off the grid), as described in https://becarioprecario.bitbucket.io/spde-gitbook/ch-lcox.html
+  #originally following Isaac's et al code, but they don't follow the same recipe quite...  This seems much more in line with Simpson et al,
+  #as it incorporates mesh nodes (background points) into the observation model too (doing the point process integration).
+  
+  #Note that the tesselation areas (e.pp from Mesh$w are calcualted using a different method (deldir))
+  #This shouldn't matter, and is faster, and based on Voronoi polygons rather than GIS polygons 
+  #   (see above website Fig 4.3 for some probably effective but odd shapes...)
 
   #the working variate
   y.pp <- c( rep( 0, Mesh$mesh$n), rep( 1, nrow( observs)))
@@ -313,16 +428,14 @@ MakePPPstack <- function( observs, Mesh, presname="presence", tag="PO", ind=1, v
   #mesh nodes to mesh nodes
   imat <- Matrix::Diagonal( Mesh$mesh$n, rep( 1, Mesh$mesh$n))
   #observations to mesh nodes
-  lmat <- INLA::inla.spde.make.A( Mesh$mesh, as.matrix( coordinates( observs)))
+  lmat <- INLA::inla.spde.make.A( Mesh$mesh, as.matrix( raster::coordinates( observs)))
   #entire projection
   A.pp <- rbind( imat, lmat)
 
   #covariates 'n' stuff
   covars <- as.data.frame( rbind( Mesh$covars, as.data.frame( observs)[,varNames]))
 
-  #put in an intercept to use in model -- but not here (added as data-type specific terms)
-  #  covars$Intercept <- 1
-  #  if( sum( ind) > 1)  #put in a constant term for PO data (difference in intensity from PA data)
+  #each data type gets its own intercept
   covars$Intercept.PO <- 1
 
   resp <- matrix( NA, nrow=nrow( covars), ncol=sum( ind))
@@ -332,7 +445,7 @@ MakePPPstack <- function( observs, Mesh, presname="presence", tag="PO", ind=1, v
   #make the stack
   stk.pp <- INLA::inla.stack( data = list( resp = resp, e = e.pp, offy=0),
                         A = list(1, A.pp),
-                        effects = list(covars, list(i = 1:Mesh$mesh$n)),
+                        effects = list(covars, list(isdm.spat.XXX = 1:Mesh$mesh$n)),
                         tag = tag)
   return( stk.pp)
 
@@ -372,8 +485,12 @@ MakeSpatialRegion <- function (data = NULL, coords = c("X", "Y"), mesh, bdry, pr
 
   #find the covariate values under the mesh
   covars <- NULL
-  if( !is.null( dataBrick))
-    covars <- ExtractCovarsAtNodes( mesh=mesh, covars=dataBrick)[,varNames]
+  if( !is.null( dataBrick)){
+    if( ! all( varNames %in% names( dataBrick)))
+      stop( "Covariates in formula not supplied in raster data")
+    tmp <- ExtractCovarsAtNodes( mesh=mesh, covars=dataBrick)
+    covars <- tmp[,varNames]
+  }
 
   return(list(mesh = mesh, w=w, covars=covars))
 }
@@ -387,3 +504,4 @@ ExtractCovarsAtNodes <- function( mesh=NULL, covars=NULL){
 
   return( covarAtLocs)
 }
+
