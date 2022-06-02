@@ -1,6 +1,6 @@
 
 #Function to get prediction from a fitted INLA model.
-predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.threads=NULL, includeRandom=TRUE, includeFixed=TRUE, ...){
+predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.threads=NULL, includeRandom=TRUE, includeFixed=TRUE, type="intensity", ...){
   
   if( !includeRandom & ! includeFixed)
     stop( "Neither fixed nor random included in model predictions. Please choose one or (probably) both.")
@@ -80,16 +80,23 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
     A.prd <- INLA::inla.spde.make.A( object$mesh, loc=predcoords)
     eta <- eta + A.prd %*% samples$fieldAtNodes
   }
-  mu.all <- as.matrix( exp( eta))
-  mu.mean <- rowMeans( mu.all)  #mu.cell.mean)
-  mu.median <- apply( mu.all, 1, stats::median)
-  mu.sd <- apply( mu.all, 1, stats::sd)  #mu.cell.mean, 1, sd)
+  mu.all <- NULL
+  if( type=='intensity')
+    mu.all <- as.matrix( exp( eta))
+  if( type=='probability')
+    mu.all <- as.matrix( 1-exp( -exp( eta)))
+  #if not 'intensity' or 'probability' then must(?!) be link
+  if( is.null( mu.all) & type != "link")
+    stop( "unknown type.  Must be 'intensity', 'probability' or 'link'. Please check function call.")
+  mu.mean <- rowMeans( mu.all)
+#  mu.median <- apply( mu.all, 1, stats::median)
+  mu.sd <- apply( mu.all, 1, stats::sd)
   mu.lower <- apply( mu.all, 1, stats::quantile, probs=0.025)
   mu.upper <- apply( mu.all, 1, stats::quantile, probs=0.975)
       
   muRaster <- raster::rasterFromXYZ( cbind( predcoords, mu.mean), crs=raster::crs( covarRaster))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.sd), crs=raster::crs( covarRaster)))
-  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.median), crs=raster::crs( covarRaster)))
+#  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.median), crs=raster::crs( covarRaster)))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covarRaster)))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.upper), crs=raster::crs( covarRaster)))
   
