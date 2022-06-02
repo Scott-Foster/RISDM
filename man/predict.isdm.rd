@@ -4,7 +4,7 @@
 \description{ This function predicts from an isdm object from the \code{\link{isdm}} function.  It does so by sampling from the approximate posterior of the model and produces a posterior raster.}
 \usage{
  \method{predict}{isdm}( object, covarRaster, S=500, intercept.terms=NULL, 
-			n.threads=NULL, includeRandom=TRUE, includeFixed=TRUE, ...)
+			n.threads=NULL, includeRandom=TRUE, includeFixed=TRUE, type="intensity", ...)
 }
 \arguments{
 \item{object}{An object of class isdm, as obtained from \code{isdm}. No default.}
@@ -14,6 +14,7 @@
 \item{n.threads}{How many threads to spread the computation over. Default is NULL, where the number used to estimate the model (arugment "fit") is used.}
 \item{includeRandom}{Should the random spatial effect be included in the predictions. Default is TRUE, as it nearly always should be (unless you are trying to understand the contribution of the terms).}
 \item{includeFixed}{Should the fixed effects, including the intercept(s), be included in the predictions. Default is TRUE, as it nearly always should be (unless you are trying to understand the contribution of the terms).}
+\item{type}{The type (scale) of prediction. Choices are "intensity" for the parameter of the log-Guass Cox process, "probability" for the probability of having any 1 observation in the prediction cell, or "link" for the linear predictor.}
 \item{...}{Not implemented}
 }
 
