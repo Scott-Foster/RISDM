@@ -24,7 +24,7 @@ set.sim.control <- function( contr){
 }
 
 
-simulate.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA=150, n.AA=50, n.DC=50,
+simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA=150, n.AA=50, n.DC=50,
                            coefs=list(dist=c(-1,-0.25,0.75), bias=c(-2,-1.5)), 
                            DC.pis=matrix( c(0.8,0.76, 0.7,0.73, 0.82,0.67), nrow=3, ncol=2, byrow=TRUE),
                            transect.size = 0.125, #a proportion of cell size.
@@ -48,7 +48,7 @@ simulate.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA=150
     xSeq <- sort( unique( X[,1]))
     ySeq <- sort( unique( X[,2]))
     my.extent <- as.matrix( extent( rasterBoundary))
-    my.scale <- sqrt( (tail( xSeq,1) - head( xSeq,1))^2 + (tail( ySeq,1) - head( ySeq,1))^2) / 10
+    my.scale <- sqrt( (utils::tail( xSeq,1) - utils::head( xSeq,1))^2 + (utils::tail( ySeq,1) - utils::head( ySeq,1))^2) / 10
   }
   
   #define two covariates within the study area
@@ -73,7 +73,7 @@ simulate.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA=150
   
   dataBrick <- raster::brick( raster::rasterFromXYZ( X[,c(1,2,3)]), raster::rasterFromXYZ( X[,c(1,2,4)]), raster::rasterFromXYZ( cbind( X[,1:2], REff)))
   if( !is.null( rasterBoundary))
-    dataBrick <- mask( dataBrick, rasterBoundary)
+    dataBrick <- raster::mask( dataBrick, rasterBoundary)
   dataBrick <- raster::scale( dataBrick, center=TRUE, scale=FALSE)
   X <- raster::as.data.frame( dataBrick, xy=TRUE)
   #linear predictor
@@ -89,8 +89,8 @@ simulate.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA=150
   Intensity <- Intensity / tmp.Lambda  #Intensity should sum to 1
   Intensity <- Intensity * expected.pop.size  #now sum to expected.pop.size
   
-  dataBrick <- addLayer( dataBrick, LinPred)
-  dataBrick <- addLayer( dataBrick, Intensity)
+  dataBrick <- raster::addLayer( dataBrick, LinPred)
+  dataBrick <- raster::addLayer( dataBrick, Intensity)
   
   names( dataBrick) <- c("Altitude","Temperature","REff","logIntensity","Intensity") 
   
@@ -136,7 +136,7 @@ simulate.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA=150
   observs <- matrix( NA, nrow=n.DC, ncol=nrow( DC.pis))
   colnames( observs) <- colnames( tmptmptmp)[1:3]
   for( ii in 1:n.DC)
-    observs[ii,] <- rmultinom( n=1, size=tmpTotCount[ii], prob=cat.pis[tmpID[ii],])[1:3]  #don't want the last one.
+    observs[ii,] <- stats::rmultinom( n=1, size=tmpTotCount[ii], prob=cat.pis[tmpID[ii],])[1:3]  #don't want the last one.
   
   DCData <- cbind( DCData, observs)
   
@@ -178,13 +178,13 @@ simulate.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA=150
   presences <- raster::coordinates( dataBrick)[sampleID,]
 
   if( control$do.plot){
-    par( mfrow=c(4,2))
+    graphics::par( mfrow=c(4,2))
     #PA
     raster::plot( dataBrick$Intensity, main="Intensity")
     raster::plot( PAdata[,1:2], type='n', main="PA survey", xlim=range( xSeq), ylim=range( ySeq), asp=1)
-    points( jitter( PAdata[PAdata$PA==0,1]), jitter( PAdata[PAdata$PA==0,2]), cex=0.5, pch=20, col=grey(0.7))
+    points( jitter( PAdata[PAdata$PA==0,1]), jitter( PAdata[PAdata$PA==0,2]), cex=0.5, pch=20, col=grDevices::grey(0.7))
     points( jitter( PAdata[PAdata$PA==1,1]), jitter( PAdata[PAdata$PA==1,2]), col='red', pch=20, cex=0.5)
-    legend( x="bottomleft", pch=c(20, 20), col=c(grey(0.7),'red'), legend=c("Absence", "Presence"))
+    legend( x="bottomleft", pch=c(20, 20), col=c(grDevices::grey(0.7),'red'), legend=c("Absence", "Presence"))
     #AA
     raster::plot( dataBrick$Intensity, main="Intensity")
     raster::plot( AAData[,1:2], type='n', main="AA survey", xlim=range( xSeq), ylim=range( ySeq), asp=1)

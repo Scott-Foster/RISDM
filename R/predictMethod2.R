@@ -1,21 +1,21 @@
 
 #Function to get prediction from a fitted INLA model.
-predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threads=NULL, includeRandom=TRUE, includeFixed=TRUE){
+predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.threads=NULL, includeRandom=TRUE, includeFixed=TRUE, ...){
   
   if( !includeRandom & ! includeFixed)
     stop( "Neither fixed nor random included in model predictions. Please choose one or (probably) both.")
   
   ####determine the number of threads to use.  Default is to use the same as the fit
   if( is.null( n.threads))
-    n.threads <- attr( fit, 'n.threads')
+    n.threads <- attr( object, 'n.threads')
     
-  if( !all( intercept.terms %in% fit$mod$names.fixed))
-    error( "One or more of the intercept.terms supplied is not in the model.  Please check.")
+  if( !all( intercept.terms %in% object$mod$names.fixed))
+    stop( "One or more of the intercept.terms supplied is not in the model.  Please check.")
   
   ####Get (grid of) predictions
   #build predictions
   message( "INLA::draw.posterior.samps will sometimes produce warnings. These seem to be internally corrected within INLA -- please ignore (for now).")
-  samples <- draw.posterior.samps(fit$mod, B=S, what="effects", field="isdm.spat.XXX")
+  samples <- draw.posterior.samps(object$mod, B=S, what="effects", field="isdm.spat.XXX")
   allFixedEffectSamples <- samples$fixedEffects
   message( "Any warnings from now on should be taken more seriously.")
   
@@ -26,7 +26,7 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   #get the coordinates of the prediction points
   predcoords <- raster::coordinates( covarRaster)
   #extract the covariates
-  rasterVarNames <- getVarNames( fit$distributionFormula, NULL, NULL)
+  rasterVarNames <- getVarNames( object$distributionFormula, NULL, NULL)
   covarData <- as.data.frame( raster::extract( covarRaster, predcoords[,1:2])[,rasterVarNames, drop=FALSE])
   myCellAreas <- as.matrix( raster::extract( covarRaster, predcoords[,1:2])[,"myCellAreas", drop=FALSE])
   #cut down to just those areas without NAs.
@@ -44,19 +44,16 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   }
   
   #the model matrix
-  myForm <- fit$distributionFormula
-#  if( "Intercept.DC" %in% colnames( covarData))
-#    myForm <- update( myForm, paste0("~.-1+Intercept.DC/",attr(fit,"DCobserverInfo")$SurveyID))
-#  else
+  myForm <- object$distributionFormula
   if( !is.null( intercept.terms))
     myForm <- update( myForm, paste0("~.-1+",paste( intercept.terms.legal, collapse="+")))  #colnames( covarData)[grep( "Intercept.", colnames( covarData))]))
   
-  X <- model.matrix( myForm, data=covarData)
+  X <- stats::model.matrix( myForm, data=covarData)
   #undoing the hack from before.
   colnames( X) <- gsub( "XCOLONX", ":", colnames( X))
   
   #sorting the design matrix and the effects so that they match
-  fix.names <- fit$mod$names.fixed
+  fix.names <- object$mod$names.fixed
   #those (factor levels) that are made when producing (constrained/unconstrained) design matrix
   #update 30/5/2022 -- this shouldn't do anything?
   missedLevels <- setdiff( colnames( X), fix.names)
@@ -80,15 +77,15 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   #adding in the random effects, if present
   if( length( samples$fieldAtNodes[[1]])!=0 & includeRandom==TRUE){
     #projector matrix( linking prediction points to mesh)
-    A.prd <- INLA::inla.spde.make.A( fit$mesh, loc=predcoords)
+    A.prd <- INLA::inla.spde.make.A( object$mesh, loc=predcoords)
     eta <- eta + A.prd %*% samples$fieldAtNodes
   }
   mu.all <- as.matrix( exp( eta))
   mu.mean <- rowMeans( mu.all)  #mu.cell.mean)
-  mu.median <- apply( mu.all, 1, median)
-  mu.sd <- apply( mu.all, 1, sd)  #mu.cell.mean, 1, sd)
-  mu.lower <- apply( mu.all, 1, quantile, probs=0.025)
-  mu.upper <- apply( mu.all, 1, quantile, probs=0.975)
+  mu.median <- apply( mu.all, 1, stats::median)
+  mu.sd <- apply( mu.all, 1, stats::sd)  #mu.cell.mean, 1, sd)
+  mu.lower <- apply( mu.all, 1, stats::quantile, probs=0.025)
+  mu.upper <- apply( mu.all, 1, stats::quantile, probs=0.975)
       
   muRaster <- raster::rasterFromXYZ( cbind( predcoords, mu.mean), crs=raster::crs( covarRaster))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.sd), crs=raster::crs( covarRaster)))
@@ -96,7 +93,7 @@ predict.isdm <- function( fit, covarRaster, S=500, intercept.terms=NULL, n.threa
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covarRaster)))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.upper), crs=raster::crs( covarRaster)))
   
-  res <- list( mean.field=muRaster, cell.samples=mu.all, samples=samples, fixedSamples=allFixedEffectSamples, fixed.names=fit$mod$names.fixed, predLocats=predcoords)
+  res <- list( mean.field=muRaster, cell.samples=mu.all, fixedSamples=allFixedEffectSamples, fixed.names=object$mod$names.fixed, predLocats=predcoords)
   
   return( res)
 }
@@ -118,13 +115,13 @@ PopEstimate <- function( preds, probs=c(0.025,0.975), intercept.terms=NULL){
   }
 
   samplePopN <- colSums( preds$cell.samples)
-  quants <- quantile( samplePopN, probs=probs)
+  quants <- stats::quantile( samplePopN, probs=probs)
   
-  samplePopN.pred <- rpois( n=length( samplePopN), lambda=samplePopN)
-  quants.preds <- quantile( samplePopN.pred, probs=probs)
+  samplePopN.pred <- stats::rpois( n=length( samplePopN), lambda=samplePopN)
+  quants.preds <- stats::quantile( samplePopN.pred, probs=probs)
   
-  res <- list( mean=mean( samplePopN), median=median( samplePopN), interval=quants,
-               mean.pred=mean( samplePopN.pred), median.pred=median( samplePopN.pred), interval.preds=quants.preds)
+  res <- list( mean=mean( samplePopN), median=stats::median( samplePopN), interval=quants,
+               mean.pred=mean( samplePopN.pred), median.pred=stats::median( samplePopN.pred), interval.preds=quants.preds)
   
   return( res)
 }

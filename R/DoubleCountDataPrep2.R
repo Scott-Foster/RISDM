@@ -22,7 +22,7 @@ estimatePisDoubleCount <- function( dat){
   start.vals <- colMeans( start.vals, na.rm=TRUE)
   start.vals <- log( start.vals + 0.01)
   
-  tmp <- optim( par=start.vals, fn=DC_loglikFun, dat=dat)
+  tmp <- stats::optim( par=start.vals, fn=DC_loglikFun, dat=dat)
   if( tmp$convergence != 0)
     warning("Nelder-Mead optimisation for expansion points/probabilities has not worked properly (convergence code != 0)")
   expans.pts <- exp( tmp$par)  
@@ -94,7 +94,7 @@ prepareDCdata <- function( DCdat, DCobserverInfo, sampAreaDC, DCmethod){
   kount <- 1
   for( ss in unique( DCdat[,DCobserverInfo$SurveyID])){
     ssID <- which( DCdat[,DCobserverInfo$SurveyID]==ss)
-    tmp[[kount]] <- prepareSingleSurvey( singleDataSet=DCdat[ssID,], datasetID=ss, DCcols=DCcols, survIDname=DCobserverInfo$SurveyID, sampArea=sampAreaDC, DCmethod=DCmethod)
+    tmp[[kount]] <- prepareSingleSurvey( singleDataSet=DCdat[ssID,], datasetID=ss, DCcols=DCcols, survIDname=DCobserverInfo$SurveyID, sampAreaDC=sampAreaDC, DCmethod=DCmethod)
     tmp[[kount]] <- cbind( ss, tmp[[kount]])
     colnames( tmp[[kount]])[1] <- DCobserverInfo$SurveyID
     kount <- kount + 1

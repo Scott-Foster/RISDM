@@ -31,7 +31,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   if( !is.null( observationList$DCdat)){
     responseNames['DC'] <- "DCcountDC"
 ##    warning( "Observer probabilities (for double count data) are assumed to be *within* survey.")
-    observationList$DCdat <- prepareDCdata( DCdat=observationList$DCdat, DCobserverInfo=DCobserverInfo, sampArea=sampleAreaNames["DC"], control$DCmethod)
+    observationList$DCdat <- prepareDCdata( DCdat=observationList$DCdat, DCobserverInfo=DCobserverInfo, sampAreaDC=sampleAreaNames["DC"], control$DCmethod)
     if( control$DCmethod == "TaylorsLinApprox")
       artefactFormulas$DC <- update( artefactFormulas$DC, paste0("~.+", DCobserverInfo$SurveyID,":(alpha1Coef+alpha2Coef)"))
   }

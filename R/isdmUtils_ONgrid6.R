@@ -50,7 +50,7 @@ uniqueVarNames <- function( obsList, arteForm, DCsurvID){
       tmp <- paste( tmp.labels, ii, sep="_")
       dataname <- paste0(ii,"dat")
       colnames( newObs[[dataname]])[colnames( newObs[[dataname]]) %in% attr( tt, "term.labels")] <- tmp
-      newForm[[ii]] <- reformulate( tmp)
+      newForm[[ii]] <- stats::reformulate( tmp)
       environment( newForm[[ii]]) <- environment( arteForm[[ii]])
       environment( newObs[[dataname]]) <- environment( obsList[[dataname]])
     
@@ -282,7 +282,7 @@ makeControl <- function( contr) {
   if( !"returnStack" %in% names( contr))
     contr$returnStack <- FALSE
   if( !"DCmethod" %in% names( contr))
-    contr$DCmethod <- "plugin"  #the other option is "TaylorsLinApprox"
+    contr$DCmethod <- "TaylorsLinApprox"  #the other option is "plugin"
   
   #add to as we go along
   if( !all( names( contr) %in% c("n.threads","tag.pred","spat.index", "coord.names", "verbose",

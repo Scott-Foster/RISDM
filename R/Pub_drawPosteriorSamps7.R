@@ -25,7 +25,7 @@ draw.posterior.samps <- function(inla.fm, B=100, what="params", field="iSpat",n.
     colnames( draws) <- c( rownames( inla.fm$summary.fixed), "Spatial.Variance", "kappa", "Smooth")
   
     tmp <- INLA::inla.posterior.sample( n=B, result=inla.fm, intern=FALSE, add.names=FALSE)
-    latent.ids.wanted <- tail( rownames( tmp[[1]]$latent), p.fixed)
+    latent.ids.wanted <- utils::tail( rownames( tmp[[1]]$latent), p.fixed)
   
     for( ii in 1:p.fixed)
       draws[,ii] <- sapply( tmp, function(x) x$latent[rownames( tmp[[1]]$latent) == latent.ids.wanted[ii],])

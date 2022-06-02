@@ -1,5 +1,5 @@
 
-#taken *directly* (without modifaction) from the supplementary code to 
+#taken *directly* (with only minor modifaction to keep R CMD check happy) from the supplementary code to 
 #   Krainski, E.; Gómez-Rubio, V.; Bakka, H.; Lenzi, A.; Castro-Camilo, D.; Simpson, D.; Lindgren, F. & Rue, H. 
 #     Advanced Spatial Modeling with Stochastic Partial Differential Equations Using R and INLA 
 #     Chapman & Hall/CRC Press, 2019
@@ -10,8 +10,7 @@ book.mesh.dual <- function(mesh) {
   if (mesh$manifold=='R2') {
     ce <- t(sapply(1:nrow(mesh$graph$tv), function(i)
       colMeans(mesh$loc[mesh$graph$tv[i, ], 1:2])))
-    library(parallel)
-    pls <- mclapply(1:mesh$n, function(i) {
+    pls <- parallel::mclapply(1:mesh$n, function(i) {
       p <- unique(Reduce('rbind', lapply(1:3, function(k) {
         j <- which(mesh$graph$tv[,k]==i)
         if (length(j)>0) 
@@ -37,10 +36,10 @@ book.mesh.dual <- function(mesh) {
         yy <- p[,2]-mesh$loc[i, 2]
         xx <- p[,1]-mesh$loc[i, 1]
       }
-      Polygon(p[order(atan2(yy,xx)), ])
+      sp::Polygon(p[order(atan2(yy,xx)), ])
     })
-    return(SpatialPolygons(lapply(1:mesh$n, function(i)
-      Polygons(list(pls[[i]]), i))))
+    return(sp::SpatialPolygons(lapply(1:mesh$n, function(i)
+      sp::Polygons(list(pls[[i]]), i))))
   }
   else stop("It only works for R2!")
 }
