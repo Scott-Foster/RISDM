@@ -43,11 +43,14 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expans.mult=NULL, hull.re
   
   meshy <- INLA::inla.mesh.2d(boundary=hully, max.edge = max.edge, cutoff=cutoff, max.n=max.n, offset=offset)
   
+  boundary <- list( poly=makeBoundary( ras, lowerRes=TRUE, doPlot=FALSE))
+  boundary$ras <- list( higher.res=raster::rasterize( boundary$poly$higher.res, ras), lower.res=raster::rasterize( boundary$poly$lower.res, ras))
+  
   if( doPlot){
     plot( meshy, asp=1)
-    boundary <- makeBoundary( ras, doPlot=FALSE)
-    lines( boundary, col='green')
-    legend("topright", col=c("blue","green"), legend=c("Nonconvex hull defining inner/outer domains","Boundary of raster values"), lty=c(1,1), lwd=c(2,2))
+    sp::plot( boundary$poly$lower.res, add=TRUE, border='green')
+    sp::plot( boundary$poly$higher.res, add=TRUE, border='red')
+    legend("topright", col=c("blue","green",'red'), legend=c("Nonconvex hull defining inner/outer domains","Boundary of raster values (low res)","Boundary of raster values (high res)"), lty=c(1,1), lwd=c(2,2))
   }
   
   meshy$risdmBoundary <- boundary
@@ -126,27 +129,81 @@ makeBoundary <- function( r, lowerRes=TRUE, doPlot=TRUE){
   #lowerRes is Bool to indicate if a lower res version of the boundary is required.  Almost always TRUE, unless original raster is already low res
   #doPlot is bool to indicate if plots of polygon should be produced.
   #returns a SpatialPolygons object containing the outer boundary of the non-NA raster elements.
+  r.orig <- r
   myDims <- dim( r)
   if( myDims[3]>1)
     r <- r[[1]]
+  #higher res poly
+  raster::values( r) <- ifelse( !is.na( raster::values( r)), 1, 0)#ifelse( values( tmp)>-1, 1, NA)
+  statePoly.hi <- raster::rasterToPolygons( x=r, dissolve=TRUE, fun=function(xx){xx==1})  #fun = function(xx) !is.na( xx),
+  #weed out the interior holes.  They aren't so interesting here.  I HOPE!
+  tmp.hi <- as( remove.holes( statePoly.hi), "SpatialPolygons")
+  
+  # nPol <- length( statePoly.hi@polygons[[1]]@Polygons)
+  # exterior <- rep( NA, nPol)
+  # for( ii in 1:nPol)
+  #   exterior[ii] <- !statePoly.hi@polygons[[1]]@Polygons[[ii]]@hole
+  # tmp <- as( statePoly.hi, "SpatialPolygons")
+  # tmp@polygons[[1]]@Polygons <- tmp@polygons[[1]]@Polygons[exterior]
+  # 
+  # 
+  # tmp <- sp::SpatialPolygons( lapply( 1:sum( exterior), function(i) Polygons( tmp@polygons[i], ID="external")), proj4String=CRS(proj4string(NZ)))
+  #   
+  # tmp.hi <- as( tmp, "SpatialPolygons")
+  
+#  res <- lapply(1:length(NZp), function(i) slot(NZp[[i]], "Polygons")[!holes[[i]]])
+#  IDs <- row.names(NZ)
+#  NZfill <- sp::SpatialPolygons( lapply( 1:length(statePoly.hi), function(i) Polygons(res[[i]], ID=IDs[i])), proj4string=CRS(proj4string(NZ)))
+  
+  
+
+  #now to make the lower res poly (for mesh creation)
+  r <- r.orig
   if( lowerRes){
     facs <- myDims[1:2] %/% 100
-    r <- raster::aggregate( r, fact=facs, expand=TRUE, na.rm=TRUE)  #expand means that the new raster contains the old one.
+    if( any( facs >1 ))
+      r <- raster::aggregate( r, fact=facs, expand=TRUE, na.rm=TRUE)  #expand means that the new raster contains the old one.
   }
-  raster::values( r) <- ifelse( !is.na( raster::values( r)), 1, 0)#ifelse( values( tmp)>-1, 1, NA)
-  statePoly <- raster::rasterToPolygons( x=r, dissolve=TRUE, fun=function(xx){xx==1})  #fun = function(xx) !is.na( xx),
+  raster::values( r) <- ifelse( !is.na( raster::values( r)), 1, 0)
+  statePoly.low <- raster::rasterToPolygons( x=r, dissolve=TRUE, fun=function(xx){xx==1}) 
   #weed out the interior holes.  They aren't so interesting here.  I HOPE!
-  nPol <- length( statePoly@polygons[[1]]@Polygons)
-  exterior <- rep( NA, nPol)
-  for( ii in 1:nPol)
-    exterior[ii] <- !statePoly@polygons[[1]]@Polygons[[ii]]@hole
-  tmp <- statePoly
-  tmp@polygons[[1]]@Polygons <- tmp@polygons[[1]]@Polygons[exterior]
-  tmp <- as( tmp, "SpatialPolygons")
-  if( doPlot){
-    raster::plot( r)#covars_low[[9]])
-    sp::plot( tmp, add=TRUE)
-  }
-  return( tmp)
+  tmp.low <- as( remove.holes( statePoly.hi), "SpatialPolygons")
+  # nPol <- length( statePoly.low@polygons[[1]]@Polygons)
+  # exterior <- rep( NA, nPol)
+  # for( ii in 1:nPol)
+  #   exterior[ii] <- !statePoly.low@polygons[[1]]@Polygons[[ii]]@hole
+  # tmp <- statePoly.low
+  # tmp@polygons[[1]]@Polygons <- tmp@polygons[[1]]@Polygons[exterior]
+  # tmp <- as( tmp, "SpatialPolygons")
+  # if( doPlot){
+  #   raster::plot( r)
+  #   sp::plot( tmp, add=TRUE)
+  # }
+  # tmp.low <- tmp
+
+  res <- list( higher.res=tmp.hi, lower.res=tmp.low)  
+  
+  return( res)
+  
 }
 
+remove.holes <- function(x) {
+  #taken verbatim from package spatialEco https://rdrr.io/cran/spatialEco/src/R/remove.holes.R
+  #taken May 6 2022
+  
+  if(!any(which(utils::installed.packages()[,1] %in% "maptools")))
+    stop("please install maptools package before running this function")
+  xp <- slot(x, "polygons")
+  holes <- lapply(xp, function(x) sapply(methods::slot(x, "Polygons"), methods::slot, "hole"))
+  res <- lapply(1:length(xp), function(i) methods::slot(xp[[i]], "Polygons")[!holes[[i]]])
+  IDs <- row.names(x)
+  x.fill <- sp::SpatialPolygons(lapply(1:length(res), function(i)
+    sp::Polygons(res[[i]], ID=IDs[i])), 
+    proj4string=sp::CRS(sp::proj4string(x)))
+  methods::slot(x.fill, "polygons") <- lapply(methods::slot(x.fill, "polygons"), 
+                                              maptools::checkPolygonsHoles)   
+  methods::slot(x.fill, "polygons") <- lapply(methods::slot(x.fill, "polygons"), "comment<-", NULL)   
+  pids <- sapply(methods::slot(x.fill, "polygons"), function(x) methods::slot(x, "ID"))
+  x.fill <- sp::SpatialPolygonsDataFrame(x.fill, data.frame(row.names=pids, ID=1:length(pids)))	   
+  return( x.fill )	   
+}

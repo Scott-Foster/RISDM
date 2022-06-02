@@ -22,7 +22,7 @@
  NULL
 }
 
-\seealso{\code{\link{makeBoundary}}, \code{\link{isdm}}, \code{\link{checkMesh}}, \code{\link{inla.mesh.2d}}, \code{\link{inla}}}
+\seealso{\code{\link{isdm}}, \code{\link{checkMesh}}, \code{\link{inla.mesh.2d}}, \code{\link{inla}}}
 
 \author{Scott D. Foster}
 
