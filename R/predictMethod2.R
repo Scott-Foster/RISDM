@@ -1,9 +1,9 @@
 
 #Function to get prediction from a fitted INLA model.
-predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.threads=NULL, includeRandom=TRUE, includeFixed=TRUE, type="intensity", ...){
+predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.threads=NULL, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...){
   
-  if( !includeRandom & ! includeFixed)
-    stop( "Neither fixed nor random included in model predictions. Please choose one or (probably) both.")
+  if( !includeRandom & !includeFixed & !includeBias)
+    stop( "Neither fixed, random, nor bias included in model predictions. Please choose one or more, but probably fixed and random.")
   
   ####determine the number of threads to use.  Default is to use the same as the fit
   if( is.null( n.threads))
@@ -14,11 +14,9 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   
   ####Get (grid of) predictions
   #build predictions
-  message( "INLA::draw.posterior.samps will sometimes produce warnings. These seem to be internally corrected within INLA -- please ignore (for now).")
   samples <- draw.posterior.samps(object$mod, B=S, what="effects", field="isdm.spat.XXX")
   allFixedEffectSamples <- samples$fixedEffects
-  message( "Any warnings from now on should be taken more seriously.")
-  
+
   #a data.frame containing prediciton points (no NAs).
   #add cell areas first
   covarRaster <- raster::addLayer( covarRaster, raster::raster( terra::cellSize( terra::rast( covarRaster))))
@@ -26,7 +24,7 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   #get the coordinates of the prediction points
   predcoords <- raster::coordinates( covarRaster)
   #extract the covariates
-  rasterVarNames <- getVarNames( object$distributionFormula, NULL, NULL)
+  rasterVarNames <- getVarNames( object$distributionFormula, object$biasFormula, NULL)
   covarData <- as.data.frame( raster::extract( covarRaster, predcoords[,1:2])[,rasterVarNames, drop=FALSE])
   myCellAreas <- as.matrix( raster::extract( covarRaster, predcoords[,1:2])[,"myCellAreas", drop=FALSE])
   #cut down to just those areas without NAs.
@@ -46,7 +44,7 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   #the model matrix
   myForm <- object$distributionFormula
   if( !is.null( intercept.terms))
-    myForm <- update( myForm, paste0("~.-1+",paste( intercept.terms.legal, collapse="+")))  #colnames( covarData)[grep( "Intercept.", colnames( covarData))]))
+    myForm <- update( myForm, paste0("~.-1+",paste( intercept.terms.legal, collapse="+")))
   
   X <- stats::model.matrix( myForm, data=covarData)
   #undoing the hack from before.
@@ -68,18 +66,30 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   X <- X[,order( colnames( X))]
   
   #predictions start with cell area
+  #always included no matter what components are included.
   eta <- log( as.numeric( myCellAreas))
   
   #predictions due to only fixed effects
   if( includeFixed==TRUE)
     eta <- eta + X %*% samples$fixedEffects
   
-  #adding in the random effects, if present
+  #adding in the random effects, if present and wanted
   if( length( samples$fieldAtNodes[[1]])!=0 & includeRandom==TRUE){
     #projector matrix( linking prediction points to mesh)
     A.prd <- INLA::inla.spde.make.A( object$mesh, loc=predcoords)
     eta <- eta + A.prd %*% samples$fieldAtNodes
   }
+  
+  #adding in the bias terms, if wanted.
+  if( includeBias==TRUE){
+    bform <- object$biasFormula
+    bform <- update.formula( bform, "~.-1+Intercept.PO")
+    bX <- stats::model.matrix( bform, data=covarData)
+    
+    
+    eta <- eta + 0
+  }
+  
   mu.all <- NULL
   if( type=='intensity')
     mu.all <- as.matrix( exp( eta))
