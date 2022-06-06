@@ -87,15 +87,17 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   if( includeBias==TRUE){
     bform <- object$biasFormula
     bX <- stats::model.matrix( bform, data=covarData)
-    colnames( bX)[grep( "Intercept", colnames( bX))] <- "Intercept.PO"
+    tmpID <- grepl( "(Intercept)", colnames( bX))
+    colnames( bX)[tmpID] <- "Intercept.PO"
+    colnames( bX)[!tmpID] <- paste0( "Intercept.PO:",colnames( bX)[!tmpID]))
+    bX <- bX[,order( colnames( bX))]
     
-    bfixedNames <- object$mod$names.fixed[grep( "Intercept.PO", object$mod$names.fixed)]
-    newSampsFixedBias <- samples$fixedEffects[object$mod$names.fixed %in% bfixedNames,]
+    tmpID1 <- grep( "Intercept.PO", object$mod$names.fixed)
+    bfixedNames <- object$mod$names.fixed[tmpID1][order( tmpID1)]
+    newSampsFixedBias <- samples$fixedEffects[tmpID1,]
+    newSampsFixedBias <- newSampsFixedBias[order( tmpID1),]
     
-    
-
-    
-    eta <- eta + 0
+    eta <- eta + bX %*% newSampsFixedBias
   }
   
   mu.all <- NULL
