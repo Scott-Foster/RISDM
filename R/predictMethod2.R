@@ -89,7 +89,7 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
     bX <- stats::model.matrix( bform, data=covarData)
     tmpID <- grepl( "(Intercept)", colnames( bX))
     colnames( bX)[tmpID] <- "Intercept.PO"
-    colnames( bX)[!tmpID] <- paste0( "Intercept.PO:",colnames( bX)[!tmpID]))
+    colnames( bX)[!tmpID] <- paste0( "Intercept.PO:",colnames( bX)[!tmpID])
     bX <- bX[,order( colnames( bX))]
     
     tmpID1 <- grep( "Intercept.PO", object$mod$names.fixed)
