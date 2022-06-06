@@ -15,7 +15,6 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   ####Get (grid of) predictions
   #build predictions
   samples <- draw.posterior.samps(object$mod, B=S, what="effects", field="isdm.spat.XXX")
-  allFixedEffectSamples <- samples$fixedEffects
 
   #a data.frame containing prediciton points (no NAs).
   #add cell areas first
@@ -33,46 +32,49 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   covarData <- covarData[noNAid,, drop=FALSE]
   myCellAreas <- myCellAreas[noNAid,,drop=FALSE]
   
-  if( !is.null( intercept.terms)){
-    intercept.terms.legal <- gsub( pattern=":", replacement="XCOLONX", x=intercept.terms)
-    for( ii in 1:length( intercept.terms.legal)){
-      covarData$tmptmptmptmp <- 1
-      colnames( covarData)[ ncol( covarData)] <- intercept.terms.legal[ii]
-    }
-  }
-  
-  #the model matrix
-  myForm <- object$distributionFormula
-  if( !is.null( intercept.terms))
-    myForm <- update( myForm, paste0("~.-1+",paste( intercept.terms.legal, collapse="+")))
-  
-  X <- stats::model.matrix( myForm, data=covarData)
-  #undoing the hack from before.
-  colnames( X) <- gsub( "XCOLONX", ":", colnames( X))
-  
-  #sorting the design matrix and the effects so that they match
-  fix.names <- object$mod$names.fixed
-  #those (factor levels) that are made when producing (constrained/unconstrained) design matrix
-  #update 30/5/2022 -- this shouldn't do anything?
-  missedLevels <- setdiff( colnames( X), fix.names)
-  newSampsFixedDist <- samples$fixedEffects
-  if( length( missedLevels)>0){
-    fix.names <- c( fix.names, missedLevels)
-    newSampsFixedDist <- rbind( samples$fixedEffects, matrix( 0, nrow=length( missedLevels), ncol=ncol( samples$fixedEffects)))
-  }
-  
-  fix.subset <- which( fix.names %in% colnames( X))
-  fix.names.ord <- order( fix.names[fix.subset])
-  newSampsFixedDist <- newSampsFixedDist[fix.subset[fix.names.ord],]
-  X <- X[,order( colnames( X))]
-  
   #predictions start with cell area
   #always included no matter what components are included.
   eta <- log( as.numeric( myCellAreas))
   
   #predictions due to only fixed effects
-  if( includeFixed==TRUE)
-    eta <- eta + X %*% newSampsFixedDist
+  if( includeFixed==TRUE){
+ 
+  
+    if( !is.null( intercept.terms)){
+      intercept.terms.legal <- gsub( pattern=":", replacement="XCOLONX", x=intercept.terms)
+      for( ii in 1:length( intercept.terms.legal)){
+	covarData$tmptmptmptmp <- 1
+	colnames( covarData)[ ncol( covarData)] <- intercept.terms.legal[ii]
+      }
+    }
+  
+    #the model matrix
+    myForm <- object$distributionFormula
+    if( !is.null( intercept.terms))
+      myForm <- update( myForm, paste0("~.-1+",paste( intercept.terms.legal, collapse="+")))
+  
+    X <- stats::model.matrix( myForm, data=covarData)
+    #undoing the hack from before.
+    colnames( X) <- gsub( "XCOLONX", ":", colnames( X))
+  
+    #sorting the design matrix and the effects so that they match
+    fix.names <- object$mod$names.fixed
+    #those (factor levels) that are made when producing (constrained/unconstrained) design matrix
+    #update 30/5/2022 -- this shouldn't do anything?
+    missedLevels <- setdiff( colnames( X), fix.names)
+    newSampsFixedDist <- samples$fixedEffects
+    if( length( missedLevels)>0){
+      fix.names <- c( fix.names, missedLevels)
+      newSampsFixedDist <- rbind( newSampsFixedDist, matrix( 0, nrow=length( missedLevels), ncol=ncol( newSampsFixedDist)))
+    }
+  
+    fix.subset <- which( fix.names %in% colnames( X))
+    fix.names.ord <- order( fix.names[fix.subset])
+    newSampsFixedDist <- newSampsFixedDist[fix.subset[fix.names.ord],]
+    X <- X[,order( colnames( X))]
+  
+     eta <- eta + X %*% newSampsFixedDist
+  }
   
   #adding in the random effects, if present and wanted
   if( length( samples$fieldAtNodes[[1]])!=0 & includeRandom==TRUE){
@@ -86,6 +88,11 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
     bform <- object$biasFormula
     bX <- stats::model.matrix( bform, data=covarData)
     colnames( bX)[grep( "Intercept", colnames( bX))] <- "Intercept.PO"
+    
+    bfixedNames <- object$mod$names.fixed[grep( "Intercept.PO", object$mod$names.fixed)]
+    newSampsFixedBias <- samples$fixedEffects[object$mod$names.fixed %in% bfixedNames,]
+    
+    
 
     
     eta <- eta + 0
@@ -111,7 +118,7 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covarRaster)))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.upper), crs=raster::crs( covarRaster)))
   
-  res <- list( mean.field=muRaster, cell.samples=mu.all, fixedSamples=allFixedEffectSamples, fixed.names=object$mod$names.fixed, predLocats=predcoords)
+  res <- list( mean.field=muRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords)
   
   return( res)
 }
