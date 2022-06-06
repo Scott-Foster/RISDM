@@ -43,7 +43,7 @@ Control arguments for mdoel estimation come from the argument "control", which i
 \item{prior.space.sigma}{The values to define the prior for the variance of the spatial random variable. Uses penalised complexity priors (Simpson et al. (2017). The default is c( 1,0.01) meaning that pr( sigma>1)=0.01.  That is there isn't a whole lot of spatial variance. \emph{This may need to be changed for nearly every application.}}
 \item{verbose}{Should INLA be run in verbose mode for debugging? Default is FALSE (no extraneous printing).}
 \item{addRandom}{Should the random effect be included in the model. Default is TRUE (random effect included in the model).}
-\item{returnStack}{Should the INLA data stack be returned as part of the model output. Default is FALSE -- it is not returned to save memory.}
+\item{returnStack}{Should the INLA data stack be returned as part of the model output. Default is TRUE -- it is returned (at the expense of memory). Note that this object is needed for use in \code{\link{plot.isdm}}.}
 \item{DCmethod}{Which method should be used to estimate the detectability of each observer. Default is "TaylorsLinApprox", which approximates the model. If this doesn't work well, then the other option is "plugin", which estimates the probabilities prior to estimation.}
 }
 }

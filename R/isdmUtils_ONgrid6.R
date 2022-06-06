@@ -280,7 +280,7 @@ makeControl <- function( contr) {
   if( !"addRandom" %in% names( contr))
     contr$addRandom <- TRUE
   if( !"returnStack" %in% names( contr))
-    contr$returnStack <- FALSE
+    contr$returnStack <- TRUE
   if( !"DCmethod" %in% names( contr))
     contr$DCmethod <- "TaylorsLinApprox"  #the other option is "plugin"
   
