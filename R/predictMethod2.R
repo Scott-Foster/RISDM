@@ -55,6 +55,7 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   #those (factor levels) that are made when producing (constrained/unconstrained) design matrix
   #update 30/5/2022 -- this shouldn't do anything?
   missedLevels <- setdiff( colnames( X), fix.names)
+  newSampsFixedDist <- samples$fixedEffects
   if( length( missedLevels)>0){
     fix.names <- c( fix.names, missedLevels)
     newSampsFixedDist <- rbind( samples$fixedEffects, matrix( 0, nrow=length( missedLevels), ncol=ncol( samples$fixedEffects)))
