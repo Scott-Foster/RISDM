@@ -57,12 +57,12 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   missedLevels <- setdiff( colnames( X), fix.names)
   if( length( missedLevels)>0){
     fix.names <- c( fix.names, missedLevels)
-    samples$fixedEffects <- rbind( samples$fixedEffects, matrix( 0, nrow=length( missedLevels), ncol=ncol( samples$fixedEffects)))
+    newSampsFixedDist <- rbind( samples$fixedEffects, matrix( 0, nrow=length( missedLevels), ncol=ncol( samples$fixedEffects)))
   }
   
   fix.subset <- which( fix.names %in% colnames( X))
   fix.names.ord <- order( fix.names[fix.subset])
-  samples$fixedEffects <- samples$fixedEffects[fix.subset[fix.names.ord],]
+  newSampsFixedDist <- newSampsFixedDist[fix.subset[fix.names.ord],]
   X <- X[,order( colnames( X))]
   
   #predictions start with cell area
@@ -71,7 +71,7 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   
   #predictions due to only fixed effects
   if( includeFixed==TRUE)
-    eta <- eta + X %*% samples$fixedEffects
+    eta <- eta + X %*% newSampsFixedDist
   
   #adding in the random effects, if present and wanted
   if( length( samples$fieldAtNodes[[1]])!=0 & includeRandom==TRUE){
@@ -83,9 +83,9 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   #adding in the bias terms, if wanted.
   if( includeBias==TRUE){
     bform <- object$biasFormula
-    bform <- update.formula( bform, "~.-1+Intercept.PO")
     bX <- stats::model.matrix( bform, data=covarData)
-    
+    colnames( bX)[grep( "Intercept", colnames( bX))] <- "Intercept.PO"
+
     
     eta <- eta + 0
   }
