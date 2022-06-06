@@ -9,8 +9,11 @@ plot.isdm <- function( object, covarRaster, ...){
   
   POspP <- sp::SpatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=crs( covarRaster))
   
-  rasCount <- raster::rasterize( POspP, covarRaster, fun='count')
+  rasCount <- raster::rasterize( POspP, covarRaster, fun='count', background=0)
+  rasCount <- raster::mask( rasCount, covarRaster[[1]])
   
+  resids <- (values( rasCount) - preds$mean.field$mu.mean) / preds$mean.field$mu.mean
+  resids <- raster::rasterFromXYZ( cbind( resids, raster::coordinates( rasCount)))
   
   
   
