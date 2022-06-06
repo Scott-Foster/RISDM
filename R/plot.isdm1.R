@@ -12,18 +12,21 @@ plot.isdm <- function( object, covarRaster, ...){
   rasCount <- raster::rasterize( POspP, covarRaster, fun='count', background=0)
   rasCount <- raster::mask( rasCount, covarRaster[[1]])
   
-  resids <- stats::ppois( raster::values( rasCount), raster::values( preds$mean.field$mu.mean))
-  tmp <- stats::ppois( pmax( raster::values( rasCount)-1, 0), raster::values( preds$mean.field$mu.mean))
-  tmp[values( rasCount)==0] <- 0
-  tmp1 <- stats::runif( n=length( resids), min=resids, max=tmp)
+  tmp1 <- stats::ppois( raster::values( rasCount), raster::values( preds$mean.field$mu.mean))
+  tmp2 <- stats::ppois( pmax( raster::values( rasCount)-1, 0), raster::values( preds$mean.field$mu.mean))
+  tmp2[values( rasCount)==0] <- 0
+  suppressWarnings( tmp3 <- stats::runif( n=length( tmp1), max=tmp1, min=tmp2))
+  POresids <- pnorm( tmp3)
   
-  
-  
-  
-  
-  resids <- (values( rasCount) - preds$mean.field$mu.mean) / sqrt(preds$mean.field$mu.mean)
-  resids <- raster::rasterFromXYZ( cbind( resids, raster::coordinates( rasCount)))
-  
+  POresids <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount), POresids))
+
+  par( mfrow=c(1,2))
+  raster::plot( POresids)
+  stats::qqnorm( values( POresids))
+  stats::qqline( values( POresids), col='red')
+
+
+
   
   
 #  inla.stack.index( fm$VIC$stack, "AA")$data  #from Krainski et al.
