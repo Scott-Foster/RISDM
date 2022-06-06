@@ -1,14 +1,16 @@
 
 plot.isdm <- function( object, covarRaster, ...){
-  message( paste0("Generating ",n.predSamps," samples to form prediction (with distribution, random and bias effects)."))
+ 
   if( !hasArg( S))
     S <- 250
-  
+  message( paste0("Generating ",S," samples to form prediction (with distribution, random and bias effects)."))
+   
   preds <- predict( object, covarRaster, intercept.terms=NULL, type='intensity', S=S, includeFixed=TRUE, includeRandom=TRUE, includeBias=TRUE)
   
-  POspP <- sp::spatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=crs( covarRaster))
+  POspP <- sp::SpatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=crs( covarRaster))
   
-  raster::rasterize( POspP, covarRaster, fun='count')
+  rasCount <- raster::rasterize( POspP, covarRaster, fun='count')
+  
   
   
   
