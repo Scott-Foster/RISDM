@@ -100,8 +100,10 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
                control.compute = list(config=TRUE, waic = control$calcICs, dic = control$calcICs, return.marginals = FALSE, return.marginals.predictor = FALSE))
 
   res <- list( mod=mod, distributionFormula=distributionFormula, biasFormula=biasFormula, artefactFormulas=artefactFormulas, mesh=FullMesh$mesh)
-  if( control$returnStack)
+  if( control$returnStack){
     res$stack <- stck
+    res$observationList <- observationList
+  }
   if( exists( "DCobserverInfo")){
     attr( res, "DCobserverInfo") <- DCobserverInfo
     attr( res, "DCSurveyIDLevels") <- unique( observationList$DCdat[,DCobserverInfo$SurveyID])
@@ -109,6 +111,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   else
     attr( res, "DCobserverInfo") <- attr( res, "DCSurveyIDLevels") <- NULL
   attr( res, "n.threads") <- control$n.threads
+  attr( res, "coord.names") <- control$coord.names
 
   class( res) <- "isdm"
   
