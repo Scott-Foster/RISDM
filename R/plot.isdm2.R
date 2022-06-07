@@ -41,25 +41,22 @@ plot.isdm <- function( object, covarRaster, ...){
   if( "Intercept.PO" %in% object$mod$names.fixed){
     numTypes <- numTypes+1
     ncolly <- 3
-    if( !hasArg( S))
-      S <- 250
-    message( paste0("Generating ",S," samples to form prediction (with distribution, random and bias effects)."))
-    
-    preds <- predict( object, covarRaster, intercept.terms=NULL, type='intensity', S=S, includeFixed=TRUE, includeRandom=TRUE, includeBias=TRUE)
+
+    preds <- object$mod$summary.fitted.values[INLA::inla.stack.index( object$stack, "PO")$data,"mean"]
     
     POspP <- sp::SpatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=crs( covarRaster))
     
     rasCount <- raster::rasterize( POspP, covarRaster, fun='count', background=0)
     rasCount <- raster::mask( rasCount, covarRaster[[1]])
     
-    tmp1 <- stats::ppois( raster::values( rasCount), raster::values( preds$mean.field$mu.mean))
-    tmp2 <- stats::ppois( pmax( raster::values( rasCount)-1, 0), raster::values( preds$mean.field$mu.mean))
+    tmp1 <- stats::ppois( raster::values( rasCount), preds)
+    tmp2 <- stats::ppois( pmax( raster::values( rasCount)-1, 0), preds)
     tmp2[values( rasCount)==0] <- 0
     suppressWarnings( tmp3 <- stats::runif( n=length( tmp1), max=tmp1, min=tmp2))
     POresids <- list()
     ressy <- qnorm( tmp3)
     POresids$ras <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount), ressy))
-    POresids$POresids <- data.frame( fitted=values( preds$mean.field$mu.mean), observed=values( rasCount), residual=ressy)
+    POresids$POresids <- data.frame( fitted=preds, observed=values( rasCount), residual=ressy)
   }
   
   graphics::par( mfrow=c(numTypes,ncolly))
