@@ -20,7 +20,8 @@
   The residuals for the PO data are formed spatially. The area is gridded into a raster, whose number of PO observations defines the value for the cell. Predictions are then made (using \code{\link{predict.isdm}}) and the RQR calculated.
 
   For all types of residuals, no attempt has been made to account for (e.g.) spatial autocorrelation, amongst other known departures. These residuals are intended to be a guide rather than a definitive solution to diagnostics.
-  
+
+  Note that the \code{\link{predict.isdm}} method is used, rather than taking the prediction from the INLA object, as the predict method will correctly scale to the cell area.  
 }
 \seealso{
  \code{\link{isdm}}, \code{\link{predict.isdm}}.

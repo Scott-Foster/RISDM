@@ -66,34 +66,34 @@ plot.isdm <- function( object, covarRaster, ...){
   if( "Intercept.DC" %in% object$mod$names.fixed){
     if( ncolly==3)
       graphics::plot.new()
-    plot( DCresids$fitted, DCresids$residual, pch=20, ylab="DC residuals", xlab="DC fitted")
+    plot( DCresids$fitted, DCresids$residual, pch=20, ylab="DC residuals", xlab="DC fitted", main="Double Count")
     graphics::abline( h=0, col='green')
-    stats::qqnorm( DCresids$residual, pch=20)
+    stats::qqnorm( DCresids$residual, pch=20, ylab="DC quantile", main="Double Count")
     stats::qqline( DCresids$residual, col='green')
   }
   if( "Intercept.AA" %in% object$mod$names.fixed){
     if( ncolly==3)
       graphics::plot.new()
-    plot( AAresids$fitted, AAresids$residual, pch=20, ylab="AA residuals", xlab="AA fitted")
+    plot( AAresids$fitted, AAresids$residual, pch=20, ylab="AA residuals", xlab="AA fitted", main="Abundance-Absence")
     graphics::abline( h=0, col='green')
-    stats::qqnorm( AAresids$residual, pch=20)
+    stats::qqnorm( AAresids$residual, pch=20, ylab="AA quantile", main="Abundance-Absence")
     stats::qqline( AAresids$residual, col='green')
   }
   if( "Intercept.PA" %in% object$mod$names.fixed){
     if( ncolly==3)
       graphics::plot.new()
-    plot( PAresids$fitted, PAresids$residual, pch=20, ylab="PA residuals", xlab="PA fitted")
+    plot( PAresids$fitted, PAresids$residual, pch=20, ylab="PA residuals", xlab="PA fitted", main="Presence-Absence")
     graphics::abline( h=0, col='green')
-    stats::qqnorm( values( PAresids$residual), pch=20)
+    stats::qqnorm( values( PAresids$residual), pch=20, ylab="PA quantile", main="Presence-Absence")
     stats::qqline( values( PAresids$residual), col='green')
   }
   if( "Intercept.PO" %in% object$mod$names.fixed){
-    raster::plot( POresids$ras)
+    raster::plot( POresids$ras, main="Presence-Only Residuals")
 #    plot( POresids$POresids$fitted, POresids$POresids$residual, col=c("black","blue")[(POresids$POresids$observed>0)+1], pch=20)
-    plot( POresids$POresids$fitted, POresids$POresids$residual, pch=20, ylab="PO residuals", xlab="PO fitted")
+    plot( POresids$POresids$fitted, POresids$POresids$residual, pch=20, ylab="PO residuals", xlab="PO fitted", main="Prsence-Only")
     graphics::abline( h=0, col='green')
 #    stats::qqnorm( POresids$POresids$residual, col=c("black","blue")[(POresids$POresids$observed>0)+1], pch=20)
-    stats::qqnorm( POresids$POresids$residual, pch=20)
+    stats::qqnorm( POresids$POresids$residual, pch=20, ylab="PO quantile", main="Presence Only")
     stats::qqline( POresids$POresids$residual, col='green')
 #    legend( "bottomright", legend=c("Zero","Non-zero"), pch=20, col=c("black","blue"))
   }
