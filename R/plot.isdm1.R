@@ -1,35 +1,103 @@
 
 plot.isdm <- function( object, covarRaster, ...){
  
-  if( !hasArg( S))
-    S <- 250
-  message( paste0("Generating ",S," samples to form prediction (with distribution, random and bias effects)."))
-   
-  preds <- predict( object, covarRaster, intercept.terms=NULL, type='intensity', S=S, includeFixed=TRUE, includeRandom=TRUE, includeBias=TRUE)
+  #number of data types
+  numTypes <- 0
+  #number of columns in the plot
+  ncolly <- 2
+ 
+  DCresids <- AAresids <- PAresids <- POresids <- NULL
+  if( "Intercept.DC" %in% object$mod$names.fixed){
+    numTypes <- numTypes+1
+    preds <- object$mod$summary.fitted.values[INLA::inla.stack.index( object$stack, "DC")$data,"mean"]
+    outcomes <- object$observationList$DCdat$DCcountDC
+    tmp1 <- stats::ppois( outcomes, lambda=preds)
+    tmp2 <- stats::ppois( max( outcomes-1, 0), lambda=preds)
+    tmp2[outcomes==0] <- 0
+    tmp3 <- stats::runif( n=length( tmp1), min=tmp2, max=tmp1)
+    DCresids <- data.frame( fitted=preds, observed=outcomes, residual=pnorm( tmp3))
+  }
+  if( "Intercept.AA" %in% object$mod$names.fixed){
+    numTypes <- numTypes+1
+    preds <- object$mod$summary.fitted.values[INLA::inla.stack.index( object$stack, "AA")$data,"mean"]
+    outcomes <- object$observationList$AAdat[,object$responseNames$AA]
+    tmp1 <- stats::ppois( outcomes, lambda=preds)
+    tmp2 <- stats::ppois( max( outcomes-1, 0), lambda=preds)
+    tmp2[outcomes==0] <- 0
+    tmp3 <- stats::runif( n=length( tmp1), min=tmp2, max=tmp1)
+    AAresids <- data.frame( fitted=preds, observed=outcomes, residual=pnorm( tmp3))
+  }
+  if( "Intercept.PA" %in% object$mod$names.fixed){
+    numTypes <- numTypes+1
+    preds <- object$mod$summary.fitted.values[INLA::inla.stack.index( object$stack, "PA")$data,"mean"]
+    outcomes <- object$observationList$AAdat[,object$responseNames$PA]
+    tmp1 <- stats::pbinom( outcomes, size=1, prob=preds)
+    tmp2 <- stats::pbinom( max( outcomes-1, 0), size=1, prob=preds)
+    tmp2[outcomes==0] <- 0
+    tmp3 <- stats::runif( n=length( tmp1), min=tmp2, max=tmp1)
+    PAresids <- data.frame( fitted=preds, observed=outcomes, residual=pnorm( tmp3))
+  }
   
-  POspP <- sp::SpatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=crs( covarRaster))
+  if( "Intercept.PO" %in% object$mod$names.fixed){
+    numTypes <- numTypes+1
+    ncolly <- 3
+    if( !hasArg( S))
+      S <- 250
+    message( paste0("Generating ",S," samples to form prediction (with distribution, random and bias effects)."))
+    
+    preds <- predict( object, covarRaster, intercept.terms=NULL, type='intensity', S=S, includeFixed=TRUE, includeRandom=TRUE, includeBias=TRUE)
+    
+    POspP <- sp::SpatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=crs( covarRaster))
+    
+    rasCount <- raster::rasterize( POspP, covarRaster, fun='count', background=0)
+    rasCount <- raster::mask( rasCount, covarRaster[[1]])
+    
+    tmp1 <- stats::ppois( raster::values( rasCount), raster::values( preds$mean.field$mu.mean))
+    tmp2 <- stats::ppois( pmax( raster::values( rasCount)-1, 0), raster::values( preds$mean.field$mu.mean))
+    tmp2[values( rasCount)==0] <- 0
+    suppressWarnings( tmp3 <- stats::runif( n=length( tmp1), max=tmp1, min=tmp2))
+    POresids <- list()
+    ressy <- pnorm( tmp3)
+    POresids$ras <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount), ressy))
+    POresids$POresids <- data.frame( fitted=preds, observed=rasCount, residual=ressy)
+  }
   
-  rasCount <- raster::rasterize( POspP, covarRaster, fun='count', background=0)
-  rasCount <- raster::mask( rasCount, covarRaster[[1]])
-  
-  tmp1 <- stats::ppois( raster::values( rasCount), raster::values( preds$mean.field$mu.mean))
-  tmp2 <- stats::ppois( pmax( raster::values( rasCount)-1, 0), raster::values( preds$mean.field$mu.mean))
-  tmp2[values( rasCount)==0] <- 0
-  suppressWarnings( tmp3 <- stats::runif( n=length( tmp1), max=tmp1, min=tmp2))
-  POresids <- pnorm( tmp3)
-  
-  POresids <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount), POresids))
+  graphics::par( mfrow=c(numTypes,ncolly))
+  if( "Intercept.DC" %in% object$mod$names.fixed){
+    if( ncolly==3)
+      graphics::plot.new()
+    plot( DCresids$fitted, DCresids$residual, pch=20)
+    graphics::abline( 0,1, col='green')
+    stats::qqnorm( values( DCresids$residual), pch=20)
+    stats::qqline( values( DCresids$residual), col='green')
+  }
+  if( "Intercept.AA" %in% object$mod$names.fixed){
+    if( ncolly==3)
+      graphics::plot.new()
+    plot( AAresids$fitted, AAresids$residual, pch=20)
+    graphics::abline( 0,1, col='green')
+    stats::qqnorm( values( AAresids$residual), pch=20)
+    stats::qqline( values( AAresids$residual), col='green')
+  }
+  if( "Intercept.PA" %in% object$mod$names.fixed){
+    if( ncolly==3)
+      graphics::plot.new()
+    plot( PAresids$fitted, PAresids$residual, pch=20)
+    graphics::abline( 0,1, col='green')
+    stats::qqnorm( values( PAresids$residual), pch=20)
+    stats::qqline( values( PAresids$residual), col='green')
+  }
+  if( "Intercept.PO" %in% object$mod$names.fixed){
+    raster::plot( POresids$ras)
+    plot( POresids$POresids$fitted, POresids$POresids$residual, pch=20)
+    graphics::abline( 0,1, col='green')
+    stats::qqnorm( values( POresids$POresids$residual), pch=20)
+    stats::qqline( values( POresids$POresids$residual), col='green')
+  }
 
-  par( mfrow=c(1,2))
-  raster::plot( POresids)
-  stats::qqnorm( values( POresids))
-  stats::qqline( values( POresids), col='red')
-
-
-
-  
-  
-#  inla.stack.index( fm$VIC$stack, "AA")$data  #from Krainski et al.
+#  res <- list( DC=DCresids, AA=AAresids, PA=PAresids, PO=POresids)
+#  invisible( res)
+  invisible()
   
 }
   

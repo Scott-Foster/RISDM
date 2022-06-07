@@ -99,7 +99,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
                num.threads = control$n.threads,
                control.compute = list(config=TRUE, waic = control$calcICs, dic = control$calcICs, return.marginals = FALSE, return.marginals.predictor = FALSE))
 
-  res <- list( mod=mod, distributionFormula=distributionFormula, biasFormula=biasFormula, artefactFormulas=artefactFormulas, mesh=FullMesh$mesh)
+  res <- list( mod=mod, distributionFormula=distributionFormula, biasFormula=biasFormula, artefactFormulas=artefactFormulas, mesh=FullMesh$mesh, control=control, responseNames=responseNames)
   if( control$returnStack){
     res$stack <- stck
     res$observationList <- observationList
