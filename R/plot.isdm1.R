@@ -15,7 +15,7 @@ plot.isdm <- function( object, covarRaster, ...){
     tmp2 <- stats::ppois( pmax( outcomes-1, 0), lambda=preds)
     tmp2[outcomes==0] <- 0
     tmp3 <- stats::runif( n=length( tmp1), min=tmp2, max=tmp1)
-    DCresids <- data.frame( fitted=preds, observed=outcomes, residual=pnorm( tmp3))
+    DCresids <- data.frame( fitted=preds, observed=outcomes, residual=qnorm( tmp3))
   }
   if( "Intercept.AA" %in% object$mod$names.fixed){
     numTypes <- numTypes+1
@@ -25,7 +25,7 @@ plot.isdm <- function( object, covarRaster, ...){
     tmp2 <- stats::ppois( pmax( outcomes-1, 0), lambda=preds)
     tmp2[outcomes==0] <- 0
     tmp3 <- stats::runif( n=length( tmp1), min=tmp2, max=tmp1)
-    AAresids <- data.frame( fitted=preds, observed=outcomes, residual=pnorm( tmp3))
+    AAresids <- data.frame( fitted=preds, observed=outcomes, residual=qnorm( tmp3))
   }
   if( "Intercept.PA" %in% object$mod$names.fixed){
     numTypes <- numTypes+1
@@ -35,7 +35,7 @@ plot.isdm <- function( object, covarRaster, ...){
     tmp2 <- stats::pbinom( pmax( outcomes-1, 0), size=1, prob=preds)
     tmp2[outcomes==0] <- 0
     tmp3 <- stats::runif( n=length( tmp1), min=tmp2, max=tmp1)
-    PAresids <- data.frame( fitted=preds, observed=outcomes, residual=pnorm( tmp3))
+    PAresids <- data.frame( fitted=preds, observed=outcomes, residual=qnorm( tmp3))
   }
   
   if( "Intercept.PO" %in% object$mod$names.fixed){
@@ -57,7 +57,7 @@ plot.isdm <- function( object, covarRaster, ...){
     tmp2[values( rasCount)==0] <- 0
     suppressWarnings( tmp3 <- stats::runif( n=length( tmp1), max=tmp1, min=tmp2))
     POresids <- list()
-    ressy <- pnorm( tmp3)
+    ressy <- qnorm( tmp3)
     POresids$ras <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount), ressy))
     POresids$POresids <- data.frame( fitted=values( preds$mean.field$mu.mean), observed=values( rasCount), residual=ressy)
   }
