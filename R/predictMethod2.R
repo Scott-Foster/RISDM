@@ -120,6 +120,8 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covarRaster)))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.upper), crs=raster::crs( covarRaster)))
   
+  muRaster <- extend( muRaster, covarRaster)  #just in case it is needed -- could be dropped throughout the creation of the raster.
+  
   res <- list( mean.field=muRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords)
   
   return( res)
