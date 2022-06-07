@@ -52,7 +52,7 @@ plot.isdm <- function( object, covarRaster, ...){
     tmp1 <- stats::ppois( raster::values( rasCount), preds)
     tmp2 <- stats::ppois( pmax( raster::values( rasCount)-1, 0), preds)
     tmp2[values( rasCount)==0] <- 0
-    suppressWarnings( tmp3 <- stats::runif( n=length( tmp1), max=tmp1, min=tmp2))
+    tmp3 <- stats::runif( n=length( tmp1), max=tmp1, min=tmp2)
     POresids <- list()
     ressy <- qnorm( tmp3)
     POresids$ras <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount), ressy))
@@ -63,7 +63,7 @@ plot.isdm <- function( object, covarRaster, ...){
   if( "Intercept.DC" %in% object$mod$names.fixed){
     if( ncolly==3)
       graphics::plot.new()
-    plot( DCresids$fitted, DCresids$residual, pch=20)
+    plot( DCresids$fitted, DCresids$residual, pch=20, ylab="DC residuals", xlab="DC fitted")
     graphics::abline( h=0, col='green')
     stats::qqnorm( DCresids$residual, pch=20)
     stats::qqline( DCresids$residual, col='green')
@@ -71,7 +71,7 @@ plot.isdm <- function( object, covarRaster, ...){
   if( "Intercept.AA" %in% object$mod$names.fixed){
     if( ncolly==3)
       graphics::plot.new()
-    plot( AAresids$fitted, AAresids$residual, pch=20)
+    plot( AAresids$fitted, AAresids$residual, pch=20, ylab="AA residuals", xlab="AA fitted")
     graphics::abline( h=0, col='green')
     stats::qqnorm( AAresids$residual, pch=20)
     stats::qqline( AAresids$residual, col='green')
@@ -79,7 +79,7 @@ plot.isdm <- function( object, covarRaster, ...){
   if( "Intercept.PA" %in% object$mod$names.fixed){
     if( ncolly==3)
       graphics::plot.new()
-    plot( PAresids$fitted, PAresids$residual, pch=20)
+    plot( PAresids$fitted, PAresids$residual, pch=20, ylab="PA residuals", xlab="PA fitted")
     graphics::abline( h=0, col='green')
     stats::qqnorm( values( PAresids$residual), pch=20)
     stats::qqline( values( PAresids$residual), col='green')
@@ -87,7 +87,7 @@ plot.isdm <- function( object, covarRaster, ...){
   if( "Intercept.PO" %in% object$mod$names.fixed){
     raster::plot( POresids$ras)
 #    plot( POresids$POresids$fitted, POresids$POresids$residual, col=c("black","blue")[(POresids$POresids$observed>0)+1], pch=20)
-    plot( POresids$POresids$fitted, POresids$POresids$residual, pch=20)
+    plot( POresids$POresids$fitted, POresids$POresids$residual, pch=20, ylab="PO residuals", xlab="PO fitted")
     graphics::abline( h=0, col='green')
 #    stats::qqnorm( POresids$POresids$residual, col=c("black","blue")[(POresids$POresids$observed>0)+1], pch=20)
     stats::qqnorm( POresids$POresids$residual, pch=20)
