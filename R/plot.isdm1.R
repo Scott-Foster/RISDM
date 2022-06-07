@@ -91,8 +91,8 @@ plot.isdm <- function( object, covarRaster, ...){
     raster::plot( POresids$ras)
     plot( POresids$POresids$fitted, POresids$POresids$residual, pch=20)
     graphics::abline( h=0, col='green')
-    stats::qqnorm( values( POresids$POresids$residual), pch=20)
-    stats::qqline( values( POresids$POresids$residual), col='green')
+    stats::qqnorm( POresids$POresids$residual, pch=20)
+    stats::qqline( POresids$POresids$residual, col='green')
   }
 
 #  res <- list( DC=DCresids, AA=AAresids, PA=PAresids, PO=POresids)
