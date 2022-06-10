@@ -30,7 +30,7 @@ plot.isdm <- function( object, covarRaster, ...){
   if( "Intercept.PA" %in% object$mod$names.fixed){
     numTypes <- numTypes+1
     preds <- object$mod$summary.fitted.values[INLA::inla.stack.index( object$stack, "PA")$data,"mean"]
-    outcomes <- object$observationList$AAdat[,object$responseNames["PA"]]
+    outcomes <- object$observationList$PAdat[,object$responseNames["PA"]]
     tmp1 <- stats::pbinom( outcomes, size=1, prob=preds)
     tmp2 <- stats::pbinom( pmax( outcomes-1, 0), size=1, prob=preds)
     tmp2[outcomes==0] <- 0
