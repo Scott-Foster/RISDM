@@ -1,6 +1,19 @@
 
+###############################################################################################
+###############################################################################################
+####	
+####	Producing (hopefully) easier to read printed summary of the isdm
+####
+####	Returns a summary.isdm object
+####
+####	Programmed by Scott in the first half of 2022
+####
+###############################################################################################
+###############################################################################################
+
 summary.isdm <- function( object, ...){
   
+  #find names
   allFixedNames <- object$mod$names.fixed
   
   #labels for the PO-only model
@@ -19,12 +32,17 @@ summary.isdm <- function( object, ...){
   PATerms <- allFixedNames[grep( "Intercept.PA", allFixedNames)]
   allFixedNames <- setdiff( allFixedNames, PATerms)
 
+  #find labels for the distribution terms
   distTerms <- allFixedNames #what is left *must*? be distribution...
   rm( allFixedNames)
 
+  #bundling together for return
   res <- list()
+  #distribution terms
   res$DISTRIBUTION <- if( length( distTerms)!=0) object$mod$summary.fixed[distTerms,1:5] else NULL
+  #PO bias terms
   res$PO_BIAS <- if( length( biasTerms)!=0) object$mod$summary.fixed[biasTerms,1:5] else NULL
+  #DC terms
   if( length( DCTerms)!=0) {
     alpha_id <- grep( "alpha", DCTerms)
     ord <- order( DCTerms[alpha_id])
@@ -33,11 +51,13 @@ summary.isdm <- function( object, ...){
   }
   else
     res$DC_ARTEFACT <- NULL
+  #AA artefact terms
   res$AA_ARTEFACT <- if( length( AATerms)!=0) object$mod$summary.fixed[AATerms,1:5]  else NULL
+  #PA artefact terms
   res$PA_ARTEFACT <- if( length( PATerms)!=0) object$mod$summary.fixed[PATerms,1:5] else NULL
-
+  #spatial terms
   res$SPATIAL <- if( length( object$mod$summary.hyperpar) != 0) object$mod$summary.hyperpar[,1:5] else NULL
-  
+  #marginal logl
   res$marg.lik <- object$mod$mlik[2]
 
   class( res) <- "summary.isdm"
@@ -46,36 +66,3 @@ summary.isdm <- function( object, ...){
 }
 
 
-print.summary.isdm <- function( x, digits = max(3L, getOption("digits") - 3L), ...){
-  if( !is.null( x$DISTRIBUTION)){
-    cat("\nCoefficients for distribution model (all data)\n")
-    print( round( as.matrix( x$DISTRIBUTION), digits))
-  }
-  if( !is.null( x$PO_BIAS)){
-    cat("\nCoefficients for sampling bias model (PO data)\n")
-    print( round( as.matrix( x$PO_BIAS), digits))
-  }
-  if( !is.null( x$DC_ARTEFACT)){
-    cat("\nCoefficients for artefect model for DC data\n")
-    print( round( as.matrix( x$DC_ARTEFACT), digits))
-  }
-  if( !is.null( x$AA_ARTEFACT)){
-    cat("\nCoefficients for artefact model for AA data\n")
-    print( round( as.matrix( x$AA_ARTEFACT), digits))
-  }
-  if( !is.null( x$PA_ARTEFACT)){
-    cat("\nCoefficients for artefact model for PA data\n")
-    print( round( as.matrix( x$PA_ARTEFACT), digits))
-  }
-  
-  if( !is.null( x$SPATIAL)){
-    cat("\nHyperparameters for Spatial Effects\n")
-    print( round( as.matrix( x$SPATIAL), digits))
-  }
-
-  cat("\nMarginal log-likelihood\n")
-  cat( round( x$marg.lik, digits))
-  
-  cat("\n\n")
-  invisible(x)
-}

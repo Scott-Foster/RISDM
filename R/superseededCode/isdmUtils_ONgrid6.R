@@ -3,13 +3,13 @@ checkInput <- function( respNames, biasForm, arteForm, DCobsInfo, obsList){
   
   #checking the input for obvious inconsistencies
   
-  if( all( is.null( respNames)))
-    stop("No response specified.  Please do so through responseNames argument.")
-  if( length( respNames)<1 | length( respNames)>2)
-    stop("Please specify responseNames as a named vector (no response required for PO or DC, see DCobserverInfo). See help for guidance.")
-  
-  if( length( arteForm)<1 | length( arteForm)>3)
-    stop("Please specify artefactFormulas as a named list of length 3 or less. No artefact formula accepted for PO. See help for guidance.")
+#  if( all( is.null( respNames)))
+#    stop("No response specified.  Please do so through responseNames argument.")
+#  if( length( respNames)<1 | length( respNames)>2)
+#    stop("Please specify responseNames as a named vector (no response required for PO or DC, see DCobserverInfo). See help for guidance.")
+#  
+#  if( length( arteForm)<1 | length( arteForm)>3)
+#    stop("Please specify artefactFormulas as a named list of length 3 or less. No artefact formula accepted for PO. See help for guidance.")
   
   if( length( DCobsInfo) != 4)
     stop("Please specify DCobserverInfo as a named list of exactly length 4.  See help for guidance.")
