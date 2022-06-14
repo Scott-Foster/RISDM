@@ -33,6 +33,8 @@ checkMesh <- function( mesh, hull){
   areas <- triSumms[1,]
   angles <- as.vector( triSumms[-1,])
   
+  par( mfrow=c(1,3))
+  
   #plotting mesh and inner/outer
   plot( mesh)
   points( nodeLocs[!is.na( polyNum),], col=polyNum[!is.na( polyNum)]+2, pch=20, cex=0.5)

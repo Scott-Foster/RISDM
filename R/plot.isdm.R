@@ -60,6 +60,9 @@ plot.isdm <- function( x, covarRaster, ...){
     numTypes <- numTypes+1
     #get the fitted values as predictions
     preds <- x$mod$summary.fitted.values[INLA::inla.stack.index( x$stack, "PA")$data,"mean"]
+    #provide minor adjustments to preds that are identically 0 or 1.
+    preds[preds==0] <- min( min( preds[preds!=0])/2, 1e-4)
+    preds[preds==1] <- max( max( (1-preds[preds!=1])/2), 1-1e-4)
     #get the outcomes and arrange them appropriately
     outcomes <- x$observationList$PAdat[,x$responseNames["PA"]]
     #calculate the two probs for RQR (lower and upper)
@@ -78,12 +81,21 @@ plot.isdm <- function( x, covarRaster, ...){
     numTypes <- numTypes+1
     #increase the plotting columns to 3 (default is 2)
     ncolly <- 3
+
+#####  General solution, but use the quick one for now...
     #number of draws to use in the simulation
-    if( !methods::hasArg( S))
-      S <- 250
-    message( paste0("Generating ",S," samples to form prediction (with distribution, random and bias effects)."))
+#    if( !methods::hasArg( S))
+#      S <- 250
+#    message( paste0("Generating ",S," samples to form prediction (with distribution, random and bias effects)."))
     #get the fitted values as predictions
-    preds <- predict( x, covarRaster, intercept.terms=NULL, type='intensity', S=S, includeFixed=TRUE, includeRandom=TRUE, includeBias=TRUE)
+#    preds <- predict( x, covarRaster, intercept.terms=NULL, type='intensity', S=S, includeFixed=TRUE, includeRandom=TRUE, includeBias=TRUE)
+#####	Quick solution    
+    preds <- list()
+    preds$mean.field <- list()
+    preds$mean.field$mu.mean <- raster::rasterFromXYZ( cbind( coordinates( covarRaster), x$mod$summary.fitted.values[inla.stack.index(x$stack,"PO")$data,"mean"]))
+#    plot( values( preds[[1]]$mu.mean, preds1, pch=20)
+#    abline( 0,1, col='green')
+    
     POspP <- sp::SpatialPoints( x$observationList$PO[,attr( x, "coord.names")], proj4string=crs( covarRaster))
     #get the outcomes and arrange them appropriately
     rasCount <- raster::rasterize( POspP, covarRaster, fun='count', background=0)
