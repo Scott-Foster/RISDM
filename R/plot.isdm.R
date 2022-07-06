@@ -88,8 +88,8 @@ plot.isdm <- function( x, covarRaster, ...){
 #      S <- 250
 #    message( paste0("Generating ",S," samples to form prediction (with distribution, random and bias effects)."))
     #get the fitted values as predictions
-#    preds <- predict( x, covarRaster, intercept.terms=NULL, type='intensity', S=S, includeFixed=TRUE, includeRandom=TRUE, includeBias=TRUE)
-#####	Quick solution    
+#    preds1 <- predict( x, covarRaster, intercept.terms=NULL, type='intensity', S=S, includeFixed=TRUE, includeRandom=TRUE, includeBias=TRUE)
+#####	Quick running solution
     preds <- list()
     preds$mean.field <- list()
     preds$mean.field$mu.mean <- raster::rasterFromXYZ( cbind( coordinates( covarRaster), x$mod$summary.fitted.values[inla.stack.index(x$stack,"PO")$data,"mean"]))

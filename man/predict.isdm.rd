@@ -14,7 +14,7 @@
 \item{n.threads}{How many threads to spread the computation over. Default is NULL, where the number used to estimate the model (arugment "fit") is used.}
 \item{includeRandom}{Should the random spatial effect be included in the predictions? Default is TRUE, as it nearly always should be (unless you are trying to understand the contribution of the terms).}
 \item{includeFixed}{Should the fixed effects, including the intercept(s), be included in the predictions? Default is TRUE, as it nearly always should be (unless you are trying to understand the contribution of the terms).}
-\item{includeBias}{Should the sampling bias be included in the predictions? Default is FALSE, it is not included. This term is nearly always not-interesting in terms of figuring out what is where. However, it could be interesting to see where the search effort has been placed.}
+\item{includeBias}{Should the sampling bias be included in the predictions? Default is FALSE, it is not included. This term is nearly always not-interesting in terms of figuring out what is where. However, it could be interesting to see where the search effort has been placed. Please be aware that includeBias=TRUE will force the intercept.PO to be added to the linear predictor. So, please do not include a non-NULL intercept.terms argument as that will make multiple intercepts to be included in the prediction.}
 \item{type}{The type (scale) of prediction. Choices are "intensity" for the parameter of the log-Guass Cox process, "probability" for the probability of having any 1 observation in the prediction cell, or "link" for the linear predictor.}
 \item{...}{Not implemented}
 }

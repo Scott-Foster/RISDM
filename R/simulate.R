@@ -171,7 +171,7 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
   sampleID <- sample.int( n=length( tmpProbs), size=N, prob=tmpProbs, replace=TRUE)
   presences <- raster::coordinates( dataBrick)[sampleID,]
 
-  if( control$do.plot){
+  if( control$doPlot){
     graphics::par( mfrow=c(4,2))
     #PA
     raster::plot( dataBrick$Intensity, main="Intensity")
@@ -204,6 +204,8 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
                DC=sp::SpatialPointsDataFrame( coords=DCData[,1:2], data=DCData[,-(1:2)]),
                covarBrick=dataBrick,
                expected.pop.size=expected.pop.size)
+  
+  class( res) <- "simISDMdata"
   
   return(res)
 }

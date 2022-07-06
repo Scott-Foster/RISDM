@@ -24,8 +24,8 @@ set.sim.control <- function( contr){
   if( ! "raster.dim" %in% names( contr))
     contr$raster.dim <- rep(100,2)
   #plot the simulation data?
-  if( ! "do.plot" %in% names( contr))
-    contr$do.plot <- TRUE
+  if( ! "doPlot" %in% names( contr))
+    contr$doPlot <- TRUE
   #should the random effect be added to the simulation
   if( ! "addRandom" %in% names( contr))
     contr$addRandom <- TRUE
@@ -37,7 +37,7 @@ set.sim.control <- function( contr){
     contr$range <- 0.5
   
   #add to as we go along
-  if( !all( names( contr) %in% c("set.random.seed","random.seed","raster.dim","do.plot","addRandom", "sd", "range")))
+  if( !all( names( contr) %in% c("set.random.seed","random.seed","raster.dim","doPlot","addRandom", "sd", "range")))
     warning( "There are control parameters specified that are not used.")
   return( contr)
   
