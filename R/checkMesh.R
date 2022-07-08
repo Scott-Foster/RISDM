@@ -18,7 +18,7 @@ checkMesh <- function( mesh, hull){
   #and the bounding hull.
   dom <- sp::SpatialPolygons( list( sp::Polygons( list( sp::Polygon( hull$loc)), 1)))
   #buffer the node locations
-  buffWidth <- findBuffWidth(nodeLocs)
+#  buffWidth <- findBuffWidth(nodeLocs)
   domBuff <- raster::buffer( dom, width=0.1)
   polyNum <- sp::over( nodeLocs, domBuff)
   
@@ -52,14 +52,14 @@ checkMesh <- function( mesh, hull){
   return( invisible( NULL))
 }
 
-findBuffWidth <- function( pts, propOfExtent=1e-6){
-  #how much to buffer the inner areas based on extent (and an arbitrary proportion)
-  ext <- as.matrix( raster::extent( pts))
-  tmp <- apply( ext, 1, diff)
-  tmp <- tmp * propOfExtent  
-  
-  return( min( tmp))
-}
+#findBuffWidth <- function( pts, propOfExtent=1e-6){
+#  #how much to buffer the inner areas based on extent (and an arbitrary proportion)
+#  ext <- as.matrix( raster::extent( pts))
+#  tmp <- apply( ext, 1, diff)
+#  tmp <- tmp * propOfExtent  
+#  
+#  return( min( tmp))
+#}
 
 cosRule <- function( s){
   #angle within triangles.
