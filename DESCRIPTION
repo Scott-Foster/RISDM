@@ -1,7 +1,7 @@
 Package: RISDM
 Type: Package
 Title: Integrated Species Distribution Modelling using INLA -- multiple data types
-Version: 0.6.3
+Version: 0.6.4
 Author: CSIRO Project Team
 Maintainer: Scott Foseter <scott.foster@data61.csiro.au>
 Imports:

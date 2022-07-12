@@ -122,43 +122,31 @@ plot.isdm <- function( x, covarRaster, ...){
   }
   
   #plotting up the residuals. RQR versus fitted and for PO data the raster.
-  nplots <- 0
+  oask <- grDevices::devAskNewPage(FALSE) #don't ask for the first page of plots
   if( "Intercept.DC" %in% x$mod$names.fixed){
     graphics::par( mfrow=c(1,2))
-#    if( ncolly==3)
-#      graphics::plot.new()
     plot( DCresids$fitted, DCresids$residual, pch=20, ylab="DC residuals", xlab="DC fitted", main="Double Count")
     graphics::abline( h=0, col='green')
     stats::qqnorm( DCresids$residual, pch=20, ylab="DC quantile", main="Double Count")
     stats::qqline( DCresids$residual, col='green')
-    nplots <- nplots +1
+    oask <- grDevices::devAskNewPage(TRUE)
   }
-  if( nplots>=0)
-      oask <- grDevices::devAskNewPage(TRUE)
   if( "Intercept.AA" %in% x$mod$names.fixed){
     graphics::par( mfrow=c(1,2))
-#    if( ncolly==3)
-#      graphics::plot.new()
     plot( AAresids$fitted, AAresids$residual, pch=20, ylab="AA residuals", xlab="AA fitted", main="Abundance-Absence")
     graphics::abline( h=0, col='green')
     stats::qqnorm( AAresids$residual, pch=20, ylab="AA quantile", main="Abundance-Absence")
     stats::qqline( AAresids$residual, col='green')
-    nplots <- nplots + 1
+    oask <- grDevices::devAskNewPage(TRUE)
   }
-  if( nplots>=0)
-      oask <- grDevices::devAskNewPage(TRUE)
   if( "Intercept.PA" %in% x$mod$names.fixed){
     graphics::par( mfrow=c(1,2))
-#    if( ncolly==3)
-#      graphics::plot.new()
     plot( PAresids$fitted, PAresids$residual, pch=20, ylab="PA residuals", xlab="PA fitted", main="Presence-Absence")
     graphics::abline( h=0, col='green')
     stats::qqnorm( PAresids$residual, pch=20, ylab="PA quantile", main="Presence-Absence")
     stats::qqline( PAresids$residual, col='green')
-    nplots <- nplots + 1
-  }
-  if( nplots>=0)
     oask <- grDevices::devAskNewPage(TRUE)
+  }
   if( "Intercept.PO" %in% x$mod$names.fixed){
     graphics::par( mfrow=c(1,3))
     raster::plot( POresids$ras, main="Presence-Only Residuals")
