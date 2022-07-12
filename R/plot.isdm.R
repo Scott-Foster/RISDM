@@ -122,7 +122,7 @@ plot.isdm <- function( x, covarRaster, ...){
   }
   
   #plotting up the residuals. RQR versus fitted and for PO data the raster.
-  oask <- grDevices::devAskNewPage(TRUE);
+  nplots <- 0
   graphics::par( mfrow=c(1,ncolly))
   if( "Intercept.DC" %in% x$mod$names.fixed){
     if( ncolly==3)
@@ -131,7 +131,10 @@ plot.isdm <- function( x, covarRaster, ...){
     graphics::abline( h=0, col='green')
     stats::qqnorm( DCresids$residual, pch=20, ylab="DC quantile", main="Double Count")
     stats::qqline( DCresids$residual, col='green')
+    nplots <- nplots +1
   }
+  if( nplots==0)
+      oask <- grDevices::devAskNewPage(TRUE)
   if( "Intercept.AA" %in% x$mod$names.fixed){
     if( ncolly==3)
       graphics::plot.new()
@@ -139,7 +142,10 @@ plot.isdm <- function( x, covarRaster, ...){
     graphics::abline( h=0, col='green')
     stats::qqnorm( AAresids$residual, pch=20, ylab="AA quantile", main="Abundance-Absence")
     stats::qqline( AAresids$residual, col='green')
+    nplots <- nplots + 1
   }
+  if( nplots==0)
+      oask <- grDevices::devAskNewPage(TRUE)
   if( "Intercept.PA" %in% x$mod$names.fixed){
     if( ncolly==3)
       graphics::plot.new()
@@ -147,7 +153,10 @@ plot.isdm <- function( x, covarRaster, ...){
     graphics::abline( h=0, col='green')
     stats::qqnorm( PAresids$residual, pch=20, ylab="PA quantile", main="Presence-Absence")
     stats::qqline( PAresids$residual, col='green')
+    nplots <- nplots + 1
   }
+  if( nplots==0)
+    oask <- grDevices::devAskNewPage(TRUE)
   if( "Intercept.PO" %in% x$mod$names.fixed){
     raster::plot( POresids$ras, main="Presence-Only Residuals")
     plot( POresids$POresids$fitted, POresids$POresids$residual, pch=20, ylab="PO residuals", xlab="PO fitted", main="Presence-Only")
