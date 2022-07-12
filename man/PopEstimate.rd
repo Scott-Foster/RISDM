@@ -12,6 +12,8 @@
 }
 \details{
  The function simply sums up, over the prediction raster, the cell-intensities. It does so for each posterior sample, thus giving a posterior summary.
+ 
+ Two sets of predictions are given. The first three elements of the return object \emph{do not} incorporate the sampling/space distribution, whilst the second three have this extra source of variation included.
 
  Users should be aware that obtaining population estimates from these models needs a certain number of "stars to align". Just two of them are a sensible sampling plan, where the intercept terms are unbiassedly estimated, and for detectability a DC dataset should be used.
 }

@@ -122,7 +122,8 @@ plot.isdm <- function( x, covarRaster, ...){
   }
   
   #plotting up the residuals. RQR versus fitted and for PO data the raster.
-  graphics::par( mfrow=c(numTypes,ncolly))
+  oask <- grDevices::devAskNewPage(TRUE);
+  graphics::par( mfrow=c(1,ncolly))
   if( "Intercept.DC" %in% x$mod$names.fixed){
     if( ncolly==3)
       graphics::plot.new()
@@ -155,6 +156,7 @@ plot.isdm <- function( x, covarRaster, ...){
     stats::qqline( POresids$POresids$residual, col='green')
   }
 
+  on.exit( oask)
   invisible( NULL)
   
 }
