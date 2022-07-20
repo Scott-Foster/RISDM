@@ -6,10 +6,10 @@ library( testthat)
 RandomFields::RFoptions( install="no")
 f <- system.file("external/test.grd", package="raster")
 r <- raster(f)
-values( r)[ !is.na( values( r))] <- 1
+raster::values( r)[ !is.na( raster::values( r))] <- 1
 rm( f)
 dat <- simulateData.isdm( expected.pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))
-crs( dat$covarBrick) <- crs( r)
+raster::crs( dat$covarBrick) <- raster::crs( r)
 meshy <- makeMesh( dat$covarBrick[[1]], max.n=c(500, 150), dep.range=25, expans.mult=20, offset=500, max.edge=5, doPlot=FALSE)
 fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO), 
                                   DCdat=as.data.frame( dat$DC),
@@ -35,7 +35,7 @@ testthat::test_that(
   {
     fm$preds <- predict( object=fm, covarRaster=dat$covarBrick, S=500)
     testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
-    tmp <- raster::stack( crop( dat$covarBrick$Intensity, fm$preds$mean.field), fm$preds$mean.field)
+    tmp <- raster::stack( raster::crop( dat$covarBrick$Intensity, fm$preds$mean.field), fm$preds$mean.field)
     raster::plot( tmp, nc=2)
     
     fm$preds <- predict( object=fm, covarRaster=dat$covarBrick, S=5)  #checking another value of S

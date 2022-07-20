@@ -10,7 +10,7 @@ importFrom( "sp", "SpatialPointsDataFrame", "CRS","plot", "over", "SpatialPoints
 importFrom( "parallel", "detectCores")
 importFrom( "methods", "as", "hasArg")
 importFrom( "stats","terms","update","dist","median","quantile","model.matrix", "qnorm", "predict")
-importFrom( "graphics", "abline", "hist", "legend", "lines", "points")
+importFrom( "graphics", "abline", "hist", "legend", "lines", "points","par")
 importFrom( "grDevices", "grey")
 importFrom( "terra", "cellSize", "rast")
 importFrom( "maptools", "checkPolygonsHoles")

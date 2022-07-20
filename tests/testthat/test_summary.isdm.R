@@ -6,10 +6,10 @@ library( testthat)
 RandomFields::RFoptions( install="no")
 f <- system.file("external/test.grd", package="raster")
 r <- raster(f)
-values( r)[ !is.na( values( r))] <- 1
+raster::values( r)[ !is.na( raster::values( r))] <- 1
 rm( f)
 dat <- simulateData.isdm( expected.pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))
-crs( dat$covarBrick) <- crs( r)
+raster::crs( dat$covarBrick) <- raster::crs( r)
 meshy <- makeMesh( dat$covarBrick[[1]], max.n=c(500, 150), dep.range=25, expans.mult=20, offset=500, max.edge=5, doPlot=FALSE)
 fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO), 
                                         DCdat=as.data.frame( dat$DC),
