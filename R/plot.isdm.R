@@ -126,7 +126,7 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     oask <- grDevices::devAskNewPage(TRUE)
     on.exit( grDevices::devAskNewPage(FALSE))
   }
-  graphics::par( mfrow=c(1,3))
+  graphics::par( mfrow=c(nFigRow,3))
   
 #  oask <- grDevices::devAskNewPage(FALSE) #don't ask for the first page of plots
   if( "Intercept.DC" %in% x$mod$names.fixed){
