@@ -11,7 +11,7 @@
 ###############################################################################################
 ###############################################################################################
 
-plot.isdm <- function( x, covarRaster, ask=TRUE, ...){
+plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
  
   #number of data types
   numTypes <- 0
@@ -122,22 +122,24 @@ plot.isdm <- function( x, covarRaster, ask=TRUE, ...){
   }
   
   #plotting up the residuals. RQR versus fitted and for PO data the raster.
+  if( ask){
+    oask <- grDevices::devAskNewPage(TRUE)
+    on.exit( grDevices::devAskNewPage(FALSE))
+  }
+  graphics::par( mfrow=c(1,2))
+  
 #  oask <- grDevices::devAskNewPage(FALSE) #don't ask for the first page of plots
   if( "Intercept.DC" %in% x$mod$names.fixed){
-    graphics::par( mfrow=c(1,2))
     plot( DCresids$fitted, DCresids$residual, pch=20, ylab="DC residuals", xlab="DC fitted", main="Double Count")
     graphics::abline( h=0, col='green')
     stats::qqnorm( DCresids$residual, pch=20, ylab="DC quantile", main="Double Count")
     stats::qqline( DCresids$residual, col='green')
-    oask <- grDevices::devAskNewPage(ask)
   }
   if( "Intercept.AA" %in% x$mod$names.fixed){
-    graphics::par( mfrow=c(1,2))
     plot( AAresids$fitted, AAresids$residual, pch=20, ylab="AA residuals", xlab="AA fitted", main="Abundance-Absence")
     graphics::abline( h=0, col='green')
     stats::qqnorm( AAresids$residual, pch=20, ylab="AA quantile", main="Abundance-Absence")
     stats::qqline( AAresids$residual, col='green')
-    oask <- grDevices::devAskNewPage(ask)
   }
   if( "Intercept.PA" %in% x$mod$names.fixed){
     graphics::par( mfrow=c(1,2))
@@ -145,7 +147,6 @@ plot.isdm <- function( x, covarRaster, ask=TRUE, ...){
     graphics::abline( h=0, col='green')
     stats::qqnorm( PAresids$residual, pch=20, ylab="PA quantile", main="Presence-Absence")
     stats::qqline( PAresids$residual, col='green')
-    oask <- grDevices::devAskNewPage(ask)
   }
   if( "Intercept.PO" %in% x$mod$names.fixed){
     graphics::par( mfrow=c(1,3))
@@ -156,7 +157,6 @@ plot.isdm <- function( x, covarRaster, ask=TRUE, ...){
     stats::qqline( POresids$POresids$residual, col='green')
   }
 
-  on.exit( grDevices::devAskNewPage(FALSE))
   invisible( NULL)
   
 }
