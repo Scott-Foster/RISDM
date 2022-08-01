@@ -151,7 +151,7 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     stats::qqline( PAresids$residual, col='green')
   }
   if( "Intercept.PO" %in% x$mod$names.fixed){
-    raster::plot( POresids$ras, main="Presence-Only Residuals")
+    raster::plot( POresids$ras, main="Presence-Only")
     plot( POresids$POresids$fitted, POresids$POresids$residual, pch=20, ylab="PO residuals", xlab="PO fitted", main="Presence-Only")
     graphics::abline( h=0, col='green')
     stats::qqnorm( POresids$POresids$residual, pch=20, ylab="PO quantile", main="Presence Only")
