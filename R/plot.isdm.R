@@ -145,7 +145,6 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
   }
   if( "Intercept.PA" %in% x$mod$names.fixed){
     plot.new()
-    graphics::par( mfrow=c(1,2))
     plot( PAresids$fitted, PAresids$residual, pch=20, ylab="PA residuals", xlab="PA fitted", main="Presence-Absence")
     graphics::abline( h=0, col='green')
     stats::qqnorm( PAresids$residual, pch=20, ylab="PA quantile", main="Presence-Absence")
