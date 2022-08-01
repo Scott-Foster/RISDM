@@ -3,7 +3,7 @@
 \alias{plot.isdm}
 \title{Plotting residuals for isdm objects}
 \usage{
-  \method{plot}{isdm}(x, covarRaster, ask=TRUE, \dots)
+  \method{plot}{isdm}(x, covarRaster, \dots)
 }
 \arguments{
   \item{x}{an object of class \code{"isdm"}, usually, a result of a call to \code{\link{isdm}}.}
