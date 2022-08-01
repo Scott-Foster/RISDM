@@ -82,6 +82,12 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     #increase the plotting columns to 3 (default is 2)
     ncolly <- 3
 
+    
+    POspP <- sp::SpatialPoints( x$observationList$PO[,attr( x, "coord.names")], proj4string=crs( covarRaster))
+    #get the outcomes and arrange them appropriately
+    rasCount <- raster::rasterize( POspP, covarRaster, fun='count', background=0)
+    rasCount <- raster::mask( rasCount, covarRaster[[1]])
+
 #####  General solution, but use the quick one for now...
     #number of draws to use in the simulation
 #    if( !methods::hasArg( S))
@@ -89,17 +95,13 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
 #    message( paste0("Generating ",S," samples to form prediction (with distribution, random and bias effects)."))
     #get the fitted values as predictions
 #    preds1 <- predict( x, covarRaster, intercept.terms=NULL, type='intensity', S=S, includeFixed=TRUE, includeRandom=TRUE, includeBias=TRUE)
+
 #####	Quick running solution
     preds <- list()
     preds$mean.field <- list()
     preds$mean.field$mu.mean <- raster::rasterFromXYZ( cbind( coordinates( covarRaster), x$mod$summary.fitted.values[inla.stack.index(x$stack,"PO")$data,"mean"]))
-#    plot( values( preds[[1]]$mu.mean, preds1, pch=20)
-#    abline( 0,1, col='green')
+    preds$mean.field$mu.mean <- raster::mask( preds$mean.field$mu.mean, rasCount)
     
-    POspP <- sp::SpatialPoints( x$observationList$PO[,attr( x, "coord.names")], proj4string=crs( covarRaster))
-    #get the outcomes and arrange them appropriately
-    rasCount <- raster::rasterize( POspP, covarRaster, fun='count', background=0)
-    rasCount <- raster::mask( rasCount, covarRaster[[1]])
     #calculate the two probs for RQR (lower and upper)
     tmp1 <- stats::ppois( raster::values( rasCount), raster::values( preds$mean.field$mu.mean))
     tmp2 <- stats::ppois( pmax( raster::values( rasCount)-1, 0), raster::values( preds$mean.field$mu.mean))
