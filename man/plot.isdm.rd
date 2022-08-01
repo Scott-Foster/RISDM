@@ -3,11 +3,12 @@
 \alias{plot.isdm}
 \title{Plotting residuals for isdm objects}
 \usage{
-  \method{plot}{isdm}(x, covarRaster, ask=TRUE, \dots)
+  \method{plot}{isdm}(x, covarRaster, nFigRow=1, ask=TRUE, \dots)
 }
 \arguments{
   \item{x}{an object of class \code{"isdm"}, usually, a result of a call to \code{\link{isdm}}.}
   \item{covarRaster}{a raster, or something that inheritits from a raster (raster*), to calculate residuals for PO data.}
+  \item{nFigRow}{an integer indicating the number of rows for the figure. If less than the number of data types, there will be multiple figures. If greater, there will be empty rows. Default is 1, indicating that each data type gets its own page.}
   \item{ask}{a boolean, TRUE (default) if the user should be asked before plotting the residuals for the next data type. FALSE for no asking. Function always returns the state to not prompting on function exit.}
   \item{\dots}{argments passed to other sub-functions.  Currently only implemented is S from \code{\link{predict.isdm}}, specifying the number of draws to sample from the posterior distribution.}
 }
