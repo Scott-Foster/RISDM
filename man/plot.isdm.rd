@@ -8,7 +8,7 @@
 \arguments{
   \item{x}{an object of class \code{"isdm"}, usually, a result of a call to \code{\link{isdm}}.}
   \item{covarRaster}{a raster, or something that inheritits from a raster (raster*), to calculate residuals for PO data.}
-  \item{ask}{a boolean, TRUE (default) if the user should be asked before plotting the residuals for the next data type. FALSE for no asking.}
+  \item{ask}{a boolean, TRUE (default) if the user should be asked before plotting the residuals for the next data type. FALSE for no asking. Function always returns the state to not prompting on function exit.}
   \item{\dots}{argments passed to other sub-functions.  Currently only implemented is S from \code{\link{predict.isdm}}, specifying the number of draws to sample from the posterior distribution.}
 }
 \description{
