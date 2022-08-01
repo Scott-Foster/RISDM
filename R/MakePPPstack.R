@@ -22,7 +22,7 @@ MakePPPstack <- function( observs, covarBrick, Mesh, presname="presence", tag="P
   tmp <- raster::rasterize( x=coordinates( observs), y=covarBrick, background=0, fun='count')
   tmp <- raster::mask( tmp, covarBrick[[1]])
   #the cell areas will act as an offset for the PPP
-  tmp <- raster::addLayer( tmp, raster::raster( terra::cellSize( terra::rast( tmp))))
+  tmp <- raster::addLayer( tmp, raster::area(tmp))#raster( terra::cellSize( terra::rast( tmp))))
   names( tmp) <- c( "count", "cellArea")
 
   #change to spatial data for some ease.

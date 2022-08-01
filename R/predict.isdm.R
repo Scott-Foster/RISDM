@@ -32,7 +32,7 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
 
   #a data.frame containing prediciton points (no NAs).
   #add cell areas first
-  covarRaster <- raster::addLayer( covarRaster, raster::raster( terra::cellSize( terra::rast( covarRaster))))
+  covarRaster <- raster::addLayer( covarRaster, raster::area( covarRaster))#raster::raster( terra::cellSize( terra::rast( covarRaster))))
   names( covarRaster)[raster::nlayers( covarRaster)] <- "myCellAreas"
   #get the coordinates of the prediction points
   predcoords <- raster::coordinates( covarRaster)
