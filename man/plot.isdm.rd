@@ -3,13 +3,13 @@
 \alias{plot.isdm}
 \title{Plotting residuals for isdm objects}
 \usage{
-  \method{plot}{isdm}(x, covarRaster, \dots)
+  \method{plot}{isdm}(x, covarRaster, ask=TRUE, \dots)
 }
 \arguments{
-  \item{x}{an object of class \code{"isdm"}, usually, a result of a
-    call to \code{\link{isdm}}.}
-  \item{\dots}{argments passed to other sub-functions.  Currently only implemented is S from \code{\link{predict.isdm}}, specifying the number of draws to sample from the posterior distribution.}
+  \item{x}{an object of class \code{"isdm"}, usually, a result of a call to \code{\link{isdm}}.}
   \item{covarRaster}{a raster, or something that inheritits from a raster (raster*), to calculate residuals for PO data.}
+  \item{ask}{a boolean, TRUE (default) if the user should be asked before plotting the residuals for the next data type. FALSE for no asking.}
+  \item{\dots}{argments passed to other sub-functions.  Currently only implemented is S from \code{\link{predict.isdm}}, specifying the number of draws to sample from the posterior distribution.}
 }
 \description{
   This function is a \code{\link{methods}} for class \code{isdm} objects.

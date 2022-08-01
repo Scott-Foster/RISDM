@@ -11,7 +11,7 @@
 ###############################################################################################
 ###############################################################################################
 
-plot.isdm <- function( x, covarRaster, ...){
+plot.isdm <- function( x, covarRaster, ask=TRUE, ...){
  
   #number of data types
   numTypes <- 0
@@ -122,14 +122,14 @@ plot.isdm <- function( x, covarRaster, ...){
   }
   
   #plotting up the residuals. RQR versus fitted and for PO data the raster.
-  oask <- grDevices::devAskNewPage(FALSE) #don't ask for the first page of plots
+#  oask <- grDevices::devAskNewPage(FALSE) #don't ask for the first page of plots
   if( "Intercept.DC" %in% x$mod$names.fixed){
     graphics::par( mfrow=c(1,2))
     plot( DCresids$fitted, DCresids$residual, pch=20, ylab="DC residuals", xlab="DC fitted", main="Double Count")
     graphics::abline( h=0, col='green')
     stats::qqnorm( DCresids$residual, pch=20, ylab="DC quantile", main="Double Count")
     stats::qqline( DCresids$residual, col='green')
-    oask <- grDevices::devAskNewPage(TRUE)
+    oask <- grDevices::devAskNewPage(ask)
   }
   if( "Intercept.AA" %in% x$mod$names.fixed){
     graphics::par( mfrow=c(1,2))
@@ -137,7 +137,7 @@ plot.isdm <- function( x, covarRaster, ...){
     graphics::abline( h=0, col='green')
     stats::qqnorm( AAresids$residual, pch=20, ylab="AA quantile", main="Abundance-Absence")
     stats::qqline( AAresids$residual, col='green')
-    oask <- grDevices::devAskNewPage(TRUE)
+    oask <- grDevices::devAskNewPage(ask)
   }
   if( "Intercept.PA" %in% x$mod$names.fixed){
     graphics::par( mfrow=c(1,2))
@@ -145,7 +145,7 @@ plot.isdm <- function( x, covarRaster, ...){
     graphics::abline( h=0, col='green')
     stats::qqnorm( PAresids$residual, pch=20, ylab="PA quantile", main="Presence-Absence")
     stats::qqline( PAresids$residual, col='green')
-    oask <- grDevices::devAskNewPage(TRUE)
+    oask <- grDevices::devAskNewPage(ask)
   }
   if( "Intercept.PO" %in% x$mod$names.fixed){
     graphics::par( mfrow=c(1,3))
@@ -156,7 +156,7 @@ plot.isdm <- function( x, covarRaster, ...){
     stats::qqline( POresids$POresids$residual, col='green')
   }
 
-  on.exit( oask)
+  on.exit( grDevices::devAskNewPage(FALSE))
   invisible( NULL)
   
 }
