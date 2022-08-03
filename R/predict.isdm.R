@@ -83,7 +83,7 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
     fix.names.ord <- order( fix.names[fix.subset])
     #ordering
     newSampsFixedDist <- newSampsFixedDist[fix.subset[fix.names.ord],]
-    X <- X[,order( colnames( X))]
+    X <- X[,order( colnames( X)),drop=FALSE]
     #the addition to the linear predictor
     eta <- eta + X %*% newSampsFixedDist
   }
