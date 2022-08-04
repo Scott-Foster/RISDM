@@ -86,7 +86,7 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
   if( doPlot){
     plot( meshy, asp=1)
     sp::plot( boundary$poly$lower.res, add=TRUE, border='green')
-    legend("topright", col=c("blue","green",'red'), legend=c("Nonconvex hull defining inner/outer domains","Boundary of raster values (low res)","Boundary of raster values (high res)"), lty=c(1,1), lwd=c(2,2))
+    legend("topright", col=c("blue","green",'red'), legend=c("Nonconvex hull defining inner/outer domains","Boundary of raster values (low res)"), lty=c(1,1), lwd=c(2,2))
   }
 
   #add boundary to object

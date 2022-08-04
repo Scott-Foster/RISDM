@@ -11,14 +11,16 @@
 ###############################################################################################
 ###############################################################################################
 
-checkMesh <- function( mesh, hull){
+checkMesh <- function( mesh, hull, ras=NULL){
   #check inner domain area
   #find inner domain
   nodeLocs <- sp::SpatialPoints( mesh$loc[,1:2])
   #and the bounding hull.
   dom <- sp::SpatialPolygons( list( sp::Polygons( list( sp::Polygon( hull$loc)), 1)))
   #buffer the node locations
-  domBuff <- raster::buffer( dom, width=0.1)
+  #first find the buffer width
+  buffWidth <- 0.001 * min( stats::dist( hull$loc))
+  domBuff <- raster::buffer( dom, width=buffWidth)
   polyNum <- sp::over( nodeLocs, domBuff)
   
   #find angles and areas outside area
@@ -32,14 +34,21 @@ checkMesh <- function( mesh, hull){
   areas <- triSumms[1,]
   angles <- as.vector( triSumms[-1,])
   
+  #find the boundary of the sampling area, if ras is non-NULL
+  if( !is.null(ras))
+    boundary <- list( poly=makeBoundary( ras, doPlot=FALSE))
+  
   par( mfrow=c(1,3))
   
   #plotting mesh and inner/outer
   plot( mesh)
-  points( nodeLocs[!is.na( polyNum),], col=polyNum[!is.na( polyNum)]+2, pch=20, cex=0.5)
-  points( nodeLocs[is.na( polyNum),], col='red', pch=3, cex=0.5)
+  plot( dom, add=TRUE)
+  if( !is.null( ras))
+    sp::plot( boundary$poly$lower.res, add=TRUE, border='green')
+  points( nodeLocs[!is.na( polyNum),], col=polyNum[!is.na( polyNum)]+2, pch=20, cex=0.2)
+  points( nodeLocs[is.na( polyNum),], col='red', pch=3, cex=0.1)
   
-  legend("topright", legend=c("Inner Nodes","Outer Nodes"), pch=c(20,3), col=c(2+1:(length( unique(polyNum))-1),'red'))
+#  legend("topright", legend=c("Inner Nodes","Outer Nodes"), pch=c(20,3), col=c(2+1:(length( unique(polyNum))-1),'red'))
   
   #distribution of triangles inside area.
   hist( areas, main="Inner domain triangle AREAS")
