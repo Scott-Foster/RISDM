@@ -4,6 +4,8 @@ Title: Integrated Species Distribution Modelling using INLA -- multiple data typ
 Version: 1.0.0
 Author: CSIRO Project Team
 Maintainer: Scott Foseter <scott.foster@data61.csiro.au>
+Depends: 
+  R (>= 3.5.0)
 Imports:
   raster,
   rgeos,
