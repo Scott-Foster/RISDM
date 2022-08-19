@@ -16,10 +16,10 @@ Imports:
   methods,
   stats,
   Matrix,
-  maptools
+  maptools,
+  RandomFields
 Suggests:
     MBHdesign,
-    RandomFields,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
