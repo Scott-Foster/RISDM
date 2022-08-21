@@ -60,9 +60,9 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
 
   #setting defaults
   if( is.null( cutoff)){
-    message( "No cutoff given. Assuming that points less than max.edge / 5 are considered to be the same.\n")
+    message( "No cutoff given. Assuming that points less than min( max.edge) / 5 are considered to be the same.\n")
     #advice from (HaakonBakkagit.github.io) to get triangles that aren't too 'pointy'
-    cutoff <- max.edge / 5
+    cutoff <- min( max.edge) / 5
   }
   
   #defaults
