@@ -6,7 +6,7 @@ importFrom( "raster", "extent", "rasterFromXYZ", "extract", "union", "coordinate
 importFrom( "INLA", "inla", "inla.stack.index","inla.stack", "inla.sp2segment", "inla.mesh.2d", "inla.spde.make.A", "inla.mesh.projector","inla.spde2.pcmatern", "inla.stack.data", "inla.stack.A", "inla.nonconvex.hull", "inla.posterior.sample")
 importFrom( "deldir", "deldir", "tile.list")
 importFrom( "rgeos","union", "area.poly", "intersect")
-importFrom( "sp", "SpatialPointsDataFrame", "CRS","plot", "over", "SpatialPoints", "SpatialPolygons", "Polygons", "Polygon")
+importFrom( "sp", "SpatialPointsDataFrame", "CRS","plot", "over", "SpatialPoints", "SpatialPolygons", "Polygons", "Polygon", "wkt")
 importFrom( "parallel", "detectCores")
 importFrom( "methods", "as", "hasArg")
 importFrom( "stats","terms","update","dist","median","quantile","model.matrix", "qnorm", "predict")
