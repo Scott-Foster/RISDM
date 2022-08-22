@@ -5,13 +5,13 @@ Version: 1.0.0
 Author: CSIRO Project Team
 Maintainer: Scott Foseter <scott.foster@data61.csiro.au>
 Depends: 
-  R (>= 3.5.0)
+  R (>= 4.2.1)
 Imports:
   raster,
   rgeos,
   sp,
   parallel,
-  INLA,
+  INLA (>= 22.05.07),
   deldir,
   methods,
   stats,

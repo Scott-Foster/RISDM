@@ -22,9 +22,9 @@ remove.holes <- function(x) {
   holes <- lapply(xp, function(x) sapply(methods::slot(x, "Polygons"), methods::slot, "hole"))
   res <- lapply(1:length(xp), function(i) methods::slot(xp[[i]], "Polygons")[!holes[[i]]])
   IDs <- row.names(x)
-  x.fill <- sp::SpatialPolygons(lapply(1:length(res), function(i)
-    sp::Polygons(res[[i]], ID=IDs[i])), 
-    proj4string=sp::CRS(sp::proj4string(x)))
+  x.wkt <- wkt( x)
+  x.wkt <- comment( slot( x, "proj4string"))
+  x.fill <- sp::SpatialPolygons(lapply(1:length(res), function(i) sp::Polygons(res[[i]], ID=IDs[i])), proj4string=sp::CRS(x.wkt))#sp::proj4string(x)))
   methods::slot(x.fill, "polygons") <- lapply(methods::slot(x.fill, "polygons"), 
                                               maptools::checkPolygonsHoles)   
   methods::slot(x.fill, "polygons") <- lapply(methods::slot(x.fill, "polygons"), "comment<-", NULL)   

@@ -59,7 +59,8 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   #make the complete formula for the INLA call.  With all the right interactions etc.
   fullForm <- makeFormula( distributionFormula, biasFormula, artefactFormulas, control$addRandom)
   #this is an annoying scoping thing.  Took me ages to figure this out, and I still don't quite believe it.
-  assign( "fullForm", fullForm, envir=environment())
+  #assign( "fullForm", fullForm, envir=environment())
+  environment( fullForm) <- environment()
 
   #Get variable names in formulas
   varNames <- getVarNames( distributionFormula, biasFormula, artefactFormulas)
