@@ -5,7 +5,7 @@ Version: 1.0.0
 Author: CSIRO Project Team
 Maintainer: Scott Foseter <scott.foster@data61.csiro.au>
 Depends: 
-  R (>= 4.2.1)
+  R (>= 4.1.0)
 Imports:
   raster,
   rgeos,
@@ -22,7 +22,8 @@ Suggests:
     MBHdesign,
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    splancs
 VignetteBuilder:
   knitr
 Description: Fits a spatial model (with spatial random effect) to data with multiple types. That is, can take any combination of presence-only, presence-absence and abundance (count and double count) data and fit a SDM. The package is flexible, in that it maintains options that are relevant to the integrated SDM, but also constrained in that it removes the dazzling variety of options available from INLA.
