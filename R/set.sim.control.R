@@ -22,7 +22,7 @@ set.sim.control <- function( contr){
     contr$random.seed <- 787
   #what raster dimension to simulate over
   if( ! "raster.dim" %in% names( contr))
-    contr$raster.dim <- rep(100,2)
+    contr$raster.dim <- rep(50,2)
   #plot the simulation data?
   if( ! "doPlot" %in% names( contr))
     contr$doPlot <- TRUE

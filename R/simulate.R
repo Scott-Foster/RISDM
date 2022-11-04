@@ -42,21 +42,26 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
   }
   
   #define two covariates within the study area
-  #not sure why these next two lines throw warnings...
-  #  somewhere in the assignment, and the printing of the summary.  Odd.
-  Mod1 <- RandomFields::RMgauss( var=1, scale=my.scale) + RandomFields::RMnugget( var=0.01)
-  Mod2 <- RandomFields::RMgauss( var=1, scale=my.scale) + RandomFields::RMnugget( var=0.01)
-  simmy1 <- RandomFields::RFsimulate( Mod1, x=xSeq, y=ySeq)
-  simmy2 <- RandomFields::RFsimulate( Mod2, x=xSeq, y=ySeq)
-  X <- cbind( X, as.numeric( as.matrix( simmy1)), as.numeric( as.matrix( simmy2)))
+  simmy1 <- myGrfSim( xlim=range( xSeq), ylim=range( ySeq), nx=length(xSeq), ny=length(ySeq), sig2=1, rho=my.scale, nu=5/2, nug.sig2=0.01)
+  simmy2 <- myGrfSim( xlim=range( xSeq), ylim=range( ySeq), nx=length(xSeq), ny=length(ySeq), sig2=1, rho=my.scale, nu=5/2, nug.sig2=0.01)
+  X <- cbind( simmy1, simmy2[,3])
+
+#  #not sure why these next two lines throw warnings...
+#  #  somewhere in the assignment, and the printing of the summary.  Odd.
+#  Mod1 <- RandomFields::RMgauss( var=1, scale=my.scale) + RandomFields::RMnugget( var=0.01)
+#  Mod2 <- RandomFields::RMgauss( var=1, scale=my.scale) + RandomFields::RMnugget( var=0.01)
+#  simmy1 <- RandomFields::RFsimulate( Mod1, x=xSeq, y=ySeq)
+#  simmy2 <- RandomFields::RFsimulate( Mod2, x=xSeq, y=ySeq)
+#  X <- cbind( X, as.numeric( as.matrix( simmy1)), as.numeric( as.matrix( simmy2)))
   X[,-(1:2)] <- apply( X[,-(1:2)], 2, scale)
   colnames( X) <- c("x","y","Altitude","Temperature")
   
   #random effect for the log-gauss process
   if( control$addRandom){
-    Mod3 <- RandomFields::RMmatern( nu=1, var=control$sd^2, scale= control$range / (2))
-    REff <- RandomFields::RFsimulate( Mod3, x=xSeq, y=ySeq)
-    REff <- as.numeric( as.matrix( REff))
+    REff <- myGrfSim( xlim=range( xSeq), ylim=range( ySeq), nx=length(xSeq), ny=length(ySeq), sig2=control$sd^2, rho=control$range / 2, nu=3/2, nug.sig2=0)[,3,drop=TRUE]  #not quite sure of halving range and nu=3/2...
+#    Mod3 <- RandomFields::RMmatern( nu=1, var=control$sd^2, scale= control$range / (2))
+#    REff <- RandomFields::RFsimulate( Mod3, x=xSeq, y=ySeq)
+#    REff <- as.numeric( as.matrix( REff))
   }
   else
     REff <- rep(0,nrow( X))

@@ -63,9 +63,16 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   environment( fullForm) <- environment()
 
   #Get variable names in formulas
+  #update from Andrew to handle as.factor() stuff.  4/11/22.
   varNames <- getVarNames( distributionFormula, biasFormula, artefactFormulas)
+  tf1 <- grepl("as.factor",varNames)
+  if(any(tf1)){varNames[tf1] <- gsub("as.factor[(]","",varNames[tf1])
+			   varNames[tf1] <- gsub("[)]","",varNames[tf1])}
   #and those that relate to rasters.
   rasterVarNames <- getVarNames( distributionFormula, biasFormula, list(PA=NULL, AA=NULL, DC=NULL))
+  tf2 <- grepl("as.factor",rasterVarNames)
+  if(any(tf2)){rasterVarNames[tf2] <- gsub("as.factor[(]","",rasterVarNames[tf2])
+			   rasterVarNames[tf2] <- gsub("[)]","",rasterVarNames[tf2])}
 
   #create offset (for areas) if not already present
   tmp <- createOffsets( sampleAreaNames, observationList)

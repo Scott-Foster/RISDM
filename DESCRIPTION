@@ -16,8 +16,7 @@ Imports:
   methods,
   stats,
   Matrix,
-  maptools,
-  RandomFields
+  maptools
 Suggests:
     MBHdesign,
     knitr,

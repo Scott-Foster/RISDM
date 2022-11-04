@@ -38,6 +38,12 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   predcoords <- raster::coordinates( covarRaster)
   #extract the covariates
   rasterVarNames <- getVarNames( object$distributionFormula, object$biasFormula, NULL)
+  #edit from Andrew to handle as.factor()...  Edit made 4/11/22
+  tf2 <- grepl("as.factor",rasterVarNames)
+  if(any(tf2)){rasterVarNames[tf2] <- gsub("as.factor[(]","",rasterVarNames[tf2])
+			   rasterVarNames[tf2] <- gsub("[)]","",rasterVarNames[tf2])}
+
+
   covarData <- as.data.frame( raster::extract( covarRaster, predcoords[,1:2])[,rasterVarNames, drop=FALSE])
   myCellAreas <- as.matrix( raster::extract( covarRaster, predcoords[,1:2])[,"myCellAreas", drop=FALSE])
   #cut down to just those areas without NAs.
