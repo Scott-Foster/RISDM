@@ -24,7 +24,9 @@
 \item{control}{A list of control arguments for the simulation. May be partially specified. See Details.}
 }
 \details{
- This function generates some fake data. It was written largely for internal testing purposes, but is made available just in case others find it useful (or useful to hack). It is pretty rudimentary.
+ This function generates some fake data. It was written largely for internal testing purposes, but is made available just in case others find it useful (or useful to hack). It is pretty rudimentary, and slow for even moderately sized grids. The reason for the slowness is decomposing the variance matrix for the grid of cells locations.
+ 
+  The algorithm proceeds by first defining a grid, then calculating distances, Matern covariances, then decomposing covariances and simulating using decomposition. By far and away, the slowest piece is the decomposition -- a Cholesky is used.  Dense grids, greater than about 50x50, could be annoyingly slow.
  
  The control argument may contain the following elements:
 \describe{
