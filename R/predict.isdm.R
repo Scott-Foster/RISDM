@@ -133,16 +133,18 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   if( is.null( mu.all) & type != "link")
     stop( "unknown type.  Must be 'intensity', 'probability' or 'link'. Please check function call.")
   #summaries
-  mu.mean <- rowMeans( mu.all)
-  mu.sd <- apply( mu.all, 1, stats::sd)
+  mu.median <- apply( mu.all, 1, stats::quantile, probs=0.5)
   mu.lower <- apply( mu.all, 1, stats::quantile, probs=0.025)
   mu.upper <- apply( mu.all, 1, stats::quantile, probs=0.975)
-
+  mu.mean <- rowMeans( mu.all)
+  mu.sd <- apply( mu.all, 1, stats::sd)
+  
   #raster format
-  muRaster <- raster::rasterFromXYZ( cbind( predcoords, mu.mean), crs=raster::crs( covarRaster))
-  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.sd), crs=raster::crs( covarRaster)))
+  muRaster <- raster::rasterFromXYZ( cbind( predcoords, mu.median), crs=raster::crs( covarRaster))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covarRaster)))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.upper), crs=raster::crs( covarRaster)))
+  muRaster <- raster::addLayer( muRaster, raster::rasterFromXYZ(cbind( predcoords, mu.mean), crs=raster::crs( covarRaster)))
+  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.sd), crs=raster::crs( covarRaster)))
 
   #sort out extent in case...
   muRaster <- raster::extend( muRaster, covarRaster)  #just in case it is needed -- could be dropped throughout the creation of the raster.

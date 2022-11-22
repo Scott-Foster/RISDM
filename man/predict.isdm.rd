@@ -22,7 +22,7 @@
 \details{ This function is a isdm specific interface to \code{INLA::inla.posterior.samples}. The function generates samples, selects which ones should be included for predicting and then performs the necessary machinations to do the predictions. All predictions are for the grid of covarRaster, including the area of each cell. That is the prediction is for the number of individuals (from the point process) within a cell.}
 
 \value{A list containing the following elements:
-\item{mean.field}{The predictions and summaries thereof. The summaries are for the cell-wise posterior: mean, standard deviation, median, lower interval (2.5\%) and upper interval (97.5\%)}
+\item{mean.field}{The predictions and summaries thereof. The summaries are for the cell-wise posterior: median, median, lower interval (2.5\%), upper interval (97.5\%), mean, and standard deviation. Note that the median it is possible that the median is a more robust measure of central tendancy than the mean.}
 \item{cell.samples}{All the S posterior draws for each cell.}
 \item{fixedSamples}{All the S posterior draws of the fixed effects.}
 \item{fixed.names}{The names of the fixed effects in the samples, fixedSamples}
