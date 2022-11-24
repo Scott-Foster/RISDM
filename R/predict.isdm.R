@@ -32,7 +32,8 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
 
   #a data.frame containing prediciton points (no NAs).
   #add cell areas first
-  covarRaster <- raster::addLayer( covarRaster, raster::area( covarRaster))#raster::raster( terra::cellSize( terra::rast( covarRaster))))
+  suppressWarnings( 
+  covarRaster <- raster::addLayer( covarRaster, raster::area( covarRaster)))#raster::raster( terra::cellSize( terra::rast( covarRaster))))
   names( covarRaster)[raster::nlayers( covarRaster)] <- "myCellAreas"
   #get the coordinates of the prediction points
   predcoords <- raster::coordinates( covarRaster)
@@ -133,9 +134,9 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   if( is.null( mu.all) & type != "link")
     stop( "unknown type.  Must be 'intensity', 'probability' or 'link'. Please check function call.")
   #summaries
-  mu.median <- apply( mu.all, 1, stats::quantile, probs=0.5)
-  mu.lower <- apply( mu.all, 1, stats::quantile, probs=0.025)
-  mu.upper <- apply( mu.all, 1, stats::quantile, probs=0.975)
+  mu.median <- apply( mu.all, 1, stats::quantile, probs=0.5, na.rm=TRUE)
+  mu.lower <- apply( mu.all, 1, stats::quantile, probs=0.025, na.rm=TRUE)
+  mu.upper <- apply( mu.all, 1, stats::quantile, probs=0.975, na.rm=TRUE)
   mu.mean <- rowMeans( mu.all)
   mu.sd <- apply( mu.all, 1, stats::sd)
   
