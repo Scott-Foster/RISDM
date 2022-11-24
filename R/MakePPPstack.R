@@ -38,8 +38,8 @@ MakePPPstack <- function( observs, covarBrick, Mesh, presname="presence", tag="P
   
   #covariates 'n' stuff
   tmp <- varNames %in% colnames( observs@data)
-  if( ! all( tmp))
-    warning( "Not all bias covariates in PO data. Missing: ", paste( varNames[!tmp], " "), "Creating variable and padding with NAs.")
+#  if( ! all( tmp))
+#    warning( "Not all bias covariates in PO data. Missing: ", paste( varNames[!tmp], " "), "Creating variable and padding with NAs.")
   tmptmp <- matrix( NA, nrow=nrow( observs@data), ncol=sum( !tmp), dimnames=list( NULL, varNames[!tmp]))
   observs@data <- cbind( observs@data, as.data.frame( tmptmp))
   
