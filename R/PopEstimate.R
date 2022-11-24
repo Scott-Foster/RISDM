@@ -31,14 +31,14 @@ PopEstimate <- function( preds, probs=c(0.025,0.975), intercept.terms=NULL){
 
   #summary over cells.
   samplePopN <- colSums( preds$cell.samples)
-  quants <- stats::quantile( samplePopN, probs=probs)
+  quants <- stats::quantile( samplePopN, probs=probs, na.rm=TRUE)
   
   #adding some sampling noise (this is prediction after all).
   samplePopN.pred <- stats::rpois( n=length( samplePopN), lambda=samplePopN)
-  quants.preds <- stats::quantile( samplePopN.pred, probs=probs)
+  quants.preds <- stats::quantile( samplePopN.pred, probs=probs, na.rm=TRUE)
   
-  res <- list( mean=mean( samplePopN), median=stats::median( samplePopN), interval=quants,
-               mean.pred=mean( samplePopN.pred), median.pred=stats::median( samplePopN.pred), interval.preds=quants.preds)
+  res <- list( mean=mean( samplePopN, na.rm=TRUE), median=stats::median( samplePopN, na.rm=TRUE), interval=quants,
+               mean.pred=mean( samplePopN.pred, na.rm=TRUE), median.pred=stats::median( samplePopN.pred, na.rm=TRUE), interval.preds=quants.preds)
   
   return( res)
 }
