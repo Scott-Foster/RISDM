@@ -23,8 +23,8 @@ MakeDCStack=function( observs, mesh = NULL, DCname = "DCabund", tag = "DC", varN
   
   #covariates 'n' stuff
   tmp <- varNames %in% colnames( observs@data)
-  if( ! all( tmp))
-    warning( "Not all bias covariates in DC data. Missing: ", paste(varNames[!tmp], sep=" "), "Creating variable and padding with NAs.")
+#  if( ! all( tmp))
+#    warning( "Not all bias covariates in DC data. Missing: ", paste(varNames[!tmp], sep=" "), "Creating variable and padding with NAs.")
   tmptmp <- matrix( NA, nrow=nrow( observs@data), ncol=sum( !tmp), dimnames=list( NULL, varNames[!tmp]))
   observs@data <- cbind( observs@data, as.data.frame( tmptmp))
   

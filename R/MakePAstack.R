@@ -36,8 +36,8 @@ MakePAstack=function( observs, mesh = NULL, presname = "GroupSize", tag = "PA", 
 
   #covariates 'n' stuff
   tmp <- varNames %in% colnames( observs@data)
-  if( ! all( tmp))
-    warning( "Not all bias covariates in PA data. Missing: ", paste( varNames[!tmp], " "), "Creating variable and padding with NAs.")
+#  if( ! all( tmp))
+#    warning( "Not all bias covariates in PA data. Missing: ", paste( varNames[!tmp], " "), "Creating variable and padding with NAs.")
   tmptmp <- matrix( NA, nrow=nrow( observs@data), ncol=sum( !tmp), dimnames=list( NULL, varNames[!tmp]))
   observs@data <- cbind( observs@data, as.data.frame( tmptmp))
   
