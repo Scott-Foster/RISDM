@@ -115,7 +115,7 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
     eta <- eta + A.prd %*% samples$fieldAtNodes
   }
   
-  message( add bias)
+  message( "add bias")
   #adding in the bias terms, if wanted.
   if( includeBias==TRUE){
     #sampling bias formula
