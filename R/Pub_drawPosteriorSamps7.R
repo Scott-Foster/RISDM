@@ -15,7 +15,6 @@ draw.posterior.samps <- function(inla.fm, B=100, what="params", field="iSpat",n.
   #Argument "what" is either "params", in which case function will return the fixed effects and hyper-params (all in one matrix)
   #or it is "effects" in which case it returns a matrix of fixed effects and a matrix of random effects.
   
-  message( "now in draw.posterior.samps")
   if( what=="params"){
     p.fixed <- nrow( inla.fm$summary.fixed)
     p.var <- 1
@@ -23,18 +22,12 @@ draw.posterior.samps <- function(inla.fm, B=100, what="params", field="iSpat",n.
     p.smooth <- 1
     p.tot <- p.fixed + p.var + p.dep + p.smooth
 
-    message( "set up matrix")
     draws <- matrix( NA, nrow=B, ncol=p.tot)
     colnames( draws) <- c( rownames( inla.fm$summary.fixed), "Spatial.Variance", "kappa", "Smooth")
   
-    message( "Using INLA's posterior.sample for random effects")
-    message( "class", class( inla.fm))
-    message( "names", names( inla.fm))
     tmp <- INLA::inla.posterior.sample( n=B, result=inla.fm, intern=FALSE, add.names=FALSE)
-    message( "finished with INLA's posterior.sample")
     latent.ids.wanted <- utils::tail( rownames( tmp[[1]]$latent), p.fixed)
 
-    message( "finding random hyper-par samples")
     for( ii in 1:p.fixed)
       draws[,ii] <- sapply( tmp, function(x) x$latent[rownames( tmp[[1]]$latent) == latent.ids.wanted[ii],])
     draws[,"Smooth"] <- 2 - 2/2 #alpha was 2 from above.
@@ -45,15 +38,13 @@ draw.posterior.samps <- function(inla.fm, B=100, what="params", field="iSpat",n.
     return( draws)
   }
   #else not needed as return already called.
-  message( "Using INLA's posterior.sample for fixed effects")
   p.fixed <- nrow( inla.fm$summary.fixed)
   #take the sample
   tmp <- INLA::inla.posterior.sample( n=B, result=inla.fm, num.threads=n.threads, add.names=FALSE)
-  message( "finished with INLA's posterior.sample")
   #table( Reduce( rbind, strsplit(rownames( tmp[[1]]$latent), ":"))[,1])
   iSpat.id <- grep( field, rownames( tmp[[1]]$latent))
+
   res  <- list()
-  message( "packaging for return")
   res$fieldAtNodes <- sapply( tmp, function(x) x$latent[iSpat.id])
   res$fixedEffects <- sapply( tmp, function(x) tail( x$latent, p.fixed))
   

@@ -14,8 +14,6 @@
 #Function to get prediction from a fitted INLA model.
 predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.threads=NULL, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...){
   
-  message( "going into prediction")
-  
   #check if there's anything to do.
   if( !includeRandom & !includeFixed & !includeBias)
     stop( "Neither fixed, random, nor bias included in model predictions. Please choose one or more, but probably fixed and random.")
@@ -24,21 +22,16 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   if( is.null( n.threads))
     n.threads <- attr( object, 'n.threads')
   
-  message( "Using ", n.threads, " cores")
-  
   #check to see if the intercept supplied is useable.  
   if( !all( intercept.terms %in% object$mod$names.fixed))
     stop( "One or more of the intercept.terms supplied is not in the model.  Please check.")
   
   ####Get (grid of) predictions
   #build predictions
-  message( "attempting to draw samples")
   samples <- draw.posterior.samps(object$mod, B=S, what="effects", field="isdm.spat.XXX")
-  message( "samples drawn")  
 
   #a data.frame containing prediciton points (no NAs).
   #add cell areas first
-  message( "add cell area")
   
   covarRaster <- raster::addLayer( covarRaster, raster::area( covarRaster))#raster::raster( terra::cellSize( terra::rast( covarRaster))))
   names( covarRaster)[raster::nlayers( covarRaster)] <- "myCellAreas"
@@ -51,7 +44,6 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   if(any(tf2)){rasterVarNames[tf2] <- gsub("as.factor[(]","",rasterVarNames[tf2])
 			   rasterVarNames[tf2] <- gsub("[)]","",rasterVarNames[tf2])}
 
-  message( "prepareing prediction space")
   covarData <- as.data.frame( raster::extract( covarRaster, predcoords[,1:2])[,rasterVarNames, drop=FALSE])
   myCellAreas <- as.matrix( raster::extract( covarRaster, predcoords[,1:2])[,"myCellAreas", drop=FALSE])
   #cut down to just those areas without NAs.
@@ -62,10 +54,8 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   
   #predictions start with cell area
   #always included no matter what components are included.
-  message( "calc eta")
   eta <- log( as.numeric( myCellAreas))
   
-  message( "prepare X matrix")
   #predictions due to only fixed effects
   if( includeFixed==TRUE){
     if( !is.null( intercept.terms)){
@@ -84,7 +74,6 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
     #undoing the hack from before.
     colnames( X) <- gsub( "XCOLONX", ":", colnames( X))
   
-    message( "sort matrix and effects")
     #sorting the design matrix and the effects so that they match
     fix.names <- object$mod$names.fixed
     #those (factor levels) that are made when producing (constrained/unconstrained) design matrix
@@ -102,11 +91,9 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
     newSampsFixedDist <- newSampsFixedDist[fix.subset[fix.names.ord],]
     X <- X[,order( colnames( X)),drop=FALSE]
     #the addition to the linear predictor
-    message( "calc eta fixed")
     eta <- eta + X %*% newSampsFixedDist
   }
   
-  message( "add random effect")
   #adding in the random effects, if present and wanted
   if( length( samples$fieldAtNodes[[1]])!=0 & includeRandom==TRUE){
     #projector matrix( linking prediction points to mesh)
@@ -115,7 +102,6 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
     eta <- eta + A.prd %*% samples$fieldAtNodes
   }
   
-  message( "add bias")
   #adding in the bias terms, if wanted.
   if( includeBias==TRUE){
     #sampling bias formula
@@ -136,7 +122,6 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
     eta <- eta + bX %*% newSampsFixedBias
   }
 
-    message( "transform")
   #putting together on prediction scale
   mu.all <- NULL
   if( type=='intensity')
@@ -147,7 +132,6 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
     mu.all <- as.matrix( eta)
   if( is.null( mu.all) & type != "link")
     stop( "unknown type.  Must be 'intensity', 'probability' or 'link'. Please check function call.")
-  message( "summarise")
   #summaries
   mu.median <- apply( mu.all, 1, stats::quantile, probs=0.5, na.rm=TRUE)
   mu.lower <- apply( mu.all, 1, stats::quantile, probs=0.025, na.rm=TRUE)
@@ -155,7 +139,6 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   mu.mean <- rowMeans( mu.all)
   mu.sd <- apply( mu.all, 1, stats::sd)
   
-  message( "convert to raster")
   #raster format
   muRaster <- raster::rasterFromXYZ( cbind( predcoords, mu.median), crs=raster::crs( covarRaster))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covarRaster)))
@@ -163,11 +146,9 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   muRaster <- raster::addLayer( muRaster, raster::rasterFromXYZ(cbind( predcoords, mu.mean), crs=raster::crs( covarRaster)))
   muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.sd), crs=raster::crs( covarRaster)))
 
-  message( "extend extent")
   #sort out extent in case...
   muRaster <- raster::extend( muRaster, covarRaster)  #just in case it is needed -- could be dropped throughout the creation of the raster.
 
-    message( "return")
   res <- list( mean.field=muRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords)
   
   return( res)
