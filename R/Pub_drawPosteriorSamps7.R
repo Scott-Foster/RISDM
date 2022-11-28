@@ -28,6 +28,7 @@ draw.posterior.samps <- function(inla.fm, B=100, what="params", field="iSpat",n.
     colnames( draws) <- c( rownames( inla.fm$summary.fixed), "Spatial.Variance", "kappa", "Smooth")
   
     message( "Using INLA's posterior.sample for random effects")
+    message( class( inla.fm), names( inla.fm))
     tmp <- INLA::inla.posterior.sample( n=B, result=inla.fm, intern=FALSE, add.names=FALSE)
     message( "finished with INLA's posterior.sample")
     latent.ids.wanted <- utils::tail( rownames( tmp[[1]]$latent), p.fixed)
