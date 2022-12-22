@@ -24,7 +24,7 @@
 \item{control}{A list of control arguments for the simulation. May be partially specified. See Details.}
 }
 \details{
- This function generates some fake data. It was written largely for internal testing purposes, but is made available just in case others find it useful (or useful to hack). It is pretty rudimentary, and slow for even moderately sized grids. The reason for the slowness is decomposing the variance matrix for the grid of cells locations.
+ This function generates some fake data. It was written largely for internal testing purposes, but is made available just in case others find it useful (or useful to hack). It is pretty rudimentary. The simulation of the random fields is facilitate by Skip Woolley's fftGPsim() function, which is copied (with permission) into the RISM package -- thanks Skip.
  
   The algorithm proceeds by first defining a grid, then calculating distances, Matern covariances, then decomposing covariances and simulating using decomposition. By far and away, the slowest piece is the decomposition -- a Cholesky is used.  Dense grids, greater than about 50x50, could be annoyingly slow.
  

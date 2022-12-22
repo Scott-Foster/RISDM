@@ -21,7 +21,7 @@ checkMesh <- function( mesh, hull, ras=NULL){
   #first find the buffer width
   buffWidth <- 0.001 * min( stats::dist( mesh$loc[1:(min(1000,nrow(mesh$loc))),1:2]))
   domBuff <- raster::buffer( dom, width=buffWidth)
-  proj4string(nodeLocs) <- proj4string( domBuff)
+  sp::proj4string(nodeLocs) <- sp::proj4string( domBuff)
   polyNum <- sp::over( nodeLocs, domBuff)
   
   #find angles and areas outside area

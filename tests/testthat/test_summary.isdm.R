@@ -3,9 +3,8 @@ library( testthat)
 
 ####testing isdm
 
-RandomFields::RFoptions( install="no")
 f <- system.file("external/test.grd", package="raster")
-r <- raster(f)
+r <- raster::raster(f)
 raster::values( r)[ !is.na( raster::values( r))] <- 1
 rm( f)
 dat <- simulateData.isdm( expected.pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))
@@ -38,6 +37,6 @@ testthat::test_that(
     testthat::expect_invisible( print( tmp))  #checking print.summary.isdm
 
     testthat::expect_invisible( print( tmp, digits=6))
-    testthat::expect_invisible( print( tmp, digits=0))  #silly
+    testthat::expect_invisible( print( tmp, digits=1))  #silly
   }
 )

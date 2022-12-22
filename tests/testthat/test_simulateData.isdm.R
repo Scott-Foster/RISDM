@@ -3,8 +3,6 @@ library( testthat)
 
 ####testing simulateData.isdm
 
-RandomFields::RFoptions( install="no")
-
 testthat::test_that(
   "Checking the simulation of data for ISDM examples/checks",
   {

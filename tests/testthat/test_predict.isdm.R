@@ -3,9 +3,8 @@ library( testthat)
 
 ####testing isdm
 
-RandomFields::RFoptions( install="no")
 f <- system.file("external/test.grd", package="raster")
-r <- raster(f)
+r <- raster::raster(f)
 raster::values( r)[ !is.na( raster::values( r))] <- 1
 rm( f)
 dat <- simulateData.isdm( expected.pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))
@@ -37,6 +36,9 @@ testthat::test_that(
     testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
     tmp <- raster::stack( raster::crop( dat$covarBrick$Intensity, fm$preds$mean.field), fm$preds$mean.field)
     raster::plot( tmp, nc=2)
+
+    fm$preds <- predict( object=fm, covarRaster=dat$covarBrick, S=50, n.batches = 3)
+    testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
     
     fm$preds <- predict( object=fm, covarRaster=dat$covarBrick, S=5)  #checking another value of S
     testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")

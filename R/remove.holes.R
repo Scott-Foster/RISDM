@@ -24,6 +24,7 @@ remove.holes <- function(x) {
   IDs <- row.names(x)
   x.wkt <- sp::wkt( x)
   x.wkt <- comment( slot( x, "proj4string"))
+  x.wkt <- ifelse( is.null( x.wkt), as.character( NA), x.wkt)
   x.fill <- sp::SpatialPolygons(lapply(1:length(res), function(i) sp::Polygons(res[[i]], ID=IDs[i])), proj4string=sp::CRS(x.wkt))#sp::proj4string(x)))
   methods::slot(x.fill, "polygons") <- lapply(methods::slot(x.fill, "polygons"), 
                                               maptools::checkPolygonsHoles)   

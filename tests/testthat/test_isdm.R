@@ -3,7 +3,6 @@ library( testthat)
 
 ####testing isdm
 
-RandomFields::RFoptions( install="no")
 f <- system.file("external/test.grd", package="raster")
 r <- raster::raster(f)
 raster::values( r)[ !is.na( raster::values( r))] <- 1
@@ -18,7 +17,6 @@ testthat::test_that(
     fm1 <- list()
     
     #with the PO data only using plugin estimates for now.
-    
     fm1[[1]] <- isdm( observationList=list( POdat=as.data.frame( dat$PO)),
                       covarBrick=dat$covarBrick, 
                       mesh=meshy,
@@ -100,5 +98,11 @@ testthat::test_that(
                                     n.threads=8,
                                     addRandom=TRUE, 
                                     DCmethod="TalyorsLinApprox"))
+    testthat::expect_length( fm1, 5)
+    testthat::expect_s3_class(object=fm1[[1]], class="isdm")
+    testthat::expect_s3_class(object=fm1[[2]], class="isdm")
+    testthat::expect_s3_class(object=fm1[[3]], class="isdm")
+    testthat::expect_s3_class(object=fm1[[4]], class="isdm")
+    testthat::expect_s3_class(object=fm1[[5]], class="isdm")
   }
 )

@@ -3,9 +3,8 @@ library( testthat)
 
 ####testing isdm
 
-RandomFields::RFoptions( install="no")
 f <- system.file("external/test.grd", package="raster")
-r <- raster(f)
+r <- raster::raster(f)
 raster::values( r)[ !is.na( raster::values( r))] <- 1
 rm( f)
 dat <- simulateData.isdm( expected.pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))

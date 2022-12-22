@@ -4,7 +4,7 @@
 \description{ This function predicts from an isdm object from the \code{\link{isdm}} function.  It does so by sampling from the approximate posterior of the model and produces a posterior raster.}
 \usage{
  \method{predict}{isdm}( object, covarRaster, S=500, intercept.terms=NULL, 
-			n.threads=NULL, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...)
+			n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...)
 }
 \arguments{
 \item{object}{An object of class isdm, as obtained from \code{isdm}. No default.}
@@ -12,6 +12,7 @@
 \item{S}{The number of posterior samples to take. Default is 500 samples, which is likely to be small for serious applications.}
 \item{intercept.terms}{Vector of strings indicating which terms in the model should be included as intercepts. An example might be c("Intercept.AA","Intercept.AA:surveyIDdonna") meaning that the coefficient for Intercept.AA and for the interaction Intercept.AA:surveyIDdonna will both be added to each of the predictions. If NULL (default)_the function will choose one of (in this order or preference) Intercept.DC, Intercept.AA, Intercept.PA, Intercept.PO. It is easiest to take the text for the correct term from fit$mod$names.fixed.}
 \item{n.threads}{How many threads to spread the computation over. Default is NULL, where the number used to estimate the model (arugment "fit") is used.}
+\item{n.batches}{How many batches should the prediction be split into. This is largely a hack to overcome memory issues when needing to use a large S. The number of posterior samples will be broken into n.batches groups. Avoids an error, I'd suggest not using this unless you see the error.}
 \item{includeRandom}{Should the random spatial effect be included in the predictions? Default is TRUE, as it nearly always should be (unless you are trying to understand the contribution of the terms).}
 \item{includeFixed}{Should the fixed effects, including the intercept(s), be included in the predictions? Default is TRUE, as it nearly always should be (unless you are trying to understand the contribution of the terms).}
 \item{includeBias}{Should the sampling bias be included in the predictions? Default is FALSE, it is not included. This term is nearly always not-interesting in terms of figuring out what is where. However, it could be interesting to see where the search effort has been placed. Please be aware that includeBias=TRUE will force the intercept.PO to be added to the linear predictor. So, please do not include a non-NULL intercept.terms argument as that will make multiple intercepts to be included in the prediction.}

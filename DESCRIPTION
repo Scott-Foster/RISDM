@@ -1,8 +1,10 @@
 Package: RISDM
 Type: Package
 Title: Integrated Species Distribution Modelling using INLA -- multiple data types
-Version: 1.0.0
-Author: CSIRO Project Team
+Version: 1.0.1
+Authors@R: c(person("Scott", "Foster", role = c("aut", "cre"),
+                     email = "scott.foster@data61.csiro.au"),
+              person("Skip", "Woolley", role = "ctb"))
 Maintainer: Scott Foseter <scott.foster@data61.csiro.au>
 Depends: 
   R (>= 4.1.0)
@@ -16,8 +18,7 @@ Imports:
   methods,
   stats,
   Matrix,
-  maptools,
-  RandomFields
+  maptools
 Suggests:
     MBHdesign,
     knitr,
