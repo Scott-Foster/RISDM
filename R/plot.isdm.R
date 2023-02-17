@@ -33,6 +33,11 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     tmp2 <- stats::ppois( pmax( outcomes-1, 0), lambda=preds)
     #make sure that lower isn't too low...
     tmp2[outcomes==0] <- 0
+    #make sure that lower is lower than higher (avoiding roundoff effort and underflow)
+    tmp1[tmp2>tmp1] <- tmp2[tmp2>tmp1]
+    #make sure that the random sample is not on the 'wrong' boundary
+    tmp1[tmp1<=0] <- 1e-5
+    tmp2[tmp2>=1] <- 1-1e-5 
     #do the random part of RQR
     tmp3 <- stats::runif( n=length( tmp1), min=tmp2, max=tmp1)
     #bundle the residuals
@@ -50,6 +55,11 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     tmp2 <- stats::ppois( pmax( outcomes-1, 0), lambda=preds)
     #make sure that lower isn't too low...
     tmp2[outcomes==0] <- 0
+    #make sure that lower is lower than higher (avoiding roundoff effort and underflow)
+    tmp1[tmp2>tmp1] <- tmp2[tmp2>tmp1]
+    #make sure that the random sample is not on the 'wrong' boundary
+    tmp1[tmp1<=0] <- 1e-5
+    tmp2[tmp2>=1] <- 1-1e-5 
     #do the random part of RQR
     tmp3 <- stats::runif( n=length( tmp1), min=tmp2, max=tmp1)
     #bundle the residuals
@@ -70,6 +80,11 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     tmp2 <- stats::pbinom( pmax( outcomes-1, 0), size=1, prob=preds)
     #make sure that lower isn't too low...
     tmp2[outcomes==0] <- 0
+    #make sure that lower is lower than higher (avoiding roundoff effort and underflow)
+    tmp1[tmp2>tmp1] <- tmp2[tmp2>tmp1]
+    #make sure that the random sample is not on the 'wrong' boundary
+    tmp1[tmp1<=0] <- 1e-5
+    tmp2[tmp2>=1] <- 1-1e-5 
     #do the random part of RQR
     tmp3 <- stats::runif( n=length( tmp1), min=tmp2, max=tmp1)
     #bundle the residuals
@@ -111,10 +126,16 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     na.id <- is.na( tmp1) | is.na( tmp2)
     tmp1 <- tmp1[!na.id]
     tmp2 <- tmp2[!na.id]
+    #make sure that lower is lower than higher (avoiding roundoff effort and underflow)
+    tmp1[tmp2>tmp1] <- tmp2[tmp2>tmp1]
+    #make sure that the random sample is not on the 'wrong' boundary
+    tmp1[tmp1<=0] <- 1e-5
+    tmp2[tmp2>=1] <- 1-1e-5 
     #do the random part of RQR
     tmp3 <- stats::runif( n=length( tmp1), max=tmp1, min=tmp2)
     ressy <- rep( NA, length( raster::values( rasCount)))
     ressy[!na.id] <- stats::qnorm( tmp3)
+    
     #bundle the residuals
     POresids <- list()
     POresids$ras <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount), ressy))
