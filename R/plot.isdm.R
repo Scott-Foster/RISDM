@@ -32,12 +32,14 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     tmp1 <- stats::ppois( outcomes, lambda=preds)
     tmp2 <- stats::ppois( pmax( outcomes-1, 0), lambda=preds)
     #make sure that lower isn't too low...
-    tmp2[outcomes==0] <- 0
-    #make sure that lower is lower than higher (avoiding roundoff effort and underflow)
+    tmp2[raster::values( rasCount)<=0] <- 0
+    tmp1[raster::values( rasCount)>=1] <- 1
+    #make sure that "lower is lower than higher", and "higher is higher than lower" (avoiding roundoff effort and underflow)
     tmp1[tmp2>tmp1] <- tmp2[tmp2>tmp1]
-    #make sure that the random sample is not on the 'wrong' boundary
-    tmp1[tmp1<=0] <- 1e-5
-    tmp2[tmp2>=1] <- 1-1e-5 
+    tmp2[tmp1>tmp2] <- tmp1[tmp1>tmp2]
+    #rescale so that the boundaries are not an issue.
+    tmp1 <- (1-e-5)*(tmp1-0.5) + 0.5
+    tmp2 <- (1-e-5)*(tmp2-0.5) + 0.5
     #do the random part of RQR
     tmp3 <- stats::runif( n=length( tmp1), min=tmp2, max=tmp1)
     #bundle the residuals
@@ -54,12 +56,14 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     tmp1 <- stats::ppois( outcomes, lambda=preds)
     tmp2 <- stats::ppois( pmax( outcomes-1, 0), lambda=preds)
     #make sure that lower isn't too low...
-    tmp2[outcomes==0] <- 0
-    #make sure that lower is lower than higher (avoiding roundoff effort and underflow)
+    tmp2[raster::values( rasCount)<=0] <- 0
+    tmp1[raster::values( rasCount)>=1] <- 1
+    #make sure that "lower is lower than higher", and "higher is higher than lower" (avoiding roundoff effort and underflow)
     tmp1[tmp2>tmp1] <- tmp2[tmp2>tmp1]
-    #make sure that the random sample is not on the 'wrong' boundary
-    tmp1[tmp1<=0] <- 1e-5
-    tmp2[tmp2>=1] <- 1-1e-5 
+    tmp2[tmp1>tmp2] <- tmp1[tmp1>tmp2]
+    #rescale so that the boundaries are not an issue.
+    tmp1 <- (1-e-5)*(tmp1-0.5) + 0.5
+    tmp2 <- (1-e-5)*(tmp2-0.5) + 0.5
     #do the random part of RQR
     tmp3 <- stats::runif( n=length( tmp1), min=tmp2, max=tmp1)
     #bundle the residuals
@@ -79,12 +83,14 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     tmp1 <- stats::pbinom( outcomes, size=1, prob=preds)
     tmp2 <- stats::pbinom( pmax( outcomes-1, 0), size=1, prob=preds)
     #make sure that lower isn't too low...
-    tmp2[outcomes==0] <- 0
-    #make sure that lower is lower than higher (avoiding roundoff effort and underflow)
+    tmp2[raster::values( rasCount)<=0] <- 0
+    tmp1[raster::values( rasCount)>=1] <- 1
+    #make sure that "lower is lower than higher", and "higher is higher than lower" (avoiding roundoff effort and underflow)
     tmp1[tmp2>tmp1] <- tmp2[tmp2>tmp1]
-    #make sure that the random sample is not on the 'wrong' boundary
-    tmp1[tmp1<=0] <- 1e-5
-    tmp2[tmp2>=1] <- 1-1e-5 
+    tmp2[tmp1>tmp2] <- tmp1[tmp1>tmp2]
+    #rescale so that the boundaries are not an issue.
+    tmp1 <- (1-e-5)*(tmp1-0.5) + 0.5
+    tmp2 <- (1-e-5)*(tmp2-0.5) + 0.5
     #do the random part of RQR
     tmp3 <- stats::runif( n=length( tmp1), min=tmp2, max=tmp1)
     #bundle the residuals
@@ -120,17 +126,22 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     #calculate the two probs for RQR (lower and upper)
     tmp1 <- stats::ppois( raster::values( rasCount), raster::values( preds$mean.field$mu.mean))
     tmp2 <- stats::ppois( pmax( raster::values( rasCount)-1, 0), raster::values( preds$mean.field$mu.mean))
-    #make sure that lower isn't too low...
-    tmp2[raster::values( rasCount)==0] <- 0
     #trim the NAs
     na.id <- is.na( tmp1) | is.na( tmp2)
     tmp1 <- tmp1[!na.id]
     tmp2 <- tmp2[!na.id]
-    #make sure that lower is lower than higher (avoiding roundoff effort and underflow)
+    #make sure that lower isn't too low...
+    tmp2[raster::values( rasCount)<=0] <- 0
+    tmp1[raster::values( rasCount)>=1] <- 1
+    #make sure that "lower is lower than higher", and "higher is higher than lower" (avoiding roundoff effort and underflow)
     tmp1[tmp2>tmp1] <- tmp2[tmp2>tmp1]
-    #make sure that the random sample is not on the 'wrong' boundary
-    tmp1[tmp1<=0] <- 1e-5
-    tmp2[tmp2>=1] <- 1-1e-5 
+    tmp2[tmp1>tmp2] <- tmp1[tmp1>tmp2]
+    #rescale so that the boundaries are not an issue.
+    tmp1 <- (1-e-5)*(tmp1-0.5) + 0.5
+    tmp2 <- (1-e-5)*(tmp2-0.5) + 0.5
+#    #make sure that the random sample is not on the 'wrong' boundary
+#    tmp1[tmp1<=0] <- 1e-5
+#    tmp2[tmp2>=1] <- 1-1e-5 
     #do the random part of RQR
     tmp3 <- stats::runif( n=length( tmp1), max=tmp1, min=tmp2)
     ressy <- rep( NA, length( raster::values( rasCount)))
