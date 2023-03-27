@@ -14,7 +14,7 @@
 ###############################################################################################
 ###############################################################################################
 
-MakePPPstack <- function( observs, covarBrick, Mesh, presname="presence", tag="PO", varNames, ind) {
+MakePPPstack <- function( observs, covarBrick, habitatArea, Mesh, presname="presence", tag="PO", ind){#varNames, ind) {
 
   ##update 17-May-22  Going on the grid -- increase robustness (hopefully) with little increase in computation (for coarse enough grid)
 
@@ -22,21 +22,34 @@ MakePPPstack <- function( observs, covarBrick, Mesh, presname="presence", tag="P
   tmp <- raster::rasterize( x=coordinates( observs), y=covarBrick, background=0, fun='count')
   tmp <- raster::mask( tmp, covarBrick[[1]])
   #the cell areas will act as an offset for the PPP
-  if( raster::isLonLat( tmp))
-    tmp <- raster::addLayer( tmp, raster::area(tmp))
-  else{
-    tmp1 <- prod( raster::res( tmp))
-    tmp2 <- tmp[[1]]
-    raster::values( tmp2) <- tmp1
-    tmp <- raster::addLayer( tmp, tmp2)
+  if( !is.null( habitatArea)){
+    tmp <- raster::addLayer( tmp, covarBrick[[habitatArea]])
+    if( any( unique( raster::values( tmp[[1]]>0 & !(tmp[[2]] > 0))), na.rm=TRUE)){
+      xxz <- sum( unique( raster::values( tmp[[1]]>0 & !(tmp[[2]] > 0))), na.rm=TRUE)
+      warning( paste0( "Presences occur in cells with zero (or NA) habitat area. Please check POdat and habitatArea arguments.\n For now, these observations will be removed. There are ",xxz," of them."))
+      raster::values( tmp[[1]])[raster::values( tmp[[1]]>0 & !(tmp[[2]] > 0))] <- 0
+    }
   }
-    
+  else{
+    if( raster::isLonLat( tmp))
+      tmp <- raster::addLayer( tmp, raster::area(tmp))
+    else{
+      tmp1 <- prod( raster::res( tmp))
+      tmp2 <- tmp[[1]]
+      raster::values( tmp2) <- tmp1
+      tmp <- raster::addLayer( tmp, tmp2)
+    }
+  }  
   names( tmp) <- c( "count", "cellArea")
 
   #change to spatial data for some ease.
   observs <- SpatialPointsDataFrame( coords=coordinates( tmp), data=cbind( raster::as.data.frame( tmp), raster::as.data.frame( covarBrick)))
   abundname <- 'count'
   sampleAreaName <- "cellArea"
+  #remove the cells that are not within the study area (masked out)
+  observs <- observs[!is.na( observs$count),]  
+  #remove the cells that have zero habitat
+  observs <- observs[!is.na( observs@data[,sampleAreaName]) & observs@data[,sampleAreaName]>0,]
   
   ### This is copied from makeAAStack.  Changes here or there will need to be transfered
   y.pp <- as.integer( observs@data[,abundname])
@@ -44,22 +57,23 @@ MakePPPstack <- function( observs, covarBrick, Mesh, presname="presence", tag="P
   #the area sampled
   offy <- observs@data[,sampleAreaName]
   
-  #covariates 'n' stuff
-  tmp <- varNames %in% colnames( observs@data)
-#  if( ! all( tmp))
-#    warning( "Not all bias covariates in PO data. Missing: ", paste( varNames[!tmp], " "), "Creating variable and padding with NAs.")
-  tmptmp <- matrix( NA, nrow=nrow( observs@data), ncol=sum( !tmp), dimnames=list( NULL, varNames[!tmp]))
-  observs@data <- cbind( observs@data, as.data.frame( tmptmp))
+#  #covariates 'n' stuff
+#  tmp <- varNames %in% colnames( observs@data)
+##  if( ! all( tmp))
+##    warning( "Not all bias covariates in PO data. Missing: ", paste( varNames[!tmp], " "), "Creating variable and padding with NAs.")
+#  tmptmp <- matrix( NA, nrow=nrow( observs@data), ncol=sum( !tmp), dimnames=list( NULL, varNames[!tmp]))
+#  observs@data <- cbind( observs@data, as.data.frame( tmptmp))
   
   #Convert back to non-spatial
-  covars <- as.data.frame( observs@data[,varNames])
-  colnames( covars) <- varNames
+#  as.data.frame( observs@data[,varNames])
+#  colnames( covars) <- varNames
 
-  #add intercept, whose name is not prespecified.
-  covars$Intercept.PO <- 1
+#  #add intercept, whose name is not prespecified.
+#  observs$PO_Intercept <- 1
+#  covars$Intercept.PO <- 1
 
   #Getting the response ready
-  resp <- matrix( NA, nrow=nrow( covars), ncol=sum( ind))
+  resp <- matrix( NA, nrow=nrow( observs), ncol=sum( ind))
   colnames( resp) <- names( ind[ind!=0])  #name the variables
   resp[,"PO"] <- y.pp
   
@@ -67,9 +81,9 @@ MakePPPstack <- function( observs, covarBrick, Mesh, presname="presence", tag="P
   projmat <- INLA::inla.spde.make.A( Mesh$mesh, as.matrix( raster::coordinates( observs))) # from mesh to point observations
   
   #make the stack
-  stk.po <- INLA::inla.stack(data=list(resp=resp, e=rep( 1, nrow( covars)), offy=log( offy)),
+  stk.po <- INLA::inla.stack(data=list(resp=resp, e=rep( 1, nrow( observs)), offy=log( offy)),
                                 A=list(1,projmat), tag=tag,
-                                effects=list( covars, list(isdm.spat.XXX=1:Mesh$mesh$n)))
+                                effects=list( observs@data[,-(1:2)], list(isdm.spat.XXX=1:Mesh$mesh$n)))
 
   return( stk.po)
 

@@ -13,7 +13,7 @@
 ###############################################################################################
 
 #Function to get prediction from a fitted INLA model.
-predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...){
+predict.isdm <- function( object, covarRaster, habitatArea=NULL, S=500, intercept.terms=NULL, n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...){
   
   #check if there's anything to do.
   if( !includeRandom & !includeFixed & !includeBias)
@@ -57,29 +57,37 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
     }
   }
   
-
   #a data.frame containing prediciton points (no NAs).
   #add cell areas first
-  if( raster::isLonLat( covarRaster))
-    covarRaster <- raster::addLayer( covarRaster, raster::area( covarRaster))
+  if( !is.null( habitatArea)){
+    tmp <- covarRaster[[habitatArea]]
+    names( tmp) <- "blah"  #will be changed in a bit anyway
+    covarRaster <- raster::addLayer( covarRaster, tmp)  #this wastes memory a bit, temporarily (only really doing to rename things easily)
+    covarRaster <- dropLayer( covarRaster, which( names( covarRaster) == habitatArea))
+  }
   else{
-    tmp <- covarRaster[[1]]
-    names( tmp) <- "tmpName"
-    raster::values( tmp) <- prod( raster::res( tmp))
-    covarRaster <- raster::addLayer( covarRaster, tmp)
+    if( raster::isLonLat( covarRaster))
+      covarRaster <- raster::addLayer( covarRaster, raster::area( covarRaster))
+    else{
+      tmp <- covarRaster[[1]]
+      names( tmp) <- "tmpName"
+      raster::values( tmp) <- prod( raster::res( tmp))
+      covarRaster <- raster::addLayer( covarRaster, tmp)
+    }
   }
   names( covarRaster)[raster::nlayers( covarRaster)] <- "myCellAreas"
+  covarRaster[["myCellAreas"]] <- raster::mask( covarRaster[["myCellAreas"]], covarRaster[[1]])
+
   #get the coordinates of the prediction points
   predcoords <- raster::coordinates( covarRaster)
   #extract the covariates
-  rasterVarNames <- getVarNames( object$distributionFormula, object$biasFormula, NULL)
-  #edit from Andrew to handle as.factor()...  Edit made 4/11/22
-  tf2 <- grepl("as.factor",rasterVarNames)
-  if(any(tf2)){rasterVarNames[tf2] <- gsub("as.factor[(]","",rasterVarNames[tf2])
-			   rasterVarNames[tf2] <- gsub("[)]","",rasterVarNames[tf2])}
-
-  covarData <- as.data.frame( raster::extract( covarRaster, predcoords[,1:2])[,rasterVarNames, drop=FALSE])
+  
+  #Get expanded data (model matrix) and corresponding formulae
+  newInfo <- uniqueVarNames( obsList=list(), covarBrick=covarRaster, distForm=object$distributionFormula, biasForm=object$biasFormula, arteForm=list(), habitatArea="myCellAreas", DCsurvID=attr( object, "DCobserverInfo"), coord.names=attr( res, "coord.names"), responseNames=object$responseNames, sampleAreaNames=NULL, stdCovs=object$control$standardiseCovariates)
+  #putting it into a data frame
+  covarData <- as.data.frame( raster::extract( newInfo$covarBrick, predcoords[,1:2]))#[,names( newInfo$covarBrick), drop=FALSE])
   myCellAreas <- as.matrix( raster::extract( covarRaster, predcoords[,1:2])[,"myCellAreas", drop=FALSE])
+    
   #cut down to just those areas without NAs.
   noNAid <- apply( covarData, 1, function(x) !any( is.na( x)))
   predcoords <- predcoords[noNAid,]
@@ -93,40 +101,22 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   
   #predictions due to only fixed effects
   if( includeFixed==TRUE){
-    if( !is.null( intercept.terms)){
-      intercept.terms.legal <- gsub( pattern=":", replacement="XCOLONX", x=intercept.terms)
-      for( ii in 1:length( intercept.terms.legal)){
-	covarData$tmptmptmptmp <- 1
-	colnames( covarData)[ ncol( covarData)] <- intercept.terms.legal[ii]
-      }
-    }
     #the model matrix
-    myForm <- object$distributionFormula
-    if( !is.null( intercept.terms))
-      myForm <- update( myForm, paste0("~.-1+",paste( intercept.terms.legal, collapse="+")))
+    myForm <- newInfo$distForm#object$distributionFormula
   
     X <- stats::model.matrix( myForm, data=covarData)
-    #undoing the hack from before.
-    colnames( X) <- gsub( "XCOLONX", ":", colnames( X))
   
     #sorting the design matrix and the effects so that they match
     fix.names <- object$mod$names.fixed
-    #those (factor levels) that are made when producing (constrained/unconstrained) design matrix
-    #update 30/5/2022 -- this shouldn't do anything?
-    missedLevels <- setdiff( colnames( X), fix.names)
-    newSampsFixedDist <- samples$fixedEffects
-    if( length( missedLevels)>0){
-      fix.names <- c( fix.names, missedLevels)
-      newSampsFixedDist <- rbind( newSampsFixedDist, matrix( 0, nrow=length( missedLevels), ncol=ncol( newSampsFixedDist)))
-    }
+
     #the fixed effects involved in this term
     fix.subset <- which( fix.names %in% colnames( X))
     fix.names.ord <- order( fix.names[fix.subset])
     #ordering
-    newSampsFixedDist <- newSampsFixedDist[fix.subset[fix.names.ord],]
+    fixedSamps <- samples$fixedEffects[fix.subset[fix.names.ord],]
     X <- X[,order( colnames( X)),drop=FALSE]
     #the addition to the linear predictor
-    eta <- eta + X %*% newSampsFixedDist
+    eta <- eta + X %*% fixedSamps
   }
   
   #adding in the random effects, if present and wanted
@@ -140,19 +130,19 @@ predict.isdm <- function( object, covarRaster, S=500, intercept.terms=NULL, n.th
   #adding in the bias terms, if wanted.
   if( includeBias==TRUE){
     #sampling bias formula
-    bform <- object$biasFormula
+    bform <- newInfo$biasForm
+    bform <- update( bform, "~.-1")  #belt and braces
     #sampling bias model.matrix
     bX <- stats::model.matrix( bform, data=covarData)
-    #fixing up intercept name
-    tmpID <- grepl( "(Intercept)", colnames( bX))
-    colnames( bX)[tmpID] <- "Intercept.PO"
-    colnames( bX)[!tmpID] <- paste0( "Intercept.PO:",colnames( bX)[!tmpID])
+#    #fixing up intercept name
+#    tmpID <- grepl( "(Intercept)", colnames( bX))
+#    colnames( bX)[tmpID] <- "Intercept.PO"
+#    colnames( bX)[!tmpID] <- paste0( "Intercept.PO:",colnames( bX)[!tmpID])
     bX <- bX[,order( colnames( bX))]
     #sorting samples and design matrix
-    tmpID1 <- grep( "Intercept.PO", object$mod$names.fixed)
-    bfixedNames <- object$mod$names.fixed[tmpID1][order( tmpID1)]
-    newSampsFixedBias <- samples$fixedEffects[tmpID1,]
-    newSampsFixedBias <- newSampsFixedBias[order( tmpID1),]
+    tmpID1 <- grep( "PO_", object$mod$names.fixed)
+    bfixedNames <- object$mod$names.fixed[tmpID1]
+    newSampsFixedBias <- samples$fixedEffects[tmpID1,][order( bfixedNames),]
     #the addition to the linear predictor
     eta <- eta + bX %*% newSampsFixedBias
   }

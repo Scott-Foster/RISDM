@@ -21,7 +21,7 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
   #containers for the residuals
   DCresids <- AAresids <- PAresids <- POresids <- NULL
   #DC residuals
-  if( "Intercept.DC" %in% x$mod$names.fixed){
+  if( "DC_Intercept" %in% x$mod$names.fixed){
     #increment the number of data types.
     numTypes <- numTypes+1
     #get the fitted values as predictions
@@ -42,7 +42,7 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     #bundle the residuals
     DCresids <- data.frame( fitted=preds, observed=outcomes, residual=stats::qnorm( tmp3))
   }
-  if( "Intercept.AA" %in% x$mod$names.fixed){
+  if( "AA_Intercept" %in% x$mod$names.fixed){
     #increment the number of data types.
     numTypes <- numTypes+1
     #get the fitted values as predictions
@@ -63,7 +63,7 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     #bundle the residuals
     AAresids <- data.frame( fitted=preds, observed=outcomes, residual=stats::qnorm( tmp3))
   }
-  if( "Intercept.PA" %in% x$mod$names.fixed){
+  if( "PA_Intercept" %in% x$mod$names.fixed){
     #increment the number of data types.
     numTypes <- numTypes+1
     #get the fitted values as predictions
@@ -88,7 +88,7 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
     PAresids <- data.frame( fitted=preds, observed=outcomes, residual=stats::qnorm( tmp3))
   }
   
-  if( "Intercept.PO" %in% x$mod$names.fixed){
+  if( "PO_Intercept" %in% x$mod$names.fixed){
     #increment the number of data types.
     numTypes <- numTypes+1
     #increase the plotting columns to 3 (default is 2)
@@ -111,7 +111,9 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
 #####	Quick running solution
     preds <- list()
     preds$mean.field <- list()
-    preds$mean.field$mu.mean <- raster::rasterFromXYZ( cbind( coordinates( covarRaster), x$mod$summary.fitted.values[inla.stack.index(x$stack,"PO")$data,"mean"]))
+    preds$mean.field$mu.mean <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount)[!is.na( raster::values( rasCount)),], x$mod$summary.fitted.values[inla.stack.index(x$stack,"PO")$data,"mean"]))
+    preds$mean.field$mu.mean <- raster::extend( preds$mean.field$mu.mean, rasCount)
+    preds$mean.field$mu.mean <- raster::crop( preds$mean.field$mu.mean, rasCount)
     preds$mean.field$mu.mean <- raster::mask( preds$mean.field$mu.mean, rasCount)
     
     #calculate the two probs for RQR (lower and upper)
@@ -148,28 +150,28 @@ plot.isdm <- function( x, covarRaster, nFigRow=1, ask=TRUE, ...){
   graphics::par( mfrow=c(nFigRow,3))
   
 #  oask <- grDevices::devAskNewPage(FALSE) #don't ask for the first page of plots
-  if( "Intercept.DC" %in% x$mod$names.fixed){
+  if( "DC_Intercept" %in% x$mod$names.fixed){
     plot.new()
     plot( DCresids$fitted, DCresids$residual, pch=20, ylab="DC residuals", xlab="DC fitted", main="Double Count")
     graphics::abline( h=0, col='green')
     stats::qqnorm( DCresids$residual, pch=20, ylab="DC quantile", main="Double Count")
     stats::qqline( DCresids$residual, col='green')
   }
-  if( "Intercept.AA" %in% x$mod$names.fixed){
+  if( "AA_Intercept" %in% x$mod$names.fixed){
     plot.new()
     plot( AAresids$fitted, AAresids$residual, pch=20, ylab="AA residuals", xlab="AA fitted", main="Abundance-Absence")
     graphics::abline( h=0, col='green')
     stats::qqnorm( AAresids$residual, pch=20, ylab="AA quantile", main="Abundance-Absence")
     stats::qqline( AAresids$residual, col='green')
   }
-  if( "Intercept.PA" %in% x$mod$names.fixed){
+  if( "PA_Intercept" %in% x$mod$names.fixed){
     plot.new()
     plot( PAresids$fitted, PAresids$residual, pch=20, ylab="PA residuals", xlab="PA fitted", main="Presence-Absence")
     graphics::abline( h=0, col='green')
     stats::qqnorm( PAresids$residual, pch=20, ylab="PA quantile", main="Presence-Absence")
     stats::qqline( PAresids$residual, col='green')
   }
-  if( "Intercept.PO" %in% x$mod$names.fixed){
+  if( "PO_Intercept" %in% x$mod$names.fixed){
     raster::plot( POresids$ras, main="Presence-Only")
     plot( POresids$POresids$fitted, POresids$POresids$residual, pch=20, ylab="PO residuals", xlab="PO fitted", main="Presence-Only")
     graphics::abline( h=0, col='green')

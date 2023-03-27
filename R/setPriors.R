@@ -13,17 +13,20 @@
 
 setPriors <- function( control, stck){
 
+  if( !is.null( control$prior.list))
+    return( prior.list)
+
   #container for the result
   tmp <- list( mean=control$prior.mean)
   tmp$prec <- list( default=control$other.prec)
   #for the intercept terms, in turn of data type.
-  if( "Intercept.PO" %in% colnames( stck$effects$data))
+  if( "PO_Intercept" %in% colnames( stck$effects$data))
     tmp$prec$Intercept.PO <- control$int.prec
-  if( "Intercept.PA" %in% colnames( stck$effects$data))
+  if( "PA_Intercept" %in% colnames( stck$effects$data))
     tmp$prec$Intercept.PA <- control$int.prec
-  if( "Intercept.AA" %in% colnames( stck$effects$data))
+  if( "AA_Intercept" %in% colnames( stck$effects$data))
     tmp$prec$Intercept.AA <- control$int.prec
-  if( "Intercept.DC" %in% colnames( stck$effects$data))
+  if( "DC_Intercept" %in% colnames( stck$effects$data))
     tmp$prec$Intercept.DC <- control$int.prec
   return( tmp)
 }

@@ -15,13 +15,16 @@
 ####		and more flexibility and some different methods. Code is completely
 ####		reliant on INLA and spatial data pacakges
 ####
+####	Re-jigged in March 2023 to make explicit for INLA the particular pattern
+####		of constraints for the factor level effects
+####
 ###############################################################################################
 ###############################################################################################
 
 isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCdat=NULL),
                                 covarBrick=NULL,
+				habitatArea=NULL,
                                 mesh=NULL,
-#                                boundary=NULL,
                                 responseNames=NULL,
                                 sampleAreaNames=NULL, 
                                 distributionFormula=NULL,
@@ -35,20 +38,14 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   #Check for mesh too
   if( is.null( mesh))
     stop("No mesh provided. Please create one using the function makeMesh() and pass it in using the mesh argument")
-  
-  #make variable names in artefact models unique -- so that factor levels etc are not shared between data types
-  tmp <- uniqueVarNames( observationList, artefactFormulas, DCobserverInfo$SurveyID)
-  artefactFormulas <- tmp$arteForm
-  #same for observation list (the species data)
-  observationList <- tmp$obsList
-  #same for double count information
-  DCobserverInfo$SurveyID <- tmp$DCsurvID
-  
+
   #set up FULL control list (priors, nthreads, indexes etc)
   control <- makeControl( control)
 
   #set up relevant information for DC data, if required.
   if( !is.null( observationList$DCdat)){
+    if( !control$DCmethod %in% c( "plugin", "TaylorsLinApprox"))
+      stop( "Specified DC method not supported. Currently must be either 'TaylorsLinApprox' or 'plugin'.  Please see conctol$DCmethod argument.")
     responseNames['DC'] <- "DCcountDC"
     observationList$DCdat <- prepareDCdata( DCdat=observationList$DCdat, DCobserverInfo=DCobserverInfo, sampAreaDC=sampleAreaNames["DC"], control$DCmethod)
     #add terms to the formula for the Taylor series approach.  But not if method is 'plugin'
@@ -56,34 +53,49 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
       artefactFormulas$DC <- update( artefactFormulas$DC, paste0("~.+", DCobserverInfo$SurveyID,":(alpha1Coef+alpha2Coef)"))
   }
 
-  #make the complete formula for the INLA call.  With all the right interactions etc.
-  fullForm <- makeFormula( distributionFormula, biasFormula, artefactFormulas, control$addRandom)
-  #this is an annoying scoping thing.  Took me ages to figure this out, and I still don't quite believe it.
-  #assign( "fullForm", fullForm, envir=environment())
-  environment( fullForm) <- environment()
+  #make variable names in artefact models unique -- so that factor levels etc are not shared between data types
+  newInfo <- uniqueVarNames( obsList=observationList, covarBrick=covarBrick, distForm=distributionFormula, biasForm=biasFormula, arteForm=artefactFormulas, habitatArea=habitatArea, DCsurvID=DCobserverInfo$SurveyID, coord.names=control$coord.names, responseNames=responseNames, sampleAreaNames=sampleAreaNames, stdCovs=control$standardiseCovariates)
 
+#  artefactFormulas <- tmp$arteForm
+#  #same for observation list (the species data)
+#  observationList <- tmp$obsList
+  #same for double count information
+  DCobserverInfo$SurveyID <- newInfo$DCsurvID
+
+
+##  #make the complete formula for the INLA call.  With all the right interactions etc.
+##  fullForm <- makeFormula( distributionFormula, biasFormula, artefactFormulas, control$addRandom, interactArtefact=TRUE)
+##  #this is an annoying scoping thing.  Took me ages to figure this out, and I still don't quite believe it.
+##  #assign( "fullForm", fullForm, envir=environment())
+##  environment( fullForm) <- environment()
+  
   #Get variable names in formulas
   #update from Andrew to handle as.factor() stuff.  4/11/22.
-  varNames <- getVarNames( distributionFormula, biasFormula, artefactFormulas)
-  tf1 <- grepl("as.factor",varNames)
-  if(any(tf1)){varNames[tf1] <- gsub("as.factor[(]","",varNames[tf1])
-			   varNames[tf1] <- gsub("[)]","",varNames[tf1])}
-  #and those that relate to rasters.
-  rasterVarNames <- getVarNames( distributionFormula, biasFormula, list(PA=NULL, AA=NULL, DC=NULL))
-  tf2 <- grepl("as.factor",rasterVarNames)
-  if(any(tf2)){rasterVarNames[tf2] <- gsub("as.factor[(]","",rasterVarNames[tf2])
-			   rasterVarNames[tf2] <- gsub("[)]","",rasterVarNames[tf2])}
+#  varNames <- getVarNames( distributionFormula, biasFormula, artefactFormulas)
+#  tf1 <- grepl("as.factor",varNames)
+#  if(any(tf1)){varNames[tf1] <- gsub("as.factor[(]","",varNames[tf1])
+#			   varNames[tf1] <- gsub("[)]","",varNames[tf1])}
+#  #and those that relate to rasters.
+#  rasterVarNames <- getVarNames( distributionFormula, biasFormula, list(PA=NULL, AA=NULL, DC=NULL))
+#  tf2 <- grepl("as.factor",rasterVarNames)
+#  if(any(tf2)){rasterVarNames[tf2] <- gsub("as.factor[(]","",rasterVarNames[tf2])
+#			   rasterVarNames[tf2] <- gsub("[)]","",rasterVarNames[tf2])}
 
   #create offset (for areas) if not already present
-  tmp <- createOffsets( sampleAreaNames, observationList)
-  #in an accident of history observationList gets rewritten again.
-  observationList <- tmp$dat
+  newInfo$offy <- createOffsets( sampleAreaNames, newInfo$obList)
+#  #in an accident of history observationList gets rewritten again.
+#  observationList <- tmp$dat
     
   #make the mesh for approximating random effect over.
-  FullMesh <- MakeSpatialRegion( mesh=mesh, dataBrick=covarBrick, varNames=rasterVarNames)
+  FullMesh <- MakeSpatialRegion( mesh=mesh, dataBrick=newInfo$covarBrick, varNames=names( newInfo$covarBrick))
 
   #set up INLA data stacks
-  stck <- makeCombinedStack( observationList, covarBrick, FullMesh, control, varNames, rasterVarNames, sampleAreaNames, responseNames)
+  stck <- makeCombinedStack( newInfo$obsList, newInfo$covarBrick, habitatArea, newInfo$distributionFormula, newInfo$artefactFormulas, FullMesh, control, responseNames, ind=newInfo$ind, sampleAreaNames)#varNames, rasterVarNames)
+
+  #make the complete formula for the INLA call.  With all the right interactions etc.
+  fullForm <- combineFormulae( list( newInfo$distForm, newInfo$biasForm, newInfo$arteForm), addRE=control$addRandom)
+#  fullForm <- makeFormula( distributionFormula, biasFormula, attr( stck, "newArtForms"), control$addRandom, interactArtefact=FALSE)
+  environment( fullForm) <- environment()
 
   #wts for loglikelihood to attempt to exclude the influence on PO data likelihood of obs outside region (hull and expansion)
   #note that this currently does nothing and is therefore commented out.
@@ -121,7 +133,8 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
 	       safe=TRUE)
 
   #the return object, which contains some of the bits and pieces calcuated above.
-  res <- list( mod=mod, distributionFormula=distributionFormula, biasFormula=biasFormula, artefactFormulas=artefactFormulas, mesh=FullMesh$mesh, control=control, responseNames=responseNames)
+  res <- list( mod=mod, distributionFormula=distributionFormula, biasFormula=biasFormula, artefactFormulas=artefactFormulas, mesh=FullMesh$mesh, control=control, responseNames=responseNames, 
+		data=list( covarBrick=newInfo$covarBrick, obsList=newInfo$obsList))
   #include the stack if requested
   if( control$returnStack){
     res$stack <- stck

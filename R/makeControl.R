@@ -19,15 +19,18 @@ makeControl <- function( contr) {
   #what are the coordinates called in the observation list data frames and the rasters.
   if( ! "coord.names" %in% names( contr))
     contr$coord.names <- c("Easting","Northing")
+  #prior list
+  if( ! "prior.list" %in% names( contr))
+    contr$prior.list <- NULL
   #priors for the intercepts -- location
   if( ! "prior.mean" %in% names( contr))
     contr$prior.mean <- 0
   #priors for the intercepts -- precision
   if( ! "int.prec" %in% names( contr))
-    contr$int.prec <- 0.0001
+    contr$int.prec <- 0.001
   #priors for the slopes -- precision
   if( ! "other.prec" %in% names( contr))
-    contr$other.prec <- 0.0001
+    contr$other.prec <- 0.1
   #Should the info. crit be calculated.  Default is no.
   if( ! "calcICs" %in% names( contr))
     contr$calcICs <- FALSE
@@ -51,12 +54,14 @@ makeControl <- function( contr) {
   #which DC method should be used.  plugin is the other option (pre-estimate detection.
   if( !"DCmethod" %in% names( contr))
     contr$DCmethod <- "TaylorsLinApprox"  #the other option is "plugin"
+  if( !"standardiseCovariates" %in% names( contr))
+    contr$standardiseCovariates <- TRUE
   
   #add to as we go along
   #check remaining input -- user may have specified stuff that is not there accidentally.
   if( !all( names( contr) %in% c("n.threads","tag.pred","spat.index", "coord.names", "verbose",
-                                 "prior.mean","int.prec","other.prec", "calcICs", "prior.range", 
-                                 "prior.space.sigma", "addRandom", "returnStack", "DCmethod")))
+                                 "prior.list", "prior.mean","int.prec","other.prec", "calcICs", "prior.range", 
+                                 "prior.space.sigma", "addRandom", "returnStack", "DCmethod", "standardiseCovariates")))
     warning( "There are control parameters specified that are not used.")
   return( contr)
 }

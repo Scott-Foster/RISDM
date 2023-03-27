@@ -9,11 +9,15 @@
 ####
 ####	Programmed by Scott in the first half of 2022
 ####	Genesis of code started with Isaac's et al. (2020) R functions
+####	Re-jigged in March 2023 to make explicit for INLA the particular pattern
+####		of constraints for the factor level effects
 ####
 ###############################################################################################
 ###############################################################################################
 
-MakeAAStack=function( observs, mesh = NULL, abundname = "abund", tag = "AA", varNames, sampleAreaName, ind) {
+#MakeAAstack=function( observs, distForm=NULL, artForm=NULL, mesh = NULL, abundname = "abund", tag = "AA", varNames, sampleAreaName, ind) {
+MakeAAstack=function( observs, mesh = NULL, abundname = "abund", tag = "AA", sampleAreaName, ind) {#, varNames
+
 
   # Function to create stack for ABUNDANCE absence points
     
@@ -22,22 +26,30 @@ MakeAAStack=function( observs, mesh = NULL, abundname = "abund", tag = "AA", var
 
   #the area sampled
   offy <- observs@data[,sampleAreaName]
+  
+  #expanding the artefact formulas, just to make sure that they get expanded properly in the INLA call (funny parsing for aliasing?)
+  covars <- observs@data[,-(1:2),drop=FALSE]#stats::model.matrix( artForm, as.data.frame( observs))
 
-  #covariates 'n' stuff
-  tmp <- varNames %in% colnames( observs@data)
-#  if( ! all( tmp))
-#    warning( "Not all bias covariates in AA data. Missing: ", paste( varNames[!tmp], " "), "Creating variable and padding with NAs.")
-  tmptmp <- matrix( NA, nrow=nrow( observs@data), ncol=sum( !tmp), dimnames=list( NULL, varNames[!tmp]))
-  observs@data <- cbind( observs@data, as.data.frame( tmptmp))
-    
-  covars <- as.data.frame( observs@data[,varNames])
-  colnames( covars) <- varNames
-  #  covars$Intercept <- 1
+#  tmptmp <- stats::model.matrix( artForm, as.data.frame( observs))
+#  colnames( tmptmp) <- paste0( "Intercept.AA_", colnames( tmptmp))
+#  colnames( tmptmp) <- gsub( "_(Intercept)", "", colnames( tmptmp), fixed=TRUE)
+#  #without this substituion the ordering of the compound variable names can sometimes be reversed
+#  #best to remove things that are parsed by formulas
+#  colnames( tmptmp) <- gsub( ":", "_", colnames( tmptmp), fixed=TRUE)
+#  observs@data <- cbind( observs@data, as.data.frame( tmptmp))
+  
+#  #a new formula for the new data labels
+#  newArtForm <- reformulate( colnames( tmptmp))
+  
+#  #a new formula for the expanded data
+#  newFullForm.AA <- reformulate( c( strsplit( deparse1( distForm[[2]]), " + ", fixed=TRUE)[[1]], strsplit( deparse1(newArtForm[[2]]), " + ", fixed=TRUE)[[1]]))
+##  newFullForm.AA <- reformulate( attr( terms( reformulate( c( attr( terms( distForm), "term.labels"), attr( terms( newArtForm), "term.labels")))),"term.labels"))
+  
+#  #just those covariates needed (with sensible labels)
+#  covars <- as.data.frame( observs@data[,attr( terms( newFullForm.AA), "term.labels")])
+#  colnames( covars) <- attr( terms( newFullForm.AA), "term.labels")
 
-  #still need to think about what is going to be the reference level for the overall prevalence
-  #  if( sum( ind) > 1)
-  covars$Intercept.AA <- 1
-
+  #building the response matrix.
   resp <- matrix( NA, nrow=nrow( covars), ncol=sum( ind))
   colnames( resp) <- names( ind[ind!=0])  #name the variables
   resp[,"AA"] <- y.pp
@@ -50,6 +62,10 @@ MakeAAStack=function( observs, mesh = NULL, abundname = "abund", tag = "AA", var
                           A=list(1,projmat), tag=tag,
                           effects=list( covars, list(isdm.spat.XXX=1:mesh$n)))
 
+#  attr( stk.abund, "newArtForm") <- newArtForm
+
   return( stk.abund)
 }
+
+
 

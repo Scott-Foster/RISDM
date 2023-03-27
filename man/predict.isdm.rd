@@ -9,6 +9,7 @@
 \arguments{
 \item{object}{An object of class isdm, as obtained from \code{isdm}. No default.}
 \item{covarRaster}{A rasterBrick (or rasterStack) object containing all the covariates in the distribution model.}
+\item{ habitatArea}{A character giving the name of a layer of covarBrick that corresponds to the amount of area within each cell of the raster brick that is suitable habitat for the species. Typically, useage here will correspond with use in the \code{\link{isdm}} function too.}
 \item{S}{The number of posterior samples to take. Default is 500 samples, which is likely to be small for serious applications.}
 \item{intercept.terms}{Vector of strings indicating which terms in the model should be included as intercepts. An example might be c("Intercept.AA","Intercept.AA:surveyIDdonna") meaning that the coefficient for Intercept.AA and for the interaction Intercept.AA:surveyIDdonna will both be added to each of the predictions. If NULL (default)_the function will choose one of (in this order or preference) Intercept.DC, Intercept.AA, Intercept.PA, Intercept.PO. It is easiest to take the text for the correct term from fit$mod$names.fixed.}
 \item{n.threads}{How many threads to spread the computation over. Default is NULL, where the number used to estimate the model (arugment "fit") is used.}

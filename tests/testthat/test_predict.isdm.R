@@ -27,7 +27,7 @@ fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO),
                           coord.names=c("x","y"),
                           n.threads=8,
                           addRandom=TRUE, 
-                          DCmethod="TalyorsLinApprox"))
+                          DCmethod="TaylorsLinApprox"))
 
 testthat::test_that(
   "Checking the prediction from an isdm object.  Predicting to original raster only.",

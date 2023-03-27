@@ -98,11 +98,29 @@ testthat::test_that(
                                     n.threads=8,
                                     addRandom=TRUE, 
                                     DCmethod="TalyorsLinApprox"))
+				    
+    fm1[[6]] <- isdm( observationList=list( DCdat=as.data.frame( dat$DC)),
+                      covarBrick=dat$covarBrick, 
+                      mesh=meshy,
+                      responseNames=c( DC="somebloodything"),
+                      sampleAreaNames=c( DC="transectArea"),
+                      DCobserverInfo=list( SurveyID="Survey", Obs1="Obs1", Obs2="Obs2", Both="Both"),
+                      distributionFormula=~0+stats::poly( Altitude, degree=2)+Temperature,
+                      artefactFormulas=list( DC=~1+Survey:stats::poly( Altitude, degree=2)),
+                      control=list( int.prec=0.01, other.prec=1,
+                                    calcICs=FALSE,
+                                    prior.range=c(1000,0.1), prior.space.sigma=c( 2,0.1),
+                                    coord.names=c("x","y"),
+                                    n.threads=8,
+                                    addRandom=TRUE, 
+                                    DCmethod="TalyorsLinApprox"))
+				    
     testthat::expect_length( fm1, 5)
     testthat::expect_s3_class(object=fm1[[1]], class="isdm")
     testthat::expect_s3_class(object=fm1[[2]], class="isdm")
     testthat::expect_s3_class(object=fm1[[3]], class="isdm")
     testthat::expect_s3_class(object=fm1[[4]], class="isdm")
+    testthat::expect_s3_class(object=fm1[[5]], class="isdm")
     testthat::expect_s3_class(object=fm1[[5]], class="isdm")
   }
 )

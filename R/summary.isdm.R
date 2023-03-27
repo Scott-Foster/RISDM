@@ -17,19 +17,19 @@ summary.isdm <- function( object, ...){
   allFixedNames <- object$mod$names.fixed
   
   #labels for the PO-only model
-  biasTerms <- allFixedNames[grep( "Intercept.PO", allFixedNames)]
+  biasTerms <- allFixedNames[grep( "PO_", allFixedNames)]
   allFixedNames <- setdiff( allFixedNames, biasTerms)
 
   #labels for the DC-only model
-  DCTerms <- allFixedNames[grep( "Intercept.DC", allFixedNames)]
+  DCTerms <- allFixedNames[grep( "DC_", allFixedNames)]
   allFixedNames <- setdiff( allFixedNames, DCTerms)
 
   #labels for the AA-only model
-  AATerms <- allFixedNames[grep( "Intercept.AA", allFixedNames)]
+  AATerms <- allFixedNames[grep( "AA_", allFixedNames)]
   allFixedNames <- setdiff( allFixedNames, AATerms)
   
   #labels for the PA-only model
-  PATerms <- allFixedNames[grep( "Intercept.PA", allFixedNames)]
+  PATerms <- allFixedNames[grep( "PA_", allFixedNames)]
   allFixedNames <- setdiff( allFixedNames, PATerms)
 
   #find labels for the distribution terms
