@@ -45,7 +45,9 @@ checkMesh <- function( mesh, hull, ras=NULL){
   plot( mesh)
   plot( dom, add=TRUE)
   if( !is.null( ras))
-    sp::plot( boundary$poly$lower.res, add=TRUE, border='green')
+    sp::plot(     raster::buffer( boundary$poly$lower.res, width=1e-5), add=TRUE, border='green') 
+#    sp::plot( boundary$poly$lower.res, add=TRUE, border='green')
+
   points( nodeLocs[!is.na( polyNum),], col=polyNum[!is.na( polyNum)]+2, pch=20, cex=0.2)
   points( nodeLocs[is.na( polyNum),], col='red', pch=3, cex=0.1)
   
