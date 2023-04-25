@@ -1,0 +1,99 @@
+%\VignetteIndexEntry{Integrated Species Distribution Models}
+%\VignettePackage{RISDM}
+%\VignetteEngine{knitr::knitr}
+
+\documentclass[article,shortnames,nojss]{jss}
+
+%% almost as usual
+\author{Scott D. Foster\\Data61, CSIRO, Hobart, Tasmania, Australia}
+\title{An Introduction to \pkg{RISDM}}
+\date{\itshape\today}
+
+%% for pretty printing and a nice hypersummary also set:
+\Plainauthor{Scott D. Foster} %% comma-separated
+\Plaintitle{An Introduction/Tutorial to RISDM} %% without formatting
+\Shorttitle{RISDM} %% a short title (if necessary)
+
+\Abstract{
+
+Species distribution models (SDMs) describe the distribution of a species through space, environment and possibly time. They are based on two types of data input: those that inform the biology of where the species is found (and possibly isn't), and those that describe the environment throughout the study region. An SDM is formed by describing the variation in the species data in terms of the variation in the environmental data (a correlative model). SDMs are a useful and proven tool for science and management. 
+
+Standard implementations of SDMs requires a possibly over-restrictive homogeneity in sources of biological data. Typically, the biological data is one of: presence-only (PO), presence-absence (PA), or abundance (AA) data. Results from SDMs using single sources of data will suffer from inherent biases and limitations to that data type. For example, PO data contains observer-bias and presence-absence (PA) and abundance (AA) data is often less geographically expansive and of limited quantity (and hence information content).
+
+Intuitively, it is appealing to incorporate as much biological information into the SDM as possible. This means that multiple data sources and multiple data types should be integrated in a single model. This is the central idea that \textit{integrated} SDMs, or ISDMs, bring \citep{fle19,mil19,isa20}. However, the structure of ISDMs is a necessary step-change in complexity to single data source SDMs -- the vagueries of the each contirbuting data sets need to be modelled as well as the differences between data sets. In addition, there are statistical specifications that need to be handled as well, such as handling multiple likelihoods in a single model.
+
+The \proglang{R}-package \texttt{RISDM} provides a task-specific tool for fitting ISDMs. RISDM utilises the computational engine of \texttt{INLA} \citet{rue09} as the back end, but hides the \texttt{INLA}-specific details from the user (such as the creation of stacks, the specification of spatial models and the specification of multiple likelihoods). The \texttt{RISDM} interface is simplified as much as possible, but still remains flexible enough for a wide class of models to be fitted. In particular, the workflow is purposefully designed to follow that of a \texttt{glm} or \texttt{gam}: model fit, model diagnostics, model summary/interpretation, and prediction.
+
+In this document, we illustrate the process of fitting an ISDM to an invasive weed data set from northern Australia. We illustrate the steps of analysis, and show the effect of altering some of the main parameters/options/control.
+}
+\Keywords{Integrated Species Distribution Models, ISDM, INLA, SPDE, \proglang{R}}
+\Plainkeywords{Integrated Species Distribution Models, ISDM, INLA, SPDE, R} %% without formatting
+%% at least one keyword must be supplied
+
+\Address{
+  Scott D. Foster\\
+  Data61, CSIRO\\
+  Marine Laboratories\\
+  GPObox 1538\\
+  Hobart 7001\\
+  Australia
+  E-mail: \email{scott.foster@data61.csiro.au}
+}
+
+%\usepackage{fullpage}
+\usepackage{natbib}
+\usepackage{url}
+%\usepackage{nicefrac}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\begin{document}
+%\SweaveOpts{concordance=TRUE}
+
+\footnotetext{This is an introduction to the RISDM R-pacakge (available from \url{https://cran.r-project.org/package=RISDM}).}
+
+%<<prelim, echo = FALSE, results = "hide">>=
+<<prelim, echo = FALSE, results="hide">>=
+library( knitr)
+opts_chunk$set(cache=TRUE, message = FALSE, comment = "", dev="pdf",
+                      dpi=300, fig.show = "hold", fig.align = "center")
+@
+
+
+
+\section*{First Things First}
+
+Before starting with this introduction to \texttt{RISDM}, we need to make sure that everything is set up properly. Much of this will vary from computer to computer, but you must have a working version of R installed (preferably the recent release). This vignette was created using \Sexpr{sessionInfo()$R.version$version.string}. It does not matter whether you prefer to use R through a development environment (such as RStudio) or through the command line -- the results will be the same. \texttt{RISDM} can be installed by starting R and then submitting (at command line):
+<<setup1, eval=FALSE>>=
+devtools::install_github( repo="Scott-Foster/RISDM")
+@
+The package will then need to be loaded via
+<<setup2>>=
+library( RISDM)
+@
+\subsection*{Last Things Last}
+
+The only remaining thing to do is to tidy up our workspace. In this case, it is simply by removing all objects. Save them first if you want to keep them for later use.
+<<clusterTidy>>=
+#tidy
+rm( list=ls())
+@
+
+
+\section*{Acknowledgements}
+
+
+%\bibliographystyle{authordate1}
+%\bibliography{/home/fos085/zoteroFiles/JabRefPDF/SDFReferences}
+\bibliography{./RISDM}
+
+\section*{Appendix}
+
+\subsection*{Computational details}
+This vignette was created using the following R and add-on package versions
+
+<<sessionInfo, results = "asis", echo = FALSE>>=
+toLatex(sessionInfo())
+@
+
+\end{document}

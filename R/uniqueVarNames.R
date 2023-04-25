@@ -26,7 +26,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   #put it in the 'correct' environment
   environment( newDistForm) <- environment( distForm)
   #assign the design matrix spatially
-  newCovarBrick <- covarBrick[[rep(1,ncol( XX))]]
+  newCovarBrick <- raster::brick( covarBrick[[rep(1,ncol( XX))]])
   raster::values( newCovarBrick) <- XX
   #put it in the 'correct' environent
   environment( newCovarBrick) <- environment( covarBrick)
