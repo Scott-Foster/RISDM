@@ -41,10 +41,12 @@ predict.isdm <- function( object, covarRaster, habitatArea=NULL, S=500, intercep
   samp.element <- funny(1)
 
   samples <- list()
-  samples$fieldAtNodes <- matrix( NA, nrow=nrow( samp.element$fieldAtNodes), ncol=S)
+  if( object$control$addRandom){
+    samples$fieldAtNodes <- matrix( NA, nrow=nrow( samp.element$fieldAtNodes), ncol=S)
+    samples$fieldAtNodes[,(batchStartEnd[1]+1):batchStartEnd[2]] <- samp.element$fieldAtNodes    
+  }
   samples$fixedEffects <- matrix( NA, nrow=nrow( samp.element$fixedEffects), ncol=S)
 
-  samples$fieldAtNodes[,(batchStartEnd[1]+1):batchStartEnd[2]] <- samp.element$fieldAtNodes
   samples$fixedEffects[,(batchStartEnd[1]+1):batchStartEnd[2]] <- samp.element$fixedEffects
   
   if( n.batches > 1){
@@ -120,7 +122,7 @@ predict.isdm <- function( object, covarRaster, habitatArea=NULL, S=500, intercep
   }
   
   #adding in the random effects, if present and wanted
-  if( length( samples$fieldAtNodes[[1]])!=0 & includeRandom==TRUE){
+  if( object$control$addRandom & includeRandom==TRUE){
     #projector matrix( linking prediction points to mesh)
     A.prd <- as.matrix( INLA::inla.spde.make.A( object$mesh, loc=predcoords))
     #the addition to the linear predictor

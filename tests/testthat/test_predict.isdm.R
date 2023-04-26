@@ -43,7 +43,7 @@ testthat::test_that(
     fm$preds <- predict( object=fm, covarRaster=dat$covarBrick, S=5)  #checking another value of S
     testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
 
-    fm$preds <- predict( object=fm, covarRaster=dat$covarBrick, S=5, intercept.terms="Intercept.DC:Survey_DCDCsurvey_2")
+    fm$preds <- predict( object=fm, covarRaster=dat$covarBrick, S=5, intercept.terms=c( "DC_Intercept", "DC_SurveyDCsurvey_2"))
     testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
 
     fm$preds <- predict( object=fm, covarRaster=dat$covarBrick, S=5, n.threads=4)

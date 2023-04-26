@@ -1,7 +1,7 @@
 Package: RISDM
 Type: Package
 Title: Integrated Species Distribution Modelling using INLA -- multiple data types
-Version: 1.2.1
+Version: 1.2.2
 Authors@R: c(person("Scott", "Foster", role = c("aut", "cre"),
                      email = "scott.foster@data61.csiro.au"),
               person("Skip", "Woolley", role = "ctb"))
@@ -20,11 +20,11 @@ Imports:
   Matrix,
   maptools
 Suggests:
-    MBHdesign,
-    knitr,
-    rmarkdown,
-    testthat (>= 3.0.0),
-    splancs
+  MBHdesign,
+  knitr,
+  rmarkdown,
+  testthat (>= 3.0.0),
+  splancs
 VignetteBuilder:
   knitr
 Description: Fits a spatial model (with spatial random effect) to data with multiple types. That is, can take any combination of presence-only, presence-absence and abundance (count and double count) data and fit a SDM. The package is flexible, in that it maintains options that are relevant to the integrated SDM, but also constrained in that it removes the dazzling variety of options available from INLA.
@@ -32,3 +32,4 @@ License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 Config/testthat/edition: 3
+
