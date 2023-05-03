@@ -25,12 +25,28 @@ makeControl <- function( contr) {
   #priors for the intercepts -- location
   if( ! "prior.mean" %in% names( contr))
     contr$prior.mean <- 0
-  #priors for the intercepts -- precision
-  if( ! "int.prec" %in% names( contr))
-    contr$int.prec <- 0.001
-  #priors for the slopes -- precision
-  if( ! "other.prec" %in% names( contr))
-    contr$other.prec <- 0.1
+  #priors for the intercepts -- stdev and precision
+  if( !"int.sd" %in% names( contr)){
+    if( !"int.prec" %in% names( contr)){
+      contr$int.sd <- 1000
+      contr$int.prec <- 1 / contr$int.sd
+    }
+    if( "int.prec" %in% names( contr))
+      contr$int.sd <- 1 / contr$int.prec
+  }
+  else  #if sd is specified then it overrides prec.
+    contr$int.prec <- 1 / contr$int.sd
+  #priors for the slopes -- stdec & precision
+  if( !"other.sd" %in% names( contr)){
+    if( !"other.prec" %in% names( contr)){
+      contr$other.sd <- 10
+      contr$other.prec <- 1 / contr$other.prec
+    }
+    if( "other.prec" %in% names( contr))
+      contr$other.sd <- 1 / contr$other.prec
+  }
+  else
+    contr$other.prec <- 1 / contr$other.sd
   #Should the info. crit be calculated.  Default is no.
   if( ! "calcICs" %in% names( contr))
     contr$calcICs <- FALSE
@@ -60,7 +76,7 @@ makeControl <- function( contr) {
   #add to as we go along
   #check remaining input -- user may have specified stuff that is not there accidentally.
   if( !all( names( contr) %in% c("n.threads","tag.pred","spat.index", "coord.names", "verbose",
-                                 "prior.list", "prior.mean","int.prec","other.prec", "calcICs", "prior.range", 
+                                 "prior.list", "prior.mean","int.prec","other.prec", "int.sd","other.sd","calcICs", "prior.range", 
                                  "prior.space.sigma", "addRandom", "returnStack", "DCmethod", "standardiseCovariates")))
     warning( "There are control parameters specified that are not used.")
   return( contr)

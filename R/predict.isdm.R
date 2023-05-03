@@ -24,7 +24,7 @@ predict.isdm <- function( object, covarRaster, habitatArea=NULL, S=500, intercep
     n.threads <- attr( object, 'n.threads')
   
   #check to see if the intercept supplied is useable.  
-  if( !all( intercept.terms %in% object$mod$names.fixed))
+  if( !is.null( intercept.terms) & !all( intercept.terms %in% object$mod$names.fixed))
     stop( "One or more of the intercept.terms supplied is not in the model.  Please check.")
 
   batchStartEnd <- seq( from=0, to=S, by=ceiling( S/n.batches))
@@ -101,6 +101,13 @@ predict.isdm <- function( object, covarRaster, habitatArea=NULL, S=500, intercep
   eta <- matrix( NA, nrow=length( myCellAreas), ncol=S)
   eta[,] <- rep( log( as.numeric( myCellAreas)), times=S)
   
+  #container for names of fixed effects
+  fix.names <- object$mod$names.fixed
+
+  #adding the intercepts, if any
+  if( !is.null( intercept.terms))
+    eta <- sweep( eta, MARGIN=2, STATS=samples$fixedEffects[fix.names %in% intercept.terms,], FUN="+")
+  
   #predictions due to only fixed effects
   if( includeFixed==TRUE){
     #the model matrix
@@ -109,7 +116,6 @@ predict.isdm <- function( object, covarRaster, habitatArea=NULL, S=500, intercep
     X <- stats::model.matrix( myForm, data=covarData)
   
     #sorting the design matrix and the effects so that they match
-    fix.names <- object$mod$names.fixed
 
     #the fixed effects involved in this term
     fix.subset <- which( fix.names %in% colnames( X))

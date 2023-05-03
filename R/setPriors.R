@@ -2,7 +2,7 @@
 ###############################################################################################
 ###############################################################################################
 ####	
-####	Set the priors on the combined stack based on what is in contarol.
+####	Set the priors on the combined stack based on what is in control.
 ####
 ####	Returns a list of priors
 ####

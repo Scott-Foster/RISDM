@@ -1,0 +1,42 @@
+
+library( readxl)
+
+#### Cull
+
+cullDat <- as.data.frame( read_excel( path="~/COTS_CCIP/CCIP-D-02/fieldTrip_March23/Data/MarchData2.xlsx", sheet="Cull"))
+
+siteTime <- tapply( cullDat$BottomTime, INDEX=paste( cullDat$Reef, cullDat$CullZone, sep="_"), FUN=sum)
+cullDat$COTS.15 <- rowSums( cullDat[,c("No.COTS15-20cm","No.COTS25-40cm","No.COTS>40cm")])
+siteCOTS.cull <- tapply( cullDat$COTS.15, INDEX=paste( cullDat$Reef, cullDat$CullZone, sep="_"), FUN=sum)
+CPUE.cull <- siteCOTS.cull / siteTime
+
+#### SALAD
+
+SDat <- as.data.frame( read_excel( path="~/COTS_CCIP/CCIP-D-02/fieldTrip_March23/Data/MarchData2.xlsx", sheet="SALAD"))
+
+siteTime <- tapply( SDat$ElapsedTIme, paste( SDat$Reef, SDat$Zone, sep="_"), sum)
+siteCOTS.salad <- tapply( SDat$No.COTS, paste( SDat$Reef, SDat$Zone, sep="_"), sum)
+siteSCARS.salad <- tapply( SDat$No.Scars, paste( SDat$Reef, SDat$Zone, sep="_"), sum)
+CPUE.SALAD <- siteCOTS.salad / siteTime
+
+##### Preliminary plotting
+
+nammy <- union( names( CPUE.cull), names( CPUE.SALAD))
+combined.CPUE <- matrix( NA, ncol=5, nrow=length( nammy))
+colnames( combined.CPUE) <- c( "CPUE.cull","CPUE.salad","COTS.cull","COTS.salad","Scars.salad")
+rownames( combined.CPUE) <- nammy
+
+combined.CPUE[names( CPUE.cull),"CPUE.cull"] <- CPUE.cull
+combined.CPUE[names( CPUE.SALAD),"CPUE.salad"] <- CPUE.SALAD
+combined.CPUE[names( siteCOTS.cull),"COTS.cull"] <- siteCOTS.cull
+combined.CPUE[names( siteCOTS.salad),"COTS.salad"] <- siteCOTS.salad
+combined.CPUE[names( siteCOTS.salad),"Scars.salad"] <- siteSCARS.salad
+
+pairs( combined.CPUE, panel=function(x,y,...){ points(x,y,pch=20);abline(0,1, col='red')})
+plot( combined.CPUE[,c("COTS.cull", "COTS.salad")])
+abline( 0,1, col='red')
+
+######  MANTA summary
+
+scarDat <- as.data.frame( read_excel( path="~/COTS_CCIP/CCIP-D-02/fieldTrip_March23/Data/MarchData2.xlsx", sheet="Cull"))
+

@@ -1,0 +1,26 @@
+{
+    "id": "0E4FEB8D",
+    "path": "~/COTS_CCIP/CCIP-D-02/fieldTrip_March23/Data/CalcCPUE1.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "3553943112",
+    "contents": "",
+    "dirty": false,
+    "created": 1683084864649.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "36,0",
+        "scrollLine": "28"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1680475530,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1680475530,
+    "read_only": false,
+    "read_only_alternatives": []
+}

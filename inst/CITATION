@@ -1,0 +1,13 @@
+citHeader("To cite the RISDM package in publications please use the following.")
+
+bibentry(
+	bibtype="Article",
+	title="RISDM: Species Distribution Modelling from Multiple Data Sources in R",
+	author = c(person("S. Foster"), person("D. Peel"), person("G. Hosack"), person( "A. Hoskins"), person("D. Mitchell"), person("K. Proft"), person("J. Froese")),
+	year = "in review",
+	journal = "TBA",
+	volume="NA",
+	pages="NA-NA",
+	textVersion = paste("Foster, S.; Peel, D.; Hosack, G.; Hoskins, A.; Mitchell, D.; Proft, K.; Froese, J. RISDM: Species Distribution Modelling from Multiple Data Sources in R, in review")
+)
+

@@ -33,25 +33,29 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   if( stdCovs)
     raster::values( newCovarBrick) <- standardiseThatDesMatrix( raster::values( newCovarBrick))
 
-  ####	Bias formula
+  ####	Bias formula, if present
+  if( !is.null( biasForm)){
   #Design matrix/raster for distribution
-  XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( values( covarBrick)), namy="PO")
-  #make new formula
-  newBiasForm <- stats::reformulate( colnames( XX))
-  #put it in the 'correct' environment
-  environment( newBiasForm) <- environment( biasForm)
-  #assign the design matrix
-  newBiasCovarBrick <- covarBrick[[rep(1,ncol( XX))]]
-  raster::values( newBiasCovarBrick) <- XX
-  names( newBiasCovarBrick) <- colnames( XX)  
-  if( stdCovs)
-    raster::values( newBiasCovarBrick) <- standardiseThatDesMatrix( raster::values( newBiasCovarBrick))
-
-  ####	Combine distribution and bias
-  tmpNames <- c( names( newCovarBrick), names( newBiasCovarBrick))
-  raster::values( newCovarBrick) <- cbind( raster::values( newCovarBrick), raster::values( newBiasCovarBrick))
-  names( newCovarBrick) <- tmpNames
-    
+    XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( values( covarBrick)), namy="PO")
+    #make new formula
+    newBiasForm <- stats::reformulate( colnames( XX))
+    #put it in the 'correct' environment
+    environment( newBiasForm) <- environment( biasForm)
+    #assign the design matrix
+    newBiasCovarBrick <- covarBrick[[rep(1,ncol( XX))]]
+    raster::values( newBiasCovarBrick) <- XX
+    names( newBiasCovarBrick) <- colnames( XX)  
+    if( stdCovs)
+      raster::values( newBiasCovarBrick) <- standardiseThatDesMatrix( raster::values( newBiasCovarBrick))
+  
+    ####	Combine distribution and bias
+    tmpNames <- c( names( newCovarBrick), names( newBiasCovarBrick))
+    raster::values( newCovarBrick) <- cbind( raster::values( newCovarBrick), raster::values( newBiasCovarBrick))
+    names( newCovarBrick) <- tmpNames
+  }
+  else
+    newBiasForm <- NULL
+  
   ####	HabitatArea variable too
   if( !is.null( habitatArea))
     newCovarBrick <- addLayer( newCovarBrick, covarBrick[[habitatArea]])

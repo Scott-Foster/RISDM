@@ -27,7 +27,8 @@ combineFormulae <- function( forms, addRE=FALSE) {
     else {
       addTerms <- as.character( forms[[jj]])
       addTerms <- addTerms[length( addTerms)]
-      fullForm <- update.formula( fullForm, paste0("~.+",addTerms))
+      if( length( addTerms) > 0 )
+	fullForm <- update.formula( fullForm, paste0("~.+",addTerms))
     }
   }
   fullForm <- update.formula( fullForm, "~.-removeMe")

@@ -1,0 +1,464 @@
+%\VignetteIndexEntry{Integrated Species Distribution Models}
+%\VignettePackage{RISDM}
+%\VignetteEngine{knitr::knitr}
+
+\documentclass[article,shortnames,nojss]{jss}
+
+%% almost as usual
+\author{Scott D. Foster\\Data61, CSIRO, Hobart, Tasmania, Australia}
+\title{An Introduction to \pkg{RISDM}}
+\date{\itshape\today}
+
+%% for pretty printing and a nice hypersummary also set:
+\Plainauthor{Scott D. Foster} %% comma-separated
+\Plaintitle{An Introduction/Tutorial to RISDM} %% without formatting
+\Shorttitle{RISDM} %% a short title (if necessary)
+
+\Abstract{
+Species distribution models (SDMs) describe the distribution of a species through space, environment and possibly time. They are based on two types of data input: those that inform the biology of where the species is found (and possibly isn't), and those that describe the environment throughout the study region. An SDM is formed by describing the variation in the species data in terms of the variation in the environmental data (a correlative model). SDMs are a useful and proven tool for science and management. 
+
+Standard implementations of SDMs requires a possibly over-restrictive homogeneity in sources of biological data. Typically, the biological data is one of: presence-only (PO), presence-absence (PA), or abundance (AA) data. Results from SDMs using single sources of data will suffer from inherent biases and limitations to that data type. For example, PO data contains observer-bias and presence-absence (PA) and abundance (AA) data is often less geographically expansive and of limited quantity (and hence information content).
+
+Intuitively, it is appealing to incorporate as much biological information into the SDM as possible. This means that multiple data sources and multiple data types should be integrated in a single model. This is the central idea that \textit{integrated} SDMs, or ISDMs, bring \citep{fle19,mil19,isa20}. However, the structure of ISDMs is a necessary step-change in complexity to single data source SDMs -- the vagueries of the each contirbuting data sets need to be modelled as well as the differences between data sets. In addition, there are statistical specifications that need to be handled as well, such as handling multiple likelihoods in a single model.
+
+The \proglang{R}-package \texttt{RISDM} provides a task-specific tool for fitting ISDMs. RISDM utilises the computational engine of \texttt{INLA} \citet{rue09} as the back end, but hides the \texttt{INLA}-specific details from the user (such as the creation of stacks, the specification of spatial models and the specification of multiple likelihoods). The \texttt{RISDM} interface is simplified as much as possible, but still remains flexible enough for a wide class of models to be fitted. In particular, the workflow is purposefully designed to follow that of a \texttt{glm} or \texttt{gam}: model fit, model diagnostics, model summary/interpretation, and prediction.
+
+In this document, we illustrate the process of fitting an ISDM to an invasive weed data set from northern Australia. We illustrate the steps of analysis, and show the effect of altering some of the main parameters/options/control.
+}
+\Keywords{Integrated Species Distribution Models, ISDM, INLA, SPDE, \proglang{R}}
+\Plainkeywords{Integrated Species Distribution Models, ISDM, INLA, SPDE, R} %% without formatting
+
+\Address{
+  Scott D. Foster\\
+  Data61, CSIRO\\
+  Marine Laboratories\\
+  GPObox 1538\\
+  Hobart 7001\\
+  Australia
+  E-mail: \email{scott.foster@data61.csiro.au}
+}
+
+\usepackage{natbib}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{color}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\begin{document}
+
+\footnotetext{This is an introduction to the RISDM R-pacakge (available from \url{https://cran.r-project.org/package=RISDM}).}
+
+%<<prelim, echo = FALSE, results = "hide">>=
+<<prelim, echo = FALSE, results="hide">>=
+library( knitr)
+opts_chunk$set(cache=TRUE, message = FALSE, comment = "", dev="pdf",
+                      dpi=50, fig.show = "hold", fig.align = "center")
+@
+
+\section*{First Things First (setting up R for using \texttt{RISDM})}
+
+Before starting with this introduction to \texttt{RISDM}, we need to make sure that everything is set up properly. Much of this will vary from computer to computer, but you must have a working version of R installed (preferably the recent release) and a working version of INLA \citep{rue09}. This vignette was created using R-version \Sexpr{sessionInfo()$R.version$version.string}, \texttt{INLA} release 22.05.07, and \texttt{RISDM} release 1.2.3. It does not matter whether you prefer to use R through a development environment (such as RStudio) or through the command line -- the results will be the same. You will need to have installed a recent version of \texttt{INLA} and \texttt{RISDM}. These can be installed by starting R and then submitting (at command line):
+<<setup1, eval=FALSE>>=
+install.packages("INLA",repos=c(getOption("repos"),
+                INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
+devtools::install_github( repo="Scott-Foster/RISDM")
+@
+The \texttt{RISDM} package will then need to be loaded. The raster package is also loaded to handle spatial data.
+<<setup2>>=
+library( RISDM)
+library( raster)
+@
+
+\section*{Introduction to RISDM, via Example}
+
+The structure and function calls within \texttt{RISDM} are designed to follow that of the \texttt{glm()} and \texttt{gam()} that are part of the well-used \texttt{stats} \citep{R22} and \texttt{mgcv} \citep{woo17} packages respectively. The \texttt{RISDM} approach is designed to broaden the user-base of ISDM models by leveraging off familiar analytical and computational concepts. While very advanced users may want to fit models that are outside of the scope of \texttt{RISDM}, the \texttt{RISDM} framework could still be used to provide many of the constructs needed for lower-level modelling with \texttt{INLA} \citep{rue09}.
+
+This document is structured, more-or-less, to match the steps that an analyst follows in an analysis workflow. At least for an archetypical analysis. That is: 
+\begin{enumerate}
+  \item \hyperref[subsec:prep]{Preparation} (data and analysis \hyperref[subsubsec:mesh]{mesh})
+  \item \hyperref[subsec:mod]{Specifying and Evaluating} (`fitting`) the model
+  \item \hyperref[subsubsec:res]{Checking the model} for any obvious departures, and \hyperref[subsubsec:summ]{understanding/summarising} the model.
+  \item \hyperref[subsec:inter]{Interpreting} the model 
+  \item \hyperref[subsec:pred]{Prediction}
+\end{enumerate}
+
+The \texttt{RISDM} package is introduced here using data on gamba grass in the Northern Territory, Australia. These data are a small subset of all those available, and are intended to be an illustrative `toy' -- containing enough complexity to be real, but not so complex that they provide too much distraction from the method and computation. The data are presented in \citet{fos24} and the reader should refer there for some more detail and for references.
+
+\subsection*{Preparation} \label{subsec:prep}
+
+\subsubsection*{Covariate Data -- setting the environmental scene}\label{subsubsec:covs}
+
+The first piece of the data puzzle is the environmental data. These data are assumed to be defined on a raster (from the raster package) and must form a raster brick. Forming them into a raster stack ensures that the individual raster layers all have the same extent and the same resolution etc. It is not necessary, but it is highly recommended, that the analyst considers the pattern of missing values within the raster stack. Missing values in covariates in any correlative model can substantially reduce the information content.
+
+The covariate data for the gamba grass example is included as part of the \texttt{RISDM} package. There are three raster layers: 
+\begin{enumerate}
+  \item Accessibility, using the method by \citep{wei18} was used after small modification for the northern Australian context. Here, it measures the travel time to any settlement with a population of more than 200 \citep{geo06}. The observed distribution of this covariate was right-skewed, so a square root transformation was taken. This was to try and reduce the leverage of unusually large observations. One method of spreading gamba grass is thought to be through human movement. So accessibility may correlate with gamba distribution.
+  \item Elevation, measured through a digital elevation model \citep[DEM; from][]{gal15}, may delineate gamba grass distribution \citep{ada15}. Like accessibility, a square root transformation was used to endeavour to reduce leverage of unusual locations within the analysis.
+  \item Soil moisture at the root zone \citep[SMRZ][]{fro18} may limit gamba grass distribution as it could require moist but not saturated soils \citep{flo05,pet12}.
+\end{enumerate}
+The gamba grass covariates can be read directly into R and compiled into a raster stack. The distribution of the covariate data has been inspected (elsewhere) and corrective steps (transformation here) have been employed. This is to reduce the leverage of these observations and to try and obtain the most amount of reliable information from these data. 
+<<readCovars, eval=TRUE,fig.cap="Environmental covariate data for the gamba grass example. Accessibility (ACC) measuring effective distance for humans to travel. Digital elevation model (DEM) giving the altitude. Soil moisture at the root zone (SMRZ) measuring the wetness where it matters for plants. See text for details and references.">>=
+filenames <- paste0( system.file("extdata", package="RISDM"), 
+                   c("/GambaExample_sqrtACC_23Mar28.tif", 
+                     "/GambaExample_sqrtDEM_23Mar28.tif", 
+                     "/GambaExample_SMRZ_23Mar28.tif"))
+covars <- stack( filenames)
+names( covars) <- c("ACC","DEM","SMRZ")
+print( colnames( coordinates( covars)))  #to see how things are labelled.
+plot( covars)
+@
+It may be that the raster data that an analyst wants to use comes in different resolutions, different projections, different extents and so on. If the analyst is not familiar with conversion of these, then it is suggested that they should look into the \texttt{projectRaster}, \texttt{aggregate}, \texttt{disaggregate}, \texttt{mask}, \texttt{crop} and \texttt{stack} functions from the \texttt{raster} package \citep{hij22}.
+
+For the environmental data in this example (see Figure \ref{fig:readCovars}), we have used an equal area project (UTM zone 52 south) with kilometre map units. We recommend the use of projected rasters, as this eases specification and interpretation of spatial processes. However, \texttt{RISDM} will still work with whatever coordinate reference system is chosen.
+
+The resolution of the raster is used to define the resolution of the underlying point process in the ISDM. It is reasonably argued that performing point-process computation on grids smaller than this is wasteful as environmental conditions would not then change between many neighbouring cells. As the raster defines point process computational scale, it can sometimes be useful -- at the start of a modelling exercise -- to coarsen the resolution just so models run faster.
+
+\subsubsection*{Bias Data}
+
+In addition to the environmental covariates, the raster stack can (and should if available) covariates that could delineate the sampling bias of the PO data \citep[e.g.][]{war13}. That is, covariates that are suspected of describing the pattern of search effort that could then result in a set of presences. For the gamba grass example, the accessibility (ACC) variable is likely to play this delineating role. When there are more than one data type, there is no issue that a single covariate describes both the distribution of the species \textit{and} the search bias.
+
+\subsubsection*{Observation Data}
+
+The observation data are those that inform the where the species is, is not, and in what quantity/abundance. Each type of data (PO, PA or AA) is required to have its own data object. They are all required to have the same projection as the raster stack for the environment. This assumes that the coordinate names are the same too. The observation data sets are:
+\begin{description}
+  \item[Presence-Only (PO) data] A \texttt{data.frame} containing at least the locations (x and y coordinates) of the presences. The data.frame may also contain extra contextual information, like the survey/database the presence record was recorded in. This contextual information is currently not used in the analysis.
+  \item[Presence-Absense (PA) and Abundance (AA) data] A \texttt{data.frame} for PA and a \texttt{data.frame} for AA (separately, but neither \textit{has to be} specified). The data.frames contain at least: 
+  \begin{enumerate}
+    \item The locations (x and y coordinates) where the observation occurred.
+    \item The value of the observation at these locations. For PA data, this is a `0' for an absence and a `1' for a presence. For AA data, this is a positive integer (or zero).
+    \item The geographical area (sample area) that the sampling method searched to record the observation. Intuitively, a search area of 1m$^2$ is more likely to produce a `0' than a search area of 1000m$^2$. If sample area is unknown then it must be either guessed (!?) or have some constant inputed. In either case, the results are unlikely to then be reflective of overall levels of species abundance, but the distribution \textit{may very well be} relative to the actual distribution.
+    \item (optional) Extra information that could explain variation in the PA or AA data. Such information could include data that might induce heterogeneous detectability (e.g. different sampling tools, different operators, and so on), but it may also include continuous variables. These variables could be included as sampling artefacts, which are only used to model the observations \textit{within its own data type}.
+  \end{enumerate}
+  \item[Double-Count (DC) data] \textbf{This is experimental}. Double count data arising from two independent observers measuring the same spatial location. These data enable an estimate of detectability for each observer. DC data is not discussed further in this vignette.
+\end{description}
+
+The gamba grass observational data is included in the \texttt{RISDM} package. To load them into R and to get an idea about their content, use:
+<<readObs, eval=TRUE>>=
+gamba_PO <- readRDS( system.file("extdata", "Gamba_PO_23Mar28.RDS", 
+                                   package="RISDM"))
+gamba_PA <- readRDS( system.file("extdata", "Gamba_PA_23Mar28.RDS", 
+                                 package="RISDM"))
+
+str( gamba_PO)
+str( gamba_PA)
+@
+  
+For the gamba grass PO data, there are \verb|\Sexpr{nrow( gamba_PO)}| observations, and their locations are stored in the columns `x' and `y'. These labels match the covariate raster stack from before. There is possible confusion as there is also a longitude and a latitude variable, but these are a legacy of a previous reference system. As stated before however, these observation data will be used in a projected form. The remainder of the data provides contextual information about date of sample, survey program, and so on. These data, for PO observations, are not currently used in \texttt{RISDM}.
+
+For the PA data, there are \verb|\Sexpr{nrow( gamba_PA)}| observations, that are randomly chosen from a much larger database. Of these observations (outcome in the `PA' column), a proportion of \verb|\Sexpr{sum( gamba_PA$PA)/nrow( gamba_PA)}| were presences and \verb|\Sexpr{1-sum(gamba_PA$PA)/nrow(gamba_PA)}| absences. The locations of the observations are in the `x' and `y' columns, and the sampling area is stored in the \texttt{Area} column. The sampling area is the same for all observations in these data (they arise from a formal survey methodology). Most of the contextual variables in gamba\_PA are not all that useful. However, there might be some detectability differences between observers, and this variable could be added as a sampling artefact.
+
+\subsubsection*{Analysis Mesh} \label{subsubsec:mesh}
+
+The geostatistical method utilised in \texttt{RISDM}, that of \citet{lin11}, relies on creating a spatial mesh over which the spatial model is calculated. Some care is needed when specifying the mesh as choices in mesh can lead to changes in inference \citep{rig20,ver21a}. We provide a function in \texttt{RISDM}, \texttt{makeMesh} to produce a mesh using arguments that we think are more intuitive than those provided in INLA. We note that \texttt{makeMesh} `simply' repacakges the information supplied and submits it to the \texttt{INLA} functions. As such, \texttt{makeMesh} provides no new methodology.
+  
+In \texttt{makeMesh}, the mesh creation task is primarily parameterised by the analyst's guess as to the likely effective range for the spatial random effect (distance to small $\sim 0.1$ expected correlation) and also the number of nodes in both the analysis area and an extension area. The analysis area is taken to be a nonconvex hull surrounding the non-NA values in one of the covariate raster layers, and the extension area is simply a buffered version of the hull. The extension is useful to allow for spatial dependence to be properly described at locations near the edges. For finer control, other arguments can also be given. If not supplied, then defaults are set using rules-of-thumbs obtained largely from \citet{bak18} and \citet{kra19}. An elementary mesh for gamba grass is now generated (note that doPlot=FALSE is chosen as \texttt{checkMesh} reproduces these shortly). In this example, the expected dependence is 3km -- so the mesh should be OK to estimate dependencies of that order (order larger). There are up to 1000 nodes in the analysis area and up to 350 in the extension area.
+
+<<makeMesh1, eval=TRUE>>=
+my.mesh <- makeMesh( covars$DEM, max.n=c(1000, 350), dep.range=3, doPlot=FALSE)
+@
+
+A `good' mesh is one that covers the regions, particularly the inner region, with triangles that are approximately equally sized and are approximately equilateral \citep{kra19}. Further, the edge lengths should be relatively small compared to the (posterior) range of spatial dependence -- otherwise the model might erroneously report that there is no dependence in the data when there is. If the edge lengths are too small however, then excessive computation may be needed. The first two conditions can be checked visually using a plot of the mesh \citep[shown in][]{kra19} but also looking at the distribution of triangle areas and angles. The \texttt{RISDM} function \texttt{checkMesh} produces these plots.
+  
+<<checkMesh1, eval=TRUE, fig.height=3>>=
+checkMesh( my.mesh, my.mesh$hull, ras=covars$DEM)
+@
+    
+This mesh appears to be adequate -- there are not too many large or small triangles and not too many triangles with overly small or large angles. However, in \citet{fos24}, we chose (perhaps unnecessarily) to extend the outer boundary slightly to allow for a better distribution of nodes. This was achieved by adding the argument \texttt{offset=7.5}, which is measured in map units (kilometres in this case). As an example of a `bad' mesh, consider the same spatial region but with fewer nodes.
+
+<<makeBadMesh1, eval=TRUE, fig.height=3>>=
+my.mesh.bad <- makeMesh( covars$DEM, max.n=c(250, 30), dep.range=3, doPlot=FALSE)
+checkMesh( my.mesh.bad, my.mesh$hull, ras=covars$DEM)
+@
+
+The resulting `bad' mesh has mostly good shaped trianlges, but those around the corners of the inner and outer areas are much smaller and more `bunched' than elsewhere. This is picked up in the distribution of the triangle areas, which is quite bimodal. However, the triangle shapes appear to be adequate. In general, the more regular the survey area (non-NA values in the raster layer), the easier it will be to produce an adequate mesh. The survey area for gamba grass is quite regular and hence even this `bad' mesh is not spectacularly bad.
+ 
+\subsection*{Specifying and Evaluating the Model} \label{subsec:mod}
+
+With the data objects and the mesh all curated and created, it is time to (finally) start the formal modelling process. There are, unfortunately, a number of moving parts that need to be specified. Let's go through them in turn.
+  
+\subsubsection*{Species Distribution}\label{subsubsec:disForm}
+  
+How the species responds to the environment, as quantified by the layers in the covariate stack (see Section \ref{subsubsec:covs}), is defined through a formula. Terms in this formula apply to \textit{all the different data types}. Specification of this formula parallels almost precisely as one would do for any glm-like modelling process -- see the details section from \texttt{?glm} for more information about forms accepted. This specification allows a wide variety of models to be fitted: linear, curvi-linear (e.g. quadratics), interactions, regression splines, and so on. The formula will take the environmental variables from the covariate stack, and so the terms in the formula must be present there. Currently, the formula will not work with (or at least have unknown, untested behaviour) with factor raster layers -- please be wary when using them and consider expanding them into a set of `dummy' raster layers that indicate the various levels of the factor. 
+
+Like the \texttt{glm} function, the distributionFormula argument can be specified using a saved formula object or a newly specified formula object. It is important to note that, \textit{un}like the \texttt{glm} function, there is no left-hand side to the formula -- there are multiple sources of outcomes and they are hence specified in another argument. Another important aspect of specifying the distribution formula is that \textit{any intercept is stripped out} and to help remind users they are recommended to explicitly add a `0' or a `-1' into the formula. In the ISDM, there are mutliple intercepts and are specified for each data type (at least).
+
+To give some concrete examples about what formulas can be considered in the distribution model, consider these. The last one is the one that is used in \citet{fos24} and is the one that will be continued with here.
+
+<<specifyDist, eval=TRUE>>=
+#linear in SMRZ only
+my.form <- ~0+SMRZ
+#interacting between SMRZ and DEM
+my.form <- ~0+SMRZ*DEM
+#a B-spline regression basis with low degrees of freedom
+my.form <- ~0+splines::bs(SMRZ, df=3)
+#a(n orthogonal) polynomial in SMRZ and DEM
+my.form <- ~0+poly(SMRZ,2)+poly(DEM,2)
+#adding accessibility too (as per paper).
+my.form <- ~0+poly(SMRZ,2)+poly(DEM,2)+acc
+@
+
+The default action for all covariates in the distribution formula is that they are standardised. This means that they are transformed (linearly -- subtracating mean and deviding by standard deviation), so that the covariate will have zero mean and standard deviation one. This also applies for basis-exansion covariates (like those from \texttt{poly} or {bs}) -- we have found that the scaling for \texttt{poly} is too small. This does not effect the fit of the model but it does improve the numerical stability and has the side effect of altering the scale of the associated model parameter. In turn, this side-effect can make it easier to specify priors for the covariate parameters -- see \ref{subsubsec:priors} for details about how this is done. This behaviour can be `turned off' by using the \texttt{standardiseCovariates} element of the control argument to \texttt{isdm}.
+  
+One thing that may, at first, seem like an odd omission from the distribution formula is the spatial random effect. This is \textit{never included}. Rather it is included as part of the machinations of \texttt{isdm} (default behaviour) or is not included by explicit request. This is controlled by the \texttt{addRandom} element of the control argument to \texttt{isdm}. 
+  
+It is difficult to indicate what a `good' and a `bad' distribution formula will look like. It depends solely on the particular species and the covariates that are available. However, analysts should consider elementary pathological cases usually exemplified with linear models. These include avoiding over-fitting. For more basic advice on specification, and some rememdies to common problems please see \citet{net96} or any introductory textbook focussing on linear models.
+
+\subsubsection*{Observation Bias (for PO data)}
+
+The biasFormula argument of \texttt{isdm} specifies how the point pattern that generates the PO data \textit{differs} from the species distribution point pattern. The biasFormula affects \textit{only the PO data} and specifies the model component for the sampling bias for the PO data \citep[see][for example]{war13}. The sampling bias arises from spatially non-uniform sampling effort over the study region. An example of why this might happen is, when PO data is citizen science based, presences are likely to be denser where there are more people available to look for them (ie near population centres). This sampling bias pattern is obscuring the true species distribution and hence should be removed from predictions, if possible. The ISDM allows for this by inspecting the (unbiased) patterns in the PA and AA data, and comparing to the pattern in the PO data.
+
+Specifying the biasFormula argument mirrors that for specifying the distributionFormula argument. It is any formula object which takes data from the raster stack. It is limited by the same limitations and transformations as the distributionFormula (see Section \ref{subsubsec:disForm}). However, note that an intercept is needed -- it is the intercept for the PO point process. If removed, in the biasFormula argument, then \texttt{isdm} will assume that it is intended and not fit an intercept. An intercept is included by default, just like \texttt{glm}.
+
+The biasFormula argument should contain terms that are likely to affect the anathropegenic search pattern. Often these will include variables like `travel time to location' and `search intensity of other species'. However, specifics will depend on the data available and the particular system being modelled.
+
+In the gamba grass example, \citet{fos24} used a simple structure based on accessibility. There is no estimability issue with including the term in both the biasFormula and in the distributionFormula -- the latter is based on both PO and PA/AA data, while the former is based only on the PO data. However, in the particular case when there is only PO data, then the same covariate should not be included in both formulas.
+
+Here are some examples of bias formulas for the gamba grass example. We take the last, simple formula to progress with.
+<<biasForm, eval=TRUE>>=
+#intercept only == no heterogeneity in search effort (no sampling bias)
+my.biasForm <- 1
+#regression spline in acc
+my.biasForm <- ~1+splines::bs( acc, df=3)
+#linear in acc
+my.biasForm <- ~1+acc
+@
+
+\subsubsection*{Sampling Artefacts (for AA and PA data)}
+
+The PA and AA data may contain sources of variation that are not a result of species distribution. This is in spite of the assumption that the PA and AA data are the result of a well-planned survey effort. Such variation may arise from (but not limited to): 1) different measurement tools/procedures, 2) blocking or stratification, or 3) seasons or weather. In fact, any source of variation that may cause extraneous variation in the data can be modelled here. We call these sources of variation \textit{sampling artefacts} as they are due to the sampling process and are generally not of primary interest.
+
+There should be a sampling artefact formula for each of the data types included in the model. However, the PO sampling artefact is nonsensical and is ignored. Sampling artefacts \textit{only affect those data types that they are defined for} and are in addition to the distribution formula for these observations. The formulae follow the same general rules as all formulas except that we currently \textit{do not} recommend the use of basis expansion within the formula itself. If the user wants to use basis expansion, then they should create a temporary design matrix object, that includes the basis expanded variables, prior to calling \texttt{isdm} and use those names instead. Of course, there are exceptions to this rule, but they have not been tested and hence it is safer just to follow the pre-expansion principle.
+
+Once again, there is no restriction about what varaibles are included in the artefactFormulas. Variables can appear in here that also appear in the distributionFormula (for example). However, the user must seriously ask themselves `why'? Why would the variation within the PA/AA data be dependent on that variable \textit{after the distribution has been conditioned out}?
+    
+For the gamba grass example, there is only one source of PA data (and no AA data). The PA data all come from a single data source, which were all measured using the same sampling tool (an aerial survey). For this reason, it is likely to be reasonable to assume that there are no sampling artefacts within these PA data. This is the assumption made in \citet{fos24} and is the assumption that we move forward with. However, the data also contain the observer that took the measurement. Different observers may see/perceive/report differently and so we present their inclusion an (untested) alternative for instructional purposes.
+<<arteForm, eval=TRUE>>=
+#observer differences as a sampling artefact
+list( PO=NULL, PA=~1+observer)
+#intercept only == no sampling artefact 
+#               == no heterogeneity within each data type
+list( PO=NULL, PA=~1)
+@
+    
+\subsubsection*{Bringing it All Together: an initial model estimation}
+  
+We now have enough pieces to estimate the model. This will rely on default parameters, which could be dangerous in some situations. Nevertheless, this is done to demonstrate the mechanics of the estimation. It is stressed that this is a preliminary model estimate -- wihtout due consideration to priors (especially those of the spatial random effect) the results may be `odd'. Even though it is not explicitly stated, this model contains a spatial random effect in the distribution formula. This term is considered fundamental enough, that it has to be explicitly removed (instructions later).
+
+The components that make up this model estimate have nearly all been introduced before. The exceptions are those that specify which variable should be used for what in which data set. That was a confusing sentence, so we'll break it down.
+  
+The responseNames argument lists what variables should be used for outcomes for each of the data types. It is a text label. Here, it specifies that the variable ``PA'' should be used from the data.frame \texttt{gamba\_PA}, which is specified in observationList\$PAdat.
+  
+The sampleAreaNames argument informs which variable within each of the PA and AA data.frames give the sample area. As stated before the sample area is the area that the sampling covered. For the gamba PA data, the sampling area was constant, and held in the un-creatively named variable ``Area''. There is no requirement for the PO data to have an area associated with it (these are assumed to be a point).
+  
+Finally, \texttt{isdm} must be told what the coordinates are called. These must be the same for all data structures. It is specified through the control\$coord.names argument.
+  
+<<initFit, eval=TRUE>>=
+fm <- isdm( observationList=list( POdat=gamba_PO, 
+                                  PAdat=gamba_PA),
+            covarBrick=covars, 
+            mesh=my.mesh,
+            responseNames=c( PO=NULL, PA="PA"),
+            sampleAreaNames=c( PO=NULL, PA="Area"),
+            distributionFormula=~0+poly( DEM, 2) + poly( SMRZ,2) + ACC,
+            biasFormula=~1+ACC,
+            artefactFormulas=list( PA=~1),
+            control=list( coord.names=c("x","y")))
+@
+    
+The return from \texttt{isdm} is silent, so there is nothing special to see upon its successful completion. Given this initial fit, further refinements of the model can be demonstrated.
+  
+\subsubsection*{Priors for Model Effects} \label{subsubsec:priors}
+  
+All Bayesian analyses require the user to specify a prior distribution, and this ISDM is no different. In \texttt{RISDM}, we have focussed on ease of specification rather than full flexibility. We focus on specifying vague priors and separate only priors for intercepts and priors for covariate effects. We envisage that most users will specify models with vague priors, reflecting little or now prior knowledge, which fits easily into this format.
+  
+The priors are specified via the control list argument and describe Gaussian distributions. In particular, the priors are specified through the prior.mean element and the prior.sd (or prior.prec) arguments. The prior.mean is a single scalar giving the prior expectation of \textit{all} the model's effects. This includes all intercepts and all covariate effects for all the data types. Almost always, prior.mean will be zero, indicating that the effect has a priori equal chance of being positive or negative.
+
+The prior variation for the covariate effects are split into two types: those for intercepts and those for covariate effects. We prefer to specify prior variation through standard deviation, but also allow for precision to be specified (inversely related). These variances are specified through the \texttt{int.sd} and \texttt{int.prec} elements of the control list. By default the sd for the intercepts is very large (1000) and that for the covariate effects is large (10). We note that if a standard deviation is specified then the precision is ignored.
+
+Remember, from Section \ref{subsubsec:disForm} that all covariates are scaled prior to fitting the model. This means that the effects are \textit{in some sense} on the same numerical scale. In turn this implies that it may be justifiable, or at least practical, to specify this common prior for effects. If a particular application requires a different approach then the priors will have to be specified directly.
+
+If the user wants to specify priors directly, then they can by specifying prior.list element of the control list directly. This argument is \textit{passed directly} to the INLA call, and so the specification is solely the responsibility of the user. INLA requires that these are passed as a list of two named elements: mean and prec. Each element contains the named vector of values for the prior. Note that only those effects that are desired to be \textit{different} from the default are required to be named and specified (I think).
+
+Here are some control list examples that specifies various prior formulations. Note that these specify only those control elements for the priors; other terms may be added to this list to control other aspects of the model or the computational aspects.
+<<contrEG, eval=TRUE>>=
+  #the very vague everything
+  my.control <- list( prior.mean=0, int.sd=1000, other.sd=1000)
+  #(much) tighter prior for effects
+  my.control <- list( prior.mean=0, int.sd=1000, other.sd=0.1)
+  #the default
+  my.control <- list( prior.mean=0, int.sd=1000, other.sd=10)
+@
+
+\subsubsection*{Spatial Effects via SPDE}
+
+The \texttt{RISDM} model, by default, includes a spatial random effect. This spatial effect is defined according to the SPDE approach defined in \citet{lin11} and practical aspects discussed in \citet{lin15} and is included for 2 purposes: 1) to induce a spatial autocorrelation into the observations (the random effect is spatially correlated); and 2) to explain spatially patterned random variation (noise) that has not been explained by the environmental covariates.
+
+The specification of the distribution of the random effects depends on two parameters: the standard deviation of the effects, and the spatial range of their dependence. The spatial range is approximately the distance that samples must be separated by before data from those locations are expected to be almost independent (correlation of approximately 0.1). Both these parameters require a prior distribution to be specified, and \texttt{RISDM}, like \texttt{INLA}, follows \citet{sim17} by using complexity priors. These priors are defined by defining the prior chance that the parameter falls above (for prior standard deviation) or below (for spatial range) specified values. For the gamba grass example, it may be reasonable that the standard deviation has probability of 0.1 (10\% chance) of being above 5. We feel that this is a vague prior for random effects on a log-link scale. Likewise, a vague prior for spatial dependence could be that there is a probability of 0.1 that the range is less than 1km. The previous initial model can be updated using these priors, giving the model in \citet{fos24}.
+
+<<fos24Fit, eval=TRUE>>=
+fm <- isdm( observationList=list( POdat=gamba_PO, 
+                                  PAdat=gamba_PA),
+            covarBrick=covars, 
+            mesh=my.mesh,
+            responseNames=c( PO=NULL, PA="PA"),
+            sampleAreaNames=c( PO=NULL, PA="Area"),
+            distributionFormula=~0+poly( DEM, 2) + poly( SMRZ,2) + ACC,
+            biasFormula=~1+ACC,
+            artefactFormulas=list( PA=~1),
+            control=list( coord.names=c("x","y"), 
+                          int.sd=1000, other.sd=10, prior.mean=0,
+                          prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
+@
+
+The addition of the spatial random effect can be suppressed by the control list element. That is by including addRandom=FALSE into the control=list($\ldots$) argument. Code below. The model will be much (!) faster to estimate.  We'll return to this model later in the vignette.
+  
+<<noRandFit, eval=TRUE>>=
+fm.noRand <- isdm( observationList=list( POdat=gamba_PO, 
+                                         PAdat=gamba_PA),
+                   covarBrick=covars, 
+                   mesh=my.mesh,
+                   responseNames=c( PO=NULL, PA="PA"),
+                   sampleAreaNames=c( PO=NULL, PA="Area"),
+                   distributionFormula=~0+poly( DEM, 2) + poly( SMRZ,2) + ACC,
+                   biasFormula=~1+ACC,
+                   artefactFormulas=list( PA=~1),
+                   control=list( coord.names=c("x","y"), 
+                                  int.sd=1000, other.sd=10, prior.mean=0,
+                                  addRandom=FALSE))
+@
+    
+\subsection*{Diagnostics and Summary}
+  
+To understand how the model has performed, and to check that things have gone as could reasonably be expected, it is important to both check the model for obvious (large) departures from assumptions and to check if the estimated model passes a `laugh test'. Both these checks have been performed in statstical sciences for a long time, but perhaps only the diagnostic formed by checking for departures is formally defined anywhere. Tools for both approaches will be given now.
+
+\subsubsection*{Summary Tables} \label{subsubsec:summ}
+
+To obtain an elementary understanding of the estimated model, a \texttt{summary} method is provided. This, like the method for \texttt{glm}, gives information about the estimated parameters and a statistic about the model itself. Unlike a \texttt{glm} summary method, the \texttt{isdm} summary method will not print the model call itself as it is generally quite long, cryptic and boring. If users want to see the \texttt{INLA} call then they can, as part of the return object (fm\$mod\$call in this case).
+
+The printed summary object shows univariate summaries of the modelled parameters' posterior distributions. These are arranged into the type of effect (distribution, bias, artefact) for ease of interpretation. In this case, we see that both quadratic terms in the distribution formula poly.DEM.2.2 and poly.SMRZ.2.2 are negative and with credible intervals that do not cover zero. This implies that both relationships are concave in shape, over the observed covariate ranges. This is reassuring as it aggrees somewhat with niche theory, but it is not the final word (linear effect may still outweigh the quadratic). The accessibility covariate is strongly negative, implying that those locations that are remote (high accessibility values) are less likely to have gambga grass. The other model components can be likewise interpreted.
+  
+<<summ,eval=TRUE>>=
+  summary( fm)
+@
+    
+\subsubsection*{Residual Plots} \label{subsubsec:res}
+  
+Residuals give an analyst a view of the data through the lens of the model. As such, they can help identify inadequacies from tenuous model assumptions. Residuals \textit{can} even help identify possible remedies to inadequacies \citep[e.g.][]{net96}.
+  
+In linear models (e.g. multiple linear regressions) residuals have a natural definition -- the observation minus the model prediction. This works in that case because those deviations are assumed by the model to be normally distributed (and homoscedastic) and there are no random effects, apart from residuals, in the model. In general use, residuals do not incorporate the variability in the model prediction. In a full Bayesian treatment, this extra variability would be included.
+  
+In \texttt{RISDM}, randomised quantile residuals \citep[RQR;][]{dun96} are used. These residuals have a number of desireable features. Most notably, their distribution (assuming model assumptions are correct) is known, and is common for all different data types. This is in contrast to, say, Pearson or deviance residuals whose distribution is unknown for a finite sample \citep{dun96}. The RQR residuals incorporate only the variation from the final fitted value (including the spatial random effect) to the observation. This mirrors the residual treatment in the popular \texttt{mgcv} package \citep{woo17}, even if \texttt{mgcv} uses different types of residuals. If the model is adequately specified, then the RQR should be normally distributed and homoscedastic -- like residuals from a multiple linear regression. Departures from normality, or patterns along environmental gradients or through space may indicate problems with the model.
+  
+In \texttt{RISDM} there are multiple sets of residuals -- one for each data type. These are automatically plotted, by the \texttt{plot.isdm} method, in ways that may be useful for diagnosing inadequacies. These mirror the treatment in introductory textbooks on linear models \citep[e.g.][]{net96}. Resdiuals are plotted per data type using a residuals versus fitted and a quantile-quantile (Q-Q) plot. There should be no patterning in the residuals versus fitted plot, in either mean pattern or in residual variation. The following plot for PA residuals shows no cause for concern here, and the PO residuals are harder to interpret. The Q-Q plot should follow a straight line. The following plot seems fine for PA data, but questionable for PO data. \texttt{RISDM} will also plot the PO RQR residuals as a spatial layer. Like any covariate, there should be no patterning and its presence could indicate deficiencies.
+  
+<<residPlots, eval=TRUE,fig.cap="Residual plots for the gamba grass data, and the model containing quadratic effects and a spatial term.">>=
+  plot( fm, covarRaster=covars, nFigRow=2, ask=FALSE)
+@
+    
+One open research questions around residuals is trying to determine how large the departures need to be before the model needs altering. This will depend on many different aspects, including the type of inference sought. Hence, it is not clear if the residuals in Figure \ref{fig:residPlots} indicate an adequate model or not. However, it is possible (and easy) to demonstrate a model with \textit{a worse fit}. To do this, we revisit the model but exclude the spatial random effects. The resulting residual plots are in Figure \ref{fig:residPlots2}. The PA data still seem adequately represented but the patterns in the PO data are accentuated and are now obviously worrisome. There are strong spatial patterns and the residuals are obviously non-normal.
+  
+<<residPlots2, eval=TRUE, fig.cap="Residual plots for the gamba grass data, and the model containing quadratic effects \textit{but no spatial term}.">>=
+  plot( fm.noRand, covarRaster=covars, nFigRow=2, ask=FALSE)
+@
+    
+One of the potential short-comings of RQR residuals is that they contain a random component. This component is largest for data types that have few categories dichotomous data, like PA data, are subject to the largest amount possible. This fact may contribute to the apparent adequate residual plots for the model without spatial random effects.
+  
+\subsection*{Interpretation} \label{subsec:inter}
+  
+{\color{blue}To do.  Ask Dave what he thinks...}
+  
+\subsection*{Prediction} \label{subsec:pred}
+  
+Predictions from the fitted model are performed using the \texttt{predict.isdm} method. This method proceeds by taking posterior draws of the parameters, using \texttt{INLA}'s \texttt{inla.posterior.sample} function, and then predicting using the sampled parameters into a user-supplied raster stack. In this routine, the spatial random effects are treated the same as the parameters. This is demonstrated using both the model with (and without) spatial random effects.
+
+One choice that the user should make is which intercept should be included in the model. This choice has a real consequence in the predictions as some datasets (or even data types) will naturally have higher/lower intercepts due to tool efficacy and possibly just by measuring the geographical area that it did.
+
+By default the \texttt{predict} method will predict on the intensity scale. This gives the expected number of individuals within a raster cell at each of the raster's locations. However, this is not the only choice and the user can choose to predict the probability of presence or the linear predictor. Probability is a non-linear transformation of the intensity and, as such, is dependent upon the intercept value chosen. An intercept that is abnormally high will produce values that are too close to one. Likewise, an intercept that is low will have deflated probability. Care should be taken and the choice should be reasoned and well-considered.
+
+The intensity and probability predictions in Figure \ref{fig:pred} appear to be very similar. They are. This is because the intensity and probability are very small, and when they are very small the non-linear transformation between them turns out to be very well approximated by the identity function.
+  
+The \texttt{predict} method outputs a list with a number of elements. Arguably, the most useful of these is the mean.field element, which contains a raster stack with a number of summaries of the prediction posterior. Most notably, the prediction stack contains the median prediction and the 2.5\% percentile and the 97.5\% percentile. These values can be taken to be the point and the interval estimate for the predicted property. Also included in the prediction stack is the posterior mean and the posterior standard deviation. It has been the authors experience that the median is a more robust summary of central location in this situation, and it is recommended.
+  
+<<pred,eval=TRUE,fig.cap="Predictions from the quadratic model including random effects. Upper two rows are for the intensity, and bottom two rows are predictions of the probability of presence (within a raster cell)", fig.height=3.5>>=
+#This is a mock-up only. 
+#You should use a much(!) larger value of S.
+#You will probably want to choose a larger value of n.threads too.
+fm$preds <- predict( fm, covarRaster=covars, S=50, 
+                       intercept.terms="PA_Intercept")
+plot( fm$preds$mean.field)
+  
+#Predicting probability too
+fm$preds.probs <- predict( fm, covarRaster=covars, 
+                           S=50, intercept.terms="PA_Intercept", 
+                           type="probability")
+plot( fm$preds.probs$mean.field)
+@
+    
+\subsection*{DIY Extensions}
+
+Whilst flexible, the \texttt{RISDM} package, and in particular the \texttt{isdm} function, do not cover the full dazzling variety of models that can be fitted using \texttt{INLA}. This is intentional as it keeps the syntax cleaner and learning curve less step. However, many extensions of the ISDM approach will require solving the same set of problems that \texttt{RISDM} handles. For this reason, advanced users may wish to use \texttt{RISDM} as a component for their workflow. \texttt{RISDM} will handle building the \texttt{INLA} stacks for multiple data sources and building the multiple likelihood structures.
+
+To enable this, the \texttt{isdm} function returns some useful data objects. Top of this list is the \texttt{INLA} data stack, held in the `stack' element of the object list. Also useful is the return of the \texttt{INLA} object itself, held in the `mod' object of the object list. These are accessed from, for example, \texttt{fm\$stack} and \texttt{fm\$mod}.
+
+\subsection*{Single Data Types}
+
+Whilst created with multiple data types in mind, \texttt{RISDM} will quite happily estimate models based on single data types too. We'll do this now for a bit of comparative fun. These models and predictions should be compared against the integrated model (e.g. Figure \ref{fig:pred}).
+
+<<singleDataPO, eval=TRUE, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5>>=
+#PO data only
+fm.PO <- isdm( observationList=list( POdat=gamba_PO),
+            covarBrick=covars, 
+            mesh=my.mesh,
+            responseNames=NULL,
+            sampleAreaNames=NULL,
+            distributionFormula=~0+poly( DEM, 2) + poly( SMRZ,2) + ACC,
+            biasFormula=~1+ACC,
+            artefactFormulas=NULL,
+            control=list( coord.names=c("x","y"), 
+                          int.sd=1000, other.sd=10, prior.mean=0,
+                          prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
+fm.PO$preds <- predict( fm.PO, covarRaster=covars, S=50, 
+                       intercept.terms="PO_Intercept")
+plot( fm.PO$preds$mean.field)
+@
+
+<<singleDataPA, eval=TRUE, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5>>=
+#PA data only
+fm.PA <- isdm( observationList=list( PAdat=gamba_PA),
+            covarBrick=covars, 
+            mesh=my.mesh,
+            responseNames=c( PA="PA"),
+            sampleAreaNames=c( PA="Area"),
+            distributionFormula=~0+poly( DEM, 2) + poly( SMRZ,2) + ACC,
+            artefactFormulas=list( PA=~1),
+            control=list( coord.names=c("x","y"), 
+                          int.sd=1000, other.sd=10, prior.mean=0,
+                          prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
+fm.PA$preds <- predict( fm.PA, covarRaster=covars, S=50, 
+                       intercept.terms="PA_Intercept")
+plot( fm.PA$preds$mean.field)
+@
+  
+\section*{Last Things Last}
+  
+The only remaining thing to do is to tidy up our workspace. This is just removing all objects for this analysis from your workspace. I like to do this, in tutorial situations, but you may not. It is entirely up to you whether you clean or not.
+<<Tidy, eval=FALSE>>=
+  #You may wish to tidy your workspace.
+  rm( covars, fm, fm.noRand, gamba_PA, gamba_PO, my.mesh, filenames, 
+             my.biasForm, my.form, my.control, my.mesh, my.mesh.bad)
+@
+    
+\bibliography{./RISDM}
+
+\section*{Appendix}
+  
+\subsection*{Computational details}
+This vignette was created using the following R and add-on package versions
+  
+<<sessionInfo, results = "asis", echo = FALSE>>=
+  toLatex(sessionInfo())
+@
+    
+\end{document}
+  
