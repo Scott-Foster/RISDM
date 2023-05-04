@@ -22,7 +22,7 @@
 ###############################################################################################
 
 isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCdat=NULL),
-                                covarBrick=NULL,
+                                covars=NULL,
 				habitatArea=NULL,
                                 mesh=NULL,
                                 responseNames=NULL,
@@ -54,14 +54,13 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   }
 
   #make variable names in artefact models unique -- so that factor levels etc are not shared between data types
-  newInfo <- uniqueVarNames( obsList=observationList, covarBrick=covarBrick, distForm=distributionFormula, biasForm=biasFormula, arteForm=artefactFormulas, habitatArea=habitatArea, DCsurvID=DCobserverInfo$SurveyID, coord.names=control$coord.names, responseNames=responseNames, sampleAreaNames=sampleAreaNames, stdCovs=control$standardiseCovariates)
+  newInfo <- uniqueVarNames( obsList=observationList, covarBrick=covars, distForm=distributionFormula, biasForm=biasFormula, arteForm=artefactFormulas, habitatArea=habitatArea, DCsurvID=DCobserverInfo$SurveyID, coord.names=control$coord.names, responseNames=responseNames, sampleAreaNames=sampleAreaNames, stdCovs=control$standardiseCovariates)
 
 #  artefactFormulas <- tmp$arteForm
 #  #same for observation list (the species data)
 #  observationList <- tmp$obsList
   #same for double count information
   DCobserverInfo$SurveyID <- newInfo$DCsurvID
-
 
 ##  #make the complete formula for the INLA call.  With all the right interactions etc.
 ##  fullForm <- makeFormula( distributionFormula, biasFormula, artefactFormulas, control$addRandom, interactArtefact=TRUE)
@@ -134,7 +133,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
 
   #the return object, which contains some of the bits and pieces calcuated above.
   res <- list( mod=mod, distributionFormula=distributionFormula, biasFormula=biasFormula, artefactFormulas=artefactFormulas, mesh=FullMesh$mesh, control=control, responseNames=responseNames, 
-		data=list( covarBrick=newInfo$covarBrick, obsList=newInfo$obsList))
+		data=list( covars=newInfo$covarBrick, obsList=newInfo$obsList))
   #include the stack if requested
   if( control$returnStack){
     res$stack <- stck

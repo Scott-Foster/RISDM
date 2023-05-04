@@ -13,7 +13,7 @@
 ###############################################################################################
 
 #Function to get prediction from a fitted INLA model.
-predict.isdm <- function( object, covarRaster, habitatArea=NULL, S=500, intercept.terms=NULL, n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...){
+predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.terms=NULL, n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...){
   
   #check if there's anything to do.
   if( !includeRandom & !includeFixed & !includeBias)
@@ -62,33 +62,33 @@ predict.isdm <- function( object, covarRaster, habitatArea=NULL, S=500, intercep
   #a data.frame containing prediciton points (no NAs).
   #add cell areas first
   if( !is.null( habitatArea)){
-    tmp <- covarRaster[[habitatArea]]
+    tmp <- covars[[habitatArea]]
     names( tmp) <- "blah"  #will be changed in a bit anyway
-    covarRaster <- raster::addLayer( covarRaster, tmp)  #this wastes memory a bit, temporarily (only really doing to rename things easily)
-    covarRaster <- dropLayer( covarRaster, which( names( covarRaster) == habitatArea))
+    covars <- raster::addLayer( covars, tmp)  #this wastes memory a bit, temporarily (only really doing to rename things easily)
+    covars <- raster::dropLayer( covars, which( names( covars) == habitatArea))
   }
   else{
-    if( raster::isLonLat( covarRaster))
-      covarRaster <- raster::addLayer( covarRaster, raster::area( covarRaster))
+    if( raster::isLonLat( covars))
+      covars <- raster::addLayer( covars, raster::area( covars))
     else{
-      tmp <- covarRaster[[1]]
+      tmp <- covars[[1]]
       names( tmp) <- "tmpName"
       raster::values( tmp) <- prod( raster::res( tmp))
-      covarRaster <- raster::addLayer( covarRaster, tmp)
+      covars <- raster::addLayer( covars, tmp)
     }
   }
-  names( covarRaster)[raster::nlayers( covarRaster)] <- "myCellAreas"
-  covarRaster[["myCellAreas"]] <- raster::mask( covarRaster[["myCellAreas"]], covarRaster[[1]])
+  names( covars)[raster::nlayers( covars)] <- "myCellAreas"
+  covars[["myCellAreas"]] <- raster::mask( covars[["myCellAreas"]], covars[[1]])
 
   #get the coordinates of the prediction points
-  predcoords <- raster::coordinates( covarRaster)
+  predcoords <- raster::coordinates( covars)
   #extract the covariates
   
   #Get expanded data (model matrix) and corresponding formulae
-  newInfo <- uniqueVarNames( obsList=list(), covarBrick=covarRaster, distForm=object$distributionFormula, biasForm=object$biasFormula, arteForm=list(), habitatArea="myCellAreas", DCsurvID=attr( object, "DCobserverInfo"), coord.names=attr( res, "coord.names"), responseNames=object$responseNames, sampleAreaNames=NULL, stdCovs=object$control$standardiseCovariates)
+  newInfo <- uniqueVarNames( obsList=list(), covarBrick=covars, distForm=object$distributionFormula, biasForm=object$biasFormula, arteForm=list(), habitatArea="myCellAreas", DCsurvID=attr( object, "DCobserverInfo"), coord.names=attr( res, "coord.names"), responseNames=object$responseNames, sampleAreaNames=NULL, stdCovs=object$control$standardiseCovariates)
   #putting it into a data frame
   covarData <- as.data.frame( raster::extract( newInfo$covarBrick, predcoords[,1:2]))#[,names( newInfo$covarBrick), drop=FALSE])
-  myCellAreas <- as.matrix( raster::extract( covarRaster, predcoords[,1:2])[,"myCellAreas", drop=FALSE])
+  myCellAreas <- as.matrix( raster::extract( covars, predcoords[,1:2])[,"myCellAreas", drop=FALSE])
     
   #cut down to just those areas without NAs.
   noNAid <- apply( covarData, 1, function(x) !any( is.na( x)))
@@ -174,14 +174,14 @@ predict.isdm <- function( object, covarRaster, habitatArea=NULL, S=500, intercep
   mu.sd <- apply( mu.all, 1, stats::sd)
   
   #raster format
-  muRaster <- raster::rasterFromXYZ( cbind( predcoords, mu.median), crs=raster::crs( covarRaster))
-  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covarRaster)))
-  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.upper), crs=raster::crs( covarRaster)))
-  muRaster <- raster::addLayer( muRaster, raster::rasterFromXYZ(cbind( predcoords, mu.mean), crs=raster::crs( covarRaster)))
-  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.sd), crs=raster::crs( covarRaster)))
+  muRaster <- raster::rasterFromXYZ( cbind( predcoords, mu.median), crs=raster::crs( covars))
+  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covars)))
+  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.upper), crs=raster::crs( covars)))
+  muRaster <- raster::addLayer( muRaster, raster::rasterFromXYZ(cbind( predcoords, mu.mean), crs=raster::crs( covars)))
+  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.sd), crs=raster::crs( covars)))
 
   #sort out extent in case...
-  muRaster <- raster::extend( muRaster, covarRaster)  #just in case it is needed -- could be dropped throughout the creation of the raster.
+  muRaster <- raster::extend( muRaster, covars)  #just in case it is needed -- could be dropped throughout the creation of the raster.
 
   res <- list( mean.field=muRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords)
   

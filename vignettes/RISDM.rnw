@@ -216,7 +216,7 @@ In the gamba grass example, \citet{fos24} used a simple structure based on acces
 
 Here are some examples of bias formulas for the gamba grass example. We take the last, simple formula to progress with.
 <<biasForm, eval=TRUE>>=
-#intercept only == no heterogeneity in search effort (no sampling bias)
+#intercept only == no heterogeneity in search effort
 my.biasForm <- 1
 #regression spline in acc
 my.biasForm <- ~1+splines::bs( acc, df=3)
@@ -235,10 +235,10 @@ Once again, there is no restriction about what varaibles are included in the art
 For the gamba grass example, there is only one source of PA data (and no AA data). The PA data all come from a single data source, which were all measured using the same sampling tool (an aerial survey). For this reason, it is likely to be reasonable to assume that there are no sampling artefacts within these PA data. This is the assumption made in \citet{fos24} and is the assumption that we move forward with. However, the data also contain the observer that took the measurement. Different observers may see/perceive/report differently and so we present their inclusion an (untested) alternative for instructional purposes.
 <<arteForm, eval=TRUE>>=
 #observer differences as a sampling artefact
-list( PO=NULL, PA=~1+observer)
+list( PA=~1+observer)
 #intercept only == no sampling artefact 
 #               == no heterogeneity within each data type
-list( PO=NULL, PA=~1)
+list( PA=~1)
 @
     
 \subsubsection*{Bringing it All Together: an initial model estimation}
@@ -256,7 +256,7 @@ Finally, \texttt{isdm} must be told what the coordinates are called. These must 
 <<initFit, eval=TRUE>>=
 fm <- isdm( observationList=list( POdat=gamba_PO, 
                                   PAdat=gamba_PA),
-            covarBrick=covars, 
+            covars=covars, 
             mesh=my.mesh,
             responseNames=c( PO=NULL, PA="PA"),
             sampleAreaNames=c( PO=NULL, PA="Area"),
@@ -282,12 +282,12 @@ If the user wants to specify priors directly, then they can by specifying prior.
 
 Here are some control list examples that specifies various prior formulations. Note that these specify only those control elements for the priors; other terms may be added to this list to control other aspects of the model or the computational aspects.
 <<contrEG, eval=TRUE>>=
-  #the very vague everything
-  my.control <- list( prior.mean=0, int.sd=1000, other.sd=1000)
-  #(much) tighter prior for effects
-  my.control <- list( prior.mean=0, int.sd=1000, other.sd=0.1)
-  #the default
-  my.control <- list( prior.mean=0, int.sd=1000, other.sd=10)
+#the very vague everything
+my.control <- list( prior.mean=0, int.sd=1000, other.sd=1000)
+#(much) tighter prior for effects
+my.control <- list( prior.mean=0, int.sd=1000, other.sd=0.1)
+#the default
+my.control <- list( prior.mean=0, int.sd=1000, other.sd=10)
 @
 
 \subsubsection*{Spatial Effects via SPDE}
@@ -299,7 +299,7 @@ The specification of the distribution of the random effects depends on two param
 <<fos24Fit, eval=TRUE>>=
 fm <- isdm( observationList=list( POdat=gamba_PO, 
                                   PAdat=gamba_PA),
-            covarBrick=covars, 
+            covars=covars, 
             mesh=my.mesh,
             responseNames=c( PO=NULL, PA="PA"),
             sampleAreaNames=c( PO=NULL, PA="Area"),
@@ -316,7 +316,7 @@ The addition of the spatial random effect can be suppressed by the control list 
 <<noRandFit, eval=TRUE>>=
 fm.noRand <- isdm( observationList=list( POdat=gamba_PO, 
                                          PAdat=gamba_PA),
-                   covarBrick=covars, 
+                   covars=covars, 
                    mesh=my.mesh,
                    responseNames=c( PO=NULL, PA="PA"),
                    sampleAreaNames=c( PO=NULL, PA="Area"),
@@ -336,11 +336,15 @@ To understand how the model has performed, and to check that things have gone as
 
 To obtain an elementary understanding of the estimated model, a \texttt{summary} method is provided. This, like the method for \texttt{glm}, gives information about the estimated parameters and a statistic about the model itself. Unlike a \texttt{glm} summary method, the \texttt{isdm} summary method will not print the model call itself as it is generally quite long, cryptic and boring. If users want to see the \texttt{INLA} call then they can, as part of the return object (fm\$mod\$call in this case).
 
-The printed summary object shows univariate summaries of the modelled parameters' posterior distributions. These are arranged into the type of effect (distribution, bias, artefact) for ease of interpretation. In this case, we see that both quadratic terms in the distribution formula poly.DEM.2.2 and poly.SMRZ.2.2 are negative and with credible intervals that do not cover zero. This implies that both relationships are concave in shape, over the observed covariate ranges. This is reassuring as it aggrees somewhat with niche theory, but it is not the final word (linear effect may still outweigh the quadratic). The accessibility covariate is strongly negative, implying that those locations that are remote (high accessibility values) are less likely to have gambga grass. The other model components can be likewise interpreted.
+The printed summary object shows univariate summaries of the modelled parameters' posterior distributions. These are arranged into the type of effect (distribution, bias, artefact) for ease of interpretation. In this case, we see that both quadratic terms in the distribution formula poly.DEM.2.2 and poly.SMRZ.2.2 are negative and with credible intervals that do not cover zero. This implies that both relationships are concave in shape, over the observed covariate ranges. This is reassuring as it aggrees somewhat with niche theory, but it is not the final word (linear effect may still outweigh the quadratic). The accessibility covariate is strongly negative, implying that those locations that are remote (high accessibility values) are less likely to have gamba grass. The other model components can be likewise interpreted.
   
 <<summ,eval=TRUE>>=
-  summary( fm)
+summary( fm)
 @
+    
+\subsubsection*{Model Comparison}
+
+The \texttt{summary.isdm} method returns, as a member of the list, an INLA estimate of the marginal likelihood. This is sometimes referred to as `model evidence'. It can be used to compare models, in particular using Bayes Factors. For further information, the reader is referred to \citet{kas95} but also see \citet{gel13}.
     
 \subsubsection*{Residual Plots} \label{subsubsec:res}
   
@@ -350,16 +354,16 @@ In linear models (e.g. multiple linear regressions) residuals have a natural def
   
 In \texttt{RISDM}, randomised quantile residuals \citep[RQR;][]{dun96} are used. These residuals have a number of desireable features. Most notably, their distribution (assuming model assumptions are correct) is known, and is common for all different data types. This is in contrast to, say, Pearson or deviance residuals whose distribution is unknown for a finite sample \citep{dun96}. The RQR residuals incorporate only the variation from the final fitted value (including the spatial random effect) to the observation. This mirrors the residual treatment in the popular \texttt{mgcv} package \citep{woo17}, even if \texttt{mgcv} uses different types of residuals. If the model is adequately specified, then the RQR should be normally distributed and homoscedastic -- like residuals from a multiple linear regression. Departures from normality, or patterns along environmental gradients or through space may indicate problems with the model.
   
-In \texttt{RISDM} there are multiple sets of residuals -- one for each data type. These are automatically plotted, by the \texttt{plot.isdm} method, in ways that may be useful for diagnosing inadequacies. These mirror the treatment in introductory textbooks on linear models \citep[e.g.][]{net96}. Resdiuals are plotted per data type using a residuals versus fitted and a quantile-quantile (Q-Q) plot. There should be no patterning in the residuals versus fitted plot, in either mean pattern or in residual variation. The following plot for PA residuals shows no cause for concern here, and the PO residuals are harder to interpret. The Q-Q plot should follow a straight line. The following plot seems fine for PA data, but questionable for PO data. \texttt{RISDM} will also plot the PO RQR residuals as a spatial layer. Like any covariate, there should be no patterning and its presence could indicate deficiencies.
+In \texttt{RISDM} there are multiple sets of residuals -- one for each data type. All these residuals can be calculated using the \texttt{residuals.isdm} method. Most often, the user will want to plot these residuals and this can be done in an automated way using the \texttt{plot.isdm} method, in ways that may be useful for diagnosing inadequacies. These mirror the treatment in introductory textbooks on linear models \citep[e.g.][]{net96}. Resdiuals are plotted per data type using a residuals versus fitted and a quantile-quantile (Q-Q) plot. There should be no patterning in the residuals versus fitted plot, in either mean pattern or in residual variation. The following plot for PA residuals shows no cause for concern here, and the PO residuals are harder to interpret. The Q-Q plot should follow a straight line. The following plot seems fine for PA data, but questionable for PO data. \texttt{RISDM} will also plot the PO RQR residuals as a spatial layer. Like any covariate, there should be no patterning and its presence could indicate deficiencies.
   
 <<residPlots, eval=TRUE,fig.cap="Residual plots for the gamba grass data, and the model containing quadratic effects and a spatial term.">>=
-  plot( fm, covarRaster=covars, nFigRow=2, ask=FALSE)
+plot( fm, covars=covars, nFigRow=2, ask=FALSE)
 @
     
 One open research questions around residuals is trying to determine how large the departures need to be before the model needs altering. This will depend on many different aspects, including the type of inference sought. Hence, it is not clear if the residuals in Figure \ref{fig:residPlots} indicate an adequate model or not. However, it is possible (and easy) to demonstrate a model with \textit{a worse fit}. To do this, we revisit the model but exclude the spatial random effects. The resulting residual plots are in Figure \ref{fig:residPlots2}. The PA data still seem adequately represented but the patterns in the PO data are accentuated and are now obviously worrisome. There are strong spatial patterns and the residuals are obviously non-normal.
   
 <<residPlots2, eval=TRUE, fig.cap="Residual plots for the gamba grass data, and the model containing quadratic effects \textit{but no spatial term}.">>=
-  plot( fm.noRand, covarRaster=covars, nFigRow=2, ask=FALSE)
+plot( fm.noRand, covars=covars, nFigRow=2, ask=FALSE)
 @
     
 One of the potential short-comings of RQR residuals is that they contain a random component. This component is largest for data types that have few categories dichotomous data, like PA data, are subject to the largest amount possible. This fact may contribute to the apparent adequate residual plots for the model without spatial random effects.
@@ -384,16 +388,24 @@ The \texttt{predict} method outputs a list with a number of elements. Arguably, 
 #This is a mock-up only. 
 #You should use a much(!) larger value of S.
 #You will probably want to choose a larger value of n.threads too.
-fm$preds <- predict( fm, covarRaster=covars, S=50, 
+fm$preds <- predict( fm, covars=covars, S=50, 
                        intercept.terms="PA_Intercept")
 plot( fm$preds$mean.field)
   
 #Predicting probability too
-fm$preds.probs <- predict( fm, covarRaster=covars, 
+fm$preds.probs <- predict( fm, covars=covars, 
                            S=50, intercept.terms="PA_Intercept", 
                            type="probability")
 plot( fm$preds.probs$mean.field)
 @
+    
+By default, the \texttt{predict.isdm} method includes the terms from the distribution function (including spatial random effect) and whatever intercept is chosen. However, variations on this can be achieved:
+\begin{itemize}
+  \item The inclusion of the random effect can be switched on and off by using the `includeRandom' argument. 
+  \item The inclusion of the fixed effect component of the linear predictor can be switched on/off by using the `includeFixed=FALSE' argument.
+  \item The terms in the sampling bias model component (not included by default) can be included or not using the `includeBias' argument.
+\end{itemize}
+Combinations of these three arguments will give the user any combination of effect types that they want. This option is included to inspect the relative contribution from the terms, for understanding, education and possibly diagnosis. As yet, it is unclear if there is any inferential use.
     
 \subsection*{DIY Extensions}
 
@@ -408,7 +420,7 @@ Whilst created with multiple data types in mind, \texttt{RISDM} will quite happi
 <<singleDataPO, eval=TRUE, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5>>=
 #PO data only
 fm.PO <- isdm( observationList=list( POdat=gamba_PO),
-            covarBrick=covars, 
+            covars=covars, 
             mesh=my.mesh,
             responseNames=NULL,
             sampleAreaNames=NULL,
@@ -418,7 +430,7 @@ fm.PO <- isdm( observationList=list( POdat=gamba_PO),
             control=list( coord.names=c("x","y"), 
                           int.sd=1000, other.sd=10, prior.mean=0,
                           prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
-fm.PO$preds <- predict( fm.PO, covarRaster=covars, S=50, 
+fm.PO$preds <- predict( fm.PO, covars=covars, S=50, 
                        intercept.terms="PO_Intercept")
 plot( fm.PO$preds$mean.field)
 @
@@ -426,7 +438,7 @@ plot( fm.PO$preds$mean.field)
 <<singleDataPA, eval=TRUE, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5>>=
 #PA data only
 fm.PA <- isdm( observationList=list( PAdat=gamba_PA),
-            covarBrick=covars, 
+            covars=covars, 
             mesh=my.mesh,
             responseNames=c( PA="PA"),
             sampleAreaNames=c( PA="Area"),
@@ -435,7 +447,7 @@ fm.PA <- isdm( observationList=list( PAdat=gamba_PA),
             control=list( coord.names=c("x","y"), 
                           int.sd=1000, other.sd=10, prior.mean=0,
                           prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
-fm.PA$preds <- predict( fm.PA, covarRaster=covars, S=50, 
+fm.PA$preds <- predict( fm.PA, covars=covars, S=50, 
                        intercept.terms="PA_Intercept")
 plot( fm.PA$preds$mean.field)
 @
@@ -444,8 +456,8 @@ plot( fm.PA$preds$mean.field)
   
 The only remaining thing to do is to tidy up our workspace. This is just removing all objects for this analysis from your workspace. I like to do this, in tutorial situations, but you may not. It is entirely up to you whether you clean or not.
 <<Tidy, eval=FALSE>>=
-  #You may wish to tidy your workspace.
-  rm( covars, fm, fm.noRand, gamba_PA, gamba_PO, my.mesh, filenames, 
+#You may wish to tidy your workspace.
+rm( covars, fm, fm.noRand, fm.PA, fm.PO, gamba_PA, gamba_PO, filenames, 
              my.biasForm, my.form, my.control, my.mesh, my.mesh.bad)
 @
     
@@ -457,7 +469,7 @@ The only remaining thing to do is to tidy up our workspace. This is just removin
 This vignette was created using the following R and add-on package versions
   
 <<sessionInfo, results = "asis", echo = FALSE>>=
-  toLatex(sessionInfo())
+toLatex(sessionInfo())
 @
     
 \end{document}

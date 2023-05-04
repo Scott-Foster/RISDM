@@ -17,7 +17,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
 
   ####	Distribution formula for entire region -- individual (artefact) datasets will be taken from this
   #Design matrix/raster for distribution
-  tmpXX <- as.data.frame( values( covarBrick))
+  tmpXX <- as.data.frame( raster::values( covarBrick))
   #the model frame for the data
   XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, namy=NULL)
   #make new formula
@@ -36,7 +36,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   ####	Bias formula, if present
   if( !is.null( biasForm)){
   #Design matrix/raster for distribution
-    XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( values( covarBrick)), namy="PO")
+    XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( raster::values( covarBrick)), namy="PO")
     #make new formula
     newBiasForm <- stats::reformulate( colnames( XX))
     #put it in the 'correct' environment
