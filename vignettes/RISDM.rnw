@@ -58,11 +58,12 @@ opts_chunk$set(cache=TRUE, message = FALSE, comment = "", dev="pdf",
 
 \section*{First Things First (setting up R for using \texttt{RISDM})}
 
-Before starting with this introduction to \texttt{RISDM}, we need to make sure that everything is set up properly. Much of this will vary from computer to computer, but you must have a working version of R installed (preferably the recent release) and a working version of INLA \citep{rue09}. This vignette was created using R-version \Sexpr{sessionInfo()$R.version$version.string}, \texttt{INLA} release 22.05.07, and \texttt{RISDM} release 1.2.3. It does not matter whether you prefer to use R through a development environment (such as RStudio) or through the command line -- the results will be the same. You will need to have installed a recent version of \texttt{INLA} and \texttt{RISDM}. These can be installed by starting R and then submitting (at command line):
+Before starting with this introduction to \texttt{RISDM}, we need to make sure that everything is set up properly. Much of this will vary from computer to computer, but you must have a working version of R installed (preferably the recent release) and a working version of INLA \citep{rue09}. This vignette was created using R-version \Sexpr{sessionInfo()$R.version$version.string}, \texttt{INLA} release 22.05.07, and \texttt{RISDM} release 1.2.7. It does not matter whether you prefer to use R through a development environment (such as RStudio) or through the command line -- the results will be the same. You will need to have installed a recent version of \texttt{INLA} and \texttt{RISDM}. These can be installed by starting R and then submitting (at command line):
 <<setup1, eval=FALSE>>=
 install.packages("INLA",repos=c(getOption("repos"),
                 INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
-devtools::install_github( repo="Scott-Foster/RISDM")
+#vignette not built to save computation
+devtools::install_github( repo="Scott-Foster/RISDM", build_vignettes=FALSE)
 @
 The \texttt{RISDM} package will then need to be loaded. The raster package is also loaded to handle spatial data.
 <<setup2>>=

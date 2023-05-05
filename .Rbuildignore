@@ -1,3 +1,5 @@
 ^doc$
 ^Meta$
 ^\.gitignore
+^.*\.Rproj$
+^\.Rproj\.user$

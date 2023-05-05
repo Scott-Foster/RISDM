@@ -6,7 +6,8 @@ opts_chunk$set(cache=TRUE, message = FALSE, comment = "", dev="pdf",
 ## ----setup1, eval=FALSE-------------------------------------------------------
 #  install.packages("INLA",repos=c(getOption("repos"),
 #                  INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
-#  devtools::install_github( repo="Scott-Foster/RISDM")
+#  #vignette not built to save computation
+#  devtools::install_github( repo="Scott-Foster/RISDM", build_vignettes=FALSE)
 
 ## ----setup2-------------------------------------------------------------------
 library( RISDM)

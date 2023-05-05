@@ -1,9 +1,0 @@
-makeMesh			    Create an analysis mesh to perform spatial computation
-checkMesh			    Perform elementary checks on the structure of the analysis mesh
-simulateData.isdm		    Simplistic simulation of data sets with multiple data types
-isdm				    Approximate posteriors for model parameters (aka fit model)
-residuals.isdm			    Calculate residuals for an isdm object
-plot.isdm			    Residual plots for diagnostics for isdm objects
-summary.isdm			    Summary of parameter posterior distributions
-predict.isdm			    Predict observations from an isdm object
-PopEstimate			    Estimate population size (with lots of assumptions)
