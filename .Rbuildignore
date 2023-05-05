@@ -1,4 +1,3 @@
-^.*\.Rproj$
-^\.Rproj\.user$
 ^doc$
 ^Meta$
+^\.gitignore
