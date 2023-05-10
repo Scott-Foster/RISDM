@@ -3,11 +3,13 @@ library( testthat)
 
 ####testing makeMesh
 
-dat <- simulateData.isdm( control=list(doPlot=FALSE))
-meshy <- makeMesh( dat$covarBrick[[1]])
-
 f <- system.file("external/test.grd", package="raster")
 r <- raster::raster(f)
+
+dat <- simulateData.isdm( control=list(doPlot=FALSE))
+raster::crs( dat$covarBrick) <- raster::crs(r)
+meshy <- makeMesh( dat$covarBrick[[1]])
+
 raster::values( r)[ !is.na( raster::values( r))] <- 1
 rm( f)
 dat1 <- simulateData.isdm( expected.pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))

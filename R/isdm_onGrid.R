@@ -45,7 +45,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   #set up relevant information for DC data, if required.
   if( !is.null( observationList$DCdat)){
     if( !control$DCmethod %in% c( "plugin", "TaylorsLinApprox"))
-      stop( "Specified DC method not supported. Currently must be either 'TaylorsLinApprox' or 'plugin'.  Please see conctol$DCmethod argument.")
+      stop( "Specified DC method not supported. Currently must be either 'TaylorsLinApprox' or 'plugin'.  Please see control$DCmethod argument.")
     responseNames['DC'] <- "DCcountDC"
     observationList$DCdat <- prepareDCdata( DCdat=observationList$DCdat, DCobserverInfo=DCobserverInfo, sampAreaDC=sampleAreaNames["DC"], control$DCmethod)
     #add terms to the formula for the Taylor series approach.  But not if method is 'plugin'

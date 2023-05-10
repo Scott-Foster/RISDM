@@ -3,13 +3,14 @@
 \title{Makes predictions from an isdm object}
 \description{ This function predicts from an isdm object from the \code{\link{isdm}} function.  It does so by sampling from the approximate posterior of the model and produces a posterior raster.}
 \usage{
- \method{predict}{isdm}( object, covarRaster, S=500, intercept.terms=NULL, 
+ \method{predict}{isdm}( object, covars, habitatArea=NULL, S=500, intercept.terms=NULL, 
 			n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...)
 }
+
 \arguments{
 \item{object}{An object of class isdm, as obtained from \code{isdm}. No default.}
-\item{covarRaster}{A rasterBrick (or rasterStack) object containing all the covariates in the distribution model.}
-\item{ habitatArea}{A character giving the name of a layer of covarBrick that corresponds to the amount of area within each cell of the raster brick that is suitable habitat for the species. Typically, useage here will correspond with use in the \code{\link{isdm}} function too.}
+\item{covars}{A rasterBrick (or rasterStack) object containing all the covariates in the distribution model.}
+\item{habitatArea}{A character giving the name of a layer of \code{covars} that corresponds to the amount of area within each cell of the raster brick that is suitable habitat for the species. Typically, useage here will correspond with use in the \code{\link{isdm}} function too.}
 \item{S}{The number of posterior samples to take. Default is 500 samples, which is likely to be small for serious applications.}
 \item{intercept.terms}{Vector of strings indicating which terms in the model should be included as intercepts. An example might be c("AA_Intercept","AA_Intercept:surveyIDdonna") meaning that the coefficient for AA_Intercept and for the interaction AA_Intercept:surveyIDdonna will both be added to each of the predictions. If NULL (default), the function will not add any intercept. To ensure that you get the correct intercept name, it is easiest to take the text for the correct term from fit$mod$names.fixed or from the \code{\link{summary}} method.}
 \item{n.threads}{How many threads to spread the computation over. Default is NULL, where the number used to estimate the model (arugment "fit") is used.}
@@ -21,7 +22,9 @@
 \item{...}{Not implemented}
 }
 
-\details{ This function is a isdm specific interface to \code{INLA::inla.posterior.samples}. The function generates samples, selects which ones should be included for predicting and then performs the necessary machinations to do the predictions. All predictions are for the grid of covarRaster, including the area of each cell. That is the prediction is for the number of individuals (from the point process) within a cell.}
+\details{ This function is a isdm specific interface to \code{INLA::inla.posterior.samples}. The function generates samples, selects which ones should be included for predicting and then performs the necessary machinations to do the predictions. All predictions are for the grid of covarRaster, including the area of each cell. That is the prediction is for the number of individuals (from the point process) within a cell.
+
+The covariate data, within \code{covars}, is treated to the same preparation as the covariate data for the model fit using \code{\link{isdm}}. This means that the use of the *same* rasters in both sets will have the desired results. However, if a different raster is provided for prediction than at estimation, then meaning is less clear. This includes prediction into new geographical areas or prediction using a different resolution. If these kinds of predictions are required, then it is recommended that the user `builds' their own raster layers for estimation and predictions. These raster layers should have the same scaling and the user should set control$scale=FALSE in the \code{\link{isdm}} estimation process.}
 
 \value{A list containing the following elements:
 \item{mean.field}{The predictions and summaries thereof. The summaries are for the cell-wise posterior: median, median, lower interval (2.5\%), upper interval (97.5\%), mean, and standard deviation. Note that the median it is possible that the median is a more robust measure of central tendancy than the mean.}

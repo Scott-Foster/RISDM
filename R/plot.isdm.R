@@ -13,7 +13,7 @@
 
 plot.isdm <- function( x, covars, nFigRow=1, ask=TRUE, ...){
  
-  ressy <- residuals( x, covars)
+  ressy <- residuals.isdm( x, covars)
  
   #plotting up the residuals. RQR versus fitted and for PO data the raster.
   if( ask){

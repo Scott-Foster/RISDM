@@ -30,9 +30,10 @@ fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO),
                           DCmethod="TaylorsLinApprox"))
 
 testthat::test_that(
-  "Checking the plotting (for diagnostics) for isdm object.",
+  "Checking the production of residuals (for diagnostics) for isdm object.",
   {
-    testthat::expect_invisible( plot( fm, covars=dat$covarBrick, S=50, ask=FALSE))
+    my.resids <- residuals( fm, covars=dat$covarBrick)
+    testthat::expect_type( object=my.resids, type="list")
   }
 )
 

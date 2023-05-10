@@ -106,7 +106,8 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
 
   #adding the intercepts, if any
   if( !is.null( intercept.terms))
-    eta <- sweep( eta, MARGIN=2, STATS=samples$fixedEffects[fix.names %in% intercept.terms,], FUN="+")
+    for( jj in intercept.terms)
+      eta <- sweep( eta, MARGIN=2, STATS=samples$fixedEffects[fix.names == jj,], FUN="+")
   
   #predictions due to only fixed effects
   if( includeFixed==TRUE){

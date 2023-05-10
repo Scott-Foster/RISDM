@@ -16,25 +16,22 @@ testthat::test_that(
   {
     fm1 <- list()
     
-    #with the PO data only using plugin estimates for now.
     fm1[[1]] <- isdm( observationList=list( POdat=as.data.frame( dat$PO)),
-                      covarBrick=dat$covarBrick, 
-                      mesh=meshy,
-                      responseNames=c( PO="anything"),
-                      sampleAreaNames=c( PO=NULL),
-                      distributionFormula=~0+Altitude+Temperature,
-                      biasFormula=~1+dist2City,
-                      artefactFormulas=list( PO=~1),
-                      control=list( int.prec=0.01, other.prec=1,
-                                    calcICs=FALSE,
-                                    prior.range=c(1000,0.1), prior.space.sigma=c( 2,0.1),
-                                    coord.names=c("x","y"),
-                                    n.threads=8,
-                                    addRandom=TRUE, 
-                                    DCmethod="TalyorsLinApprox"))
-    
+            covars=dat$covarBrick, 
+            mesh=meshy,
+            responseNames=NULL,
+            sampleAreaNames=NULL,
+            distributionFormula=~0+Altitude+Temperature,
+            biasFormula=~1+dist2City,
+            artefactFormulas=list( PO=~1),
+            control=list( coord.names=c("x","y"), 
+                          int.sd=1000, other.sd=10, prior.mean=0,
+                          prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1),
+			  n.threads=8, addRandom=TRUE,
+			  DCmethod="TaylorsLinApprox"))
+			  
     fm1[[2]] <- isdm( observationList=list( DCdat=as.data.frame( dat$DC)),
-                      covarBrick=dat$covarBrick, 
+                      covars=dat$covarBrick, 
                       mesh=meshy,
                       responseNames=c( DC="somebloodything"),
                       sampleAreaNames=c( DC="transectArea"),
@@ -47,10 +44,10 @@ testthat::test_that(
                                     coord.names=c("x","y"),
                                     n.threads=8,
                                     addRandom=TRUE, 
-                                    DCmethod="TalyorsLinApprox"))
+                                    DCmethod="TaylorsLinApprox"))
     
     fm1[[3]] <- isdm( observationList=list( AAdat=as.data.frame( dat$AA)),
-                      covarBrick=dat$covarBrick, 
+                      covars=dat$covarBrick, 
                       mesh=meshy,
                       responseNames=c( AA="AA"),
                       sampleAreaNames=c( AA="transectArea"),
@@ -62,10 +59,10 @@ testthat::test_that(
                                     coord.names=c("x","y"),
                                     n.threads=8,
                                     addRandom=TRUE, 
-                                    DCmethod="TalyorsLinApprox"))
+                                    DCmethod="TaylorsLinApprox"))
     
     fm1[[4]] <- isdm( observationList=list( PAdat=as.data.frame( dat$PA)),
-                      covarBrick=dat$covarBrick, 
+                      covars=dat$covarBrick, 
                       mesh=meshy,
                       responseNames=c( PA="PA"),
                       sampleAreaNames=c( PA="transectArea"),
@@ -77,13 +74,13 @@ testthat::test_that(
                                     coord.names=c("x","y"),
                                     n.threads=8,
                                     addRandom=TRUE, 
-                                    DCmethod="TalyorsLinApprox"))
+                                    DCmethod="TaylorsLinApprox"))
 
     fm1[[5]] <- isdm( observationList=list( POdat=as.data.frame( dat$PO), 
                                             DCdat=as.data.frame( dat$DC),
                                             AAdat=as.data.frame( dat$AA)),
                       #                                        PAdat=as.data.frame( simDat1$PA)),
-                      covarBrick=dat$covarBrick, 
+                      covars=dat$covarBrick, 
                       mesh=meshy,
                       responseNames=c( AA="AA"),#, PA="PA"),
                       sampleAreaNames=c( PO=NULL, DC="transectArea", AA="transectArea"),#, PA="transectArea"),
@@ -97,10 +94,10 @@ testthat::test_that(
                                     coord.names=c("x","y"),
                                     n.threads=8,
                                     addRandom=TRUE, 
-                                    DCmethod="TalyorsLinApprox"))
+                                    DCmethod="TaylorsLinApprox"))
 				    
     fm1[[6]] <- isdm( observationList=list( DCdat=as.data.frame( dat$DC)),
-                      covarBrick=dat$covarBrick, 
+                      covars=dat$covarBrick, 
                       mesh=meshy,
                       responseNames=c( DC="somebloodything"),
                       sampleAreaNames=c( DC="transectArea"),
@@ -113,9 +110,9 @@ testthat::test_that(
                                     coord.names=c("x","y"),
                                     n.threads=8,
                                     addRandom=TRUE, 
-                                    DCmethod="TalyorsLinApprox"))
+                                    DCmethod="TaylorsLinApprox"))
 				    
-    testthat::expect_length( fm1, 5)
+    testthat::expect_length( fm1, 6)
     testthat::expect_s3_class(object=fm1[[1]], class="isdm")
     testthat::expect_s3_class(object=fm1[[2]], class="isdm")
     testthat::expect_s3_class(object=fm1[[3]], class="isdm")

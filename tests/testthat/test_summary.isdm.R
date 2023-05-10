@@ -13,7 +13,7 @@ meshy <- makeMesh( dat$covarBrick[[1]], max.n=c(500, 150), dep.range=25, expans.
 fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO), 
                                         DCdat=as.data.frame( dat$DC),
                                         AAdat=as.data.frame( dat$AA)),
-                  covarBrick=dat$covarBrick, 
+                  covars=dat$covarBrick, 
                   mesh=meshy,
                   responseNames=c( AA="AA"),#, PA="PA"),
                   sampleAreaNames=c( PO=NULL, DC="transectArea", AA="transectArea"),#, PA="transectArea"),
@@ -27,7 +27,7 @@ fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO),
                                 coord.names=c("x","y"),
                                 n.threads=8,
                                 addRandom=TRUE, 
-                                DCmethod="TalyorsLinApprox"))
+                                DCmethod="TaylorsLinApprox"))
 
 testthat::test_that(
   "Checking the summary for isdm object (and its print)",

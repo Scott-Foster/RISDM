@@ -14,7 +14,7 @@
 setPriors <- function( control, stck){
 
   if( !is.null( control$prior.list))
-    return( prior.list)
+    return( control$prior.list)
 
   #container for the result
   tmp <- list( mean=control$prior.mean)

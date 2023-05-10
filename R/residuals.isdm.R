@@ -11,7 +11,7 @@
 ###############################################################################################
 ###############################################################################################
 
-residuals.isdm <- function( x, covars, ...){
+residuals.isdm <- function( object, covars, ...){
 
   #number of data types
   numTypes <- 0
@@ -21,13 +21,13 @@ residuals.isdm <- function( x, covars, ...){
   #containers for the residuals
   DCresids <- AAresids <- PAresids <- POresids <- NULL
   #DC residuals
-  if( "DC_Intercept" %in% x$mod$names.fixed){
+  if( "DC_Intercept" %in% object$mod$names.fixed){
     #increment the number of data types.
     numTypes <- numTypes+1
     #get the fitted values as predictions
-    preds <- x$mod$summary.fitted.values[INLA::inla.stack.index( x$stack, "DC")$data,"mean"]
+    preds <- object$mod$summary.fitted.values[INLA::inla.stack.index( object$stack, "DC")$data,"mean"]
     #get the outcomes and arrange them appropriately
-    outcomes <- x$observationList$DCdat$DCcountDC
+    outcomes <- object$observationList$DCdat$DCcountDC
     #calculate the two probs for RQR (lower and upper)
     tmp1 <- stats::ppois( outcomes, lambda=preds)
     tmp2 <- stats::ppois( pmax( outcomes-1, 0), lambda=preds)
@@ -42,13 +42,13 @@ residuals.isdm <- function( x, covars, ...){
     #bundle the residuals
     DCresids <- data.frame( fitted=preds, observed=outcomes, residual=stats::qnorm( tmp3))
   }
-  if( "AA_Intercept" %in% x$mod$names.fixed){
+  if( "AA_Intercept" %in% object$mod$names.fixed){
     #increment the number of data types.
     numTypes <- numTypes+1
     #get the fitted values as predictions
-    preds <- x$mod$summary.fitted.values[INLA::inla.stack.index( x$stack, "AA")$data,"mean"]
+    preds <- object$mod$summary.fitted.values[INLA::inla.stack.index( object$stack, "AA")$data,"mean"]
     #get the outcomes and arrange them appropriately
-    outcomes <- x$observationList$AAdat[,x$responseNames["AA"]]
+    outcomes <- object$observationList$AAdat[,object$responseNames["AA"]]
     #calculate the two probs for RQR (lower and upper)
     tmp1 <- stats::ppois( outcomes, lambda=preds)
     tmp2 <- stats::ppois( pmax( outcomes-1, 0), lambda=preds)
@@ -63,16 +63,16 @@ residuals.isdm <- function( x, covars, ...){
     #bundle the residuals
     AAresids <- data.frame( fitted=preds, observed=outcomes, residual=stats::qnorm( tmp3))
   }
-  if( "PA_Intercept" %in% x$mod$names.fixed){
+  if( "PA_Intercept" %in% object$mod$names.fixed){
     #increment the number of data types.
     numTypes <- numTypes+1
     #get the fitted values as predictions
-    preds <- x$mod$summary.fitted.values[INLA::inla.stack.index( x$stack, "PA")$data,"mean"]
+    preds <- object$mod$summary.fitted.values[INLA::inla.stack.index( object$stack, "PA")$data,"mean"]
     #provide minor adjustments to preds that are identically 0 or 1.
     preds[preds==0] <- min( min( preds[preds!=0])/2, 1e-4)
     preds[preds==1] <- max( max( (1-preds[preds!=1])/2), 1-1e-4)
     #get the outcomes and arrange them appropriately
-    outcomes <- x$observationList$PAdat[,x$responseNames["PA"]]
+    outcomes <- object$observationList$PAdat[,object$responseNames["PA"]]
     #calculate the two probs for RQR (lower and upper)
     tmp1 <- stats::pbinom( outcomes, size=1, prob=preds)
     tmp2 <- stats::pbinom( pmax( outcomes-1, 0), size=1, prob=preds)
@@ -88,13 +88,13 @@ residuals.isdm <- function( x, covars, ...){
     PAresids <- data.frame( fitted=preds, observed=outcomes, residual=stats::qnorm( tmp3))
   }
   
-  if( "PO_Intercept" %in% x$mod$names.fixed){
+  if( "PO_Intercept" %in% object$mod$names.fixed){
     #increment the number of data types.
     numTypes <- numTypes+1
     #increase the plotting columns to 3 (default is 2)
     ncolly <- 3
     
-    POspP <- sp::SpatialPoints( x$observationList$PO[,attr( x, "coord.names")], proj4string=crs( covars))
+    POspP <- sp::SpatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=crs( covars))
     #get the outcomes and arrange them appropriately
     rasCount <- raster::rasterize( POspP, covars, fun='count', background=0)
     rasCount <- raster::mask( rasCount, covars[[1]])
@@ -105,12 +105,12 @@ residuals.isdm <- function( x, covars, ...){
 #      S <- 250
 #    message( paste0("Generating ",S," samples to form prediction (with distribution, random and bias effects)."))
     #get the fitted values as predictions
-#    preds1 <- predict( x, covars, intercept.terms=NULL, type='intensity', S=S, includeFixed=TRUE, includeRandom=TRUE, includeBias=TRUE)
+#    preds1 <- predict( object, covars, intercept.terms=NULL, type='intensity', S=S, includeFixed=TRUE, includeRandom=TRUE, includeBias=TRUE)
 
 #####	Quick running solution
     preds <- list()
     preds$mean.field <- list()
-    preds$mean.field$mu.mean <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount)[!is.na( raster::values( rasCount)),], x$mod$summary.fitted.values[inla.stack.index(x$stack,"PO")$data,"mean"]))
+    preds$mean.field$mu.mean <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount)[!is.na( raster::values( rasCount)),], object$mod$summary.fitted.values[inla.stack.index(object$stack,"PO")$data,"mean"]))
     preds$mean.field$mu.mean <- raster::extend( preds$mean.field$mu.mean, rasCount)
     preds$mean.field$mu.mean <- raster::crop( preds$mean.field$mu.mean, rasCount)
     preds$mean.field$mu.mean <- raster::mask( preds$mean.field$mu.mean, rasCount)

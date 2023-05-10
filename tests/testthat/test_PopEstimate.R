@@ -13,7 +13,7 @@ meshy <- makeMesh( dat$covarBrick[[1]], max.n=c(500, 150), dep.range=25, expans.
 fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO), 
                                   DCdat=as.data.frame( dat$DC),
                                   AAdat=as.data.frame( dat$AA)),
-            covarBrick=dat$covarBrick, 
+            covars=dat$covarBrick, 
             mesh=meshy,
             responseNames=c( AA="AA"),#, PA="PA"),
             sampleAreaNames=c( PO=NULL, DC="transectArea", AA="transectArea"),#, PA="transectArea"),
@@ -27,9 +27,9 @@ fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO),
                           coord.names=c("x","y"),
                           n.threads=8,
                           addRandom=TRUE, 
-                          DCmethod="TalyorsLinApprox"))
+                          DCmethod="TaylorsLinApprox"))
 
-fm$preds <- predict( object=fm, covarRaster=dat$covarBrick, S=50)
+fm$preds <- predict( object=fm, covars=dat$covarBrick, S=50)
 
 testthat::test_that(
   "Checking the prediction from an isdm object.  Predicting to original raster only.",
@@ -40,7 +40,7 @@ testthat::test_that(
     tmp <- PopEstimate( preds=fm$preds, probs=c(0.0025,0.4,0.6,0.9975))
     testthat::expect_length( tmp, 6)
     
-    tmp <- PopEstimate( preds=fm$preds, intercept.terms = c( "Intercept.DC","Intercept.DC:Survey_DCDCsurvey_3"))
+    tmp <- PopEstimate( preds=fm$preds, intercept.terms = c( "DC_Intercept","DC_SurveyDCsurvey_3"))
     testthat::expect_length( tmp, 6)
   }
 )

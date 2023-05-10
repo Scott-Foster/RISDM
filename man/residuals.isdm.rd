@@ -3,15 +3,15 @@
 \alias{residuals.isdm}
 \title{Calculating Randomised Quantile Residuals for isdm objects}
 \usage{
-  \method{residual}{isdm}(x, covarRaster, \dots)
+  \method{residuals}{isdm}(object, covars, \dots)
 }
 \arguments{
-  \item{x}{an object of class \code{"isdm"}, usually, a result of a call to \code{\link{isdm}}.}
-  \item{covarRaster}{a raster, or something that inheritits from a raster (raster*), to calculate residuals for PO data.}
+  \item{object}{an object of class \code{"isdm"}, usually, a result of a call to \code{\link{isdm}}.}
+  \item{covars}{a raster, or something that inheritits from a raster (raster*), to calculate residuals for PO data.}
   \item{\dots}{argments passed to other sub-functions.  Currently not implemented.}
 }
 \description{
-  This function is a \code{\link{method}} for class \code{isdm} objects.
+  This function is a method for class \code{isdm} objects.
 }
 \details{
   Residuals for DC, AA and PA data are directly applications of the randomised quantile residual (RQR) approach of Dunn and Smyth (1996). The residuals are taken from the posterior expectation of the fitted model (taken from INLA directly). RQR residuals are general, but in our experience (annecdotal evidence) may not be all-that-sensitive to departures from model assumptions.  That is, the model may not be as good as the residual plots suggest.

@@ -80,7 +80,6 @@ This document is structured, more-or-less, to match the steps that an analyst fo
   \item \hyperref[subsec:prep]{Preparation} (data and analysis \hyperref[subsubsec:mesh]{mesh})
   \item \hyperref[subsec:mod]{Specifying and Evaluating} (`fitting`) the model
   \item \hyperref[subsubsec:res]{Checking the model} for any obvious departures, and \hyperref[subsubsec:summ]{understanding/summarising} the model.
-  \item \hyperref[subsec:inter]{Interpreting} the model 
   \item \hyperref[subsec:pred]{Prediction}
 \end{enumerate}
 
@@ -369,9 +368,9 @@ plot( fm.noRand, covars=covars, nFigRow=2, ask=FALSE)
     
 One of the potential short-comings of RQR residuals is that they contain a random component. This component is largest for data types that have few categories dichotomous data, like PA data, are subject to the largest amount possible. This fact may contribute to the apparent adequate residual plots for the model without spatial random effects.
   
-\subsection*{Interpretation} \label{subsec:inter}
-  
-{\color{blue}To do.  Ask Dave what he thinks...}
+%\subsection*{Interpretation} \label{subsec:inter}
+%
+%{\color{blue}To do.  Ask Dave what he thinks...}
   
 \subsection*{Prediction} \label{subsec:pred}
   

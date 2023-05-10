@@ -89,8 +89,10 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
     #put it in the 'correct' environment
     environment( newForm[[ii]]) <- environment( arteForm[[ii]])
     #add sample areas
-    XX <- cbind( newObs[[dataname]][,sampleAreaNames[ii]], XX)
-    colnames( XX)[1] <- sampleAreaNames[ii]
+    if( !is.null( sampleAreaNames[ii])){
+      XX <- cbind( newObs[[dataname]][,sampleAreaNames[ii]], XX)
+      colnames( XX)[1] <- sampleAreaNames[ii]
+    }
     #add outcome, if appropriate (not DC)
     if( length( responseNames[ii]) != 0){
       XX <- cbind( newObs[[dataname]][,responseNames[ii]], XX)
@@ -128,7 +130,8 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   ####	Casting PO data too, if it is there
   if( "POdat" %in% names( newObs)){
     ind['PO'] <- 1
-    newObs$POdat <- sp::SpatialPoints( coords=newObs$POdat[,coord.names])
+    if( !inherits( newObs$POdat, "SpatialPoints"))
+      newObs$POdat <- sp::SpatialPoints( coords=newObs$POdat[,coord.names])
   }
    
   ###	the return object
