@@ -49,7 +49,7 @@ plot.isdm <- function( x, covars, nFigRow=1, ask=TRUE, ...){
   }
   if( "PO_Intercept" %in% x$mod$names.fixed){
     POresids <- ressy$PO
-    raster::plot( POresids$ras, main="Presence-Only")
+    raster::plot( POresids$ras, main="Presence-Only", col=colorRamps::matlab.like2(25))
     plot( POresids$POresids$fitted, POresids$POresids$residual, pch=20, ylab="PO residuals", xlab="PO fitted", main="Presence-Only")
     graphics::abline( h=0, col='green')
     stats::qqnorm( POresids$POresids$residual, pch=20, ylab="PO quantile", main="Presence Only")

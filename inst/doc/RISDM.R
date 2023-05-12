@@ -120,16 +120,15 @@ fm.noRand <- isdm( observationList=list( POdat=gamba_PO,
 ## ----summ,eval=TRUE-----------------------------------------------------------
 summary( fm)
 
-## ----residPlots, eval=TRUE,fig.cap="Residual plots for the gamba grass data, and the model containing quadratic effects and a spatial term."----
+## ----residPlots, eval=TRUE, fig.height=3.5, fig.cap="Residual plots for the gamba grass data, and the model containing quadratic effects and a spatial term."----
 plot( fm, covars=covars, nFigRow=2, ask=FALSE)
 
-## ----residPlots2, eval=TRUE, fig.cap="Residual plots for the gamba grass data, and the model containing quadratic effects \textit{but no spatial term}."----
+## ----residPlots2, eval=TRUE, fig.height=3.5, fig.cap="Residual plots for the gamba grass data, and the model containing quadratic effects \textit{but no spatial term}."----
 plot( fm.noRand, covars=covars, nFigRow=2, ask=FALSE)
 
 ## ----pred,eval=TRUE,fig.cap="Predictions from the quadratic model including random effects. Upper two rows are for the intensity, and bottom two rows are predictions of the probability of presence (within a raster cell)", fig.height=3.5----
-#This is a mock-up only. 
 #You should use a much(!) larger value of S.
-#You will probably want to choose a larger value of n.threads too.
+#You may want to choose a larger value of n.threads too.
 fm$preds <- predict( fm, covars=covars, S=50, 
                        intercept.terms="PA_Intercept")
 plot( fm$preds$mean.field)
@@ -140,7 +139,33 @@ fm$preds.probs <- predict( fm, covars=covars,
                            type="probability")
 plot( fm$preds.probs$mean.field)
 
-## ----singleDataPO, eval=TRUE, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5----
+## ----interp, eval=TRUE, fig.height=3.5, fig.cap="Relationship with Soil Moisture (SMRZ). Black solid line is the median relationship and grey shaded area is the 95 percent CI."----
+#the data for interpretation
+#adding a temporary cell area layer
+covarsForInter <- addLayer( covars, covars[[1]])
+names( covarsForInter) <- c( names( covars), "tmp.habiArea")
+#area is now constant with log(1)=0 contribution
+values( covarsForInter$tmp.habiArea) <- 1 
+
+#You could use a much(!) larger value of S.
+interpPreds <- predict( fm, covars=covarsForInter, 
+                        habitatArea="tmp.habiArea", S=50, 
+                        includeFixed="SMRZ", includeRandom=FALSE, type="link")
+
+#compile covariate and prediction
+pred.df <- as.data.frame( cbind( SMRZ=values( covars$SMRZ), 
+     values( interpPreds$mean.field[[c("mu.median","mu.lower","mu.upper")]])))
+#plot
+pred.df <- pred.df[!is.na( pred.df$SMRZ),]
+pred.df <- pred.df[order( pred.df$SMRZ),]
+matplot( pred.df[,1], pred.df[,2:4], pch="", xlab="SMRZ", ylab="Effect", 
+                                                main="Effect plot for SMRZ")
+polygon( x=c( pred.df$SMRZ, rev( pred.df$SMRZ)), 
+            c(pred.df$mu.upper, rev(pred.df$mu.lower)), 
+                                                    col=grey(0.95), bor=NA)
+lines( pred.df[,c("SMRZ","mu.median")], type='l', lwd=2)
+
+## ----singleDataPO, eval=TRUE, fig.height=3.5, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5----
 #PO data only
 fm.PO <- isdm( observationList=list( POdat=gamba_PO),
             covars=covars, 
@@ -157,7 +182,7 @@ fm.PO$preds <- predict( fm.PO, covars=covars, S=50,
                        intercept.terms="PO_Intercept")
 plot( fm.PO$preds$mean.field)
 
-## ----singleDataPA, eval=TRUE, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5----
+## ----singleDataPA, eval=TRUE, fig.height=3.5, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5----
 #PA data only
 fm.PA <- isdm( observationList=list( PAdat=gamba_PA),
             covars=covars, 

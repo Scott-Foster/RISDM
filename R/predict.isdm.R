@@ -16,8 +16,10 @@
 predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.terms=NULL, n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...){
   
   #check if there's anything to do.
-  if( !includeRandom & !includeFixed & !includeBias)
+  if( !includeRandom & (includeFixed == FALSE) & !includeBias)
     stop( "Neither fixed, random, nor bias included in model predictions. Please choose one or more, but probably fixed and random.")
+  if( !is.logical(includeFixed) & !all( includeFixed %in% names( covars)))
+    stop( "Fixed effect terms specified are not in covariate layers")
   
   #determine the number of threads to use.  Default is to use the same as the fit
   if( is.null( n.threads))
@@ -110,7 +112,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
       eta <- sweep( eta, MARGIN=2, STATS=samples$fixedEffects[fix.names == jj,], FUN="+")
   
   #predictions due to only fixed effects
-  if( includeFixed==TRUE){
+  if( includeFixed!=FALSE){
     #the model matrix
     myForm <- newInfo$distForm#object$distributionFormula
   
@@ -124,6 +126,11 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     #ordering
     fixedSamps <- samples$fixedEffects[fix.subset[fix.names.ord],]
     X <- X[,order( colnames( X)),drop=FALSE]
+    #zero-ing out effects other than requested.
+    if( !is.logical( includeFixed)){
+      colID <- unlist( lapply( includeFixed, function(xx) grep( xx, colnames( X))))
+      X[,-colID] <- 0
+    }
     #the addition to the linear predictor
     eta <- eta + X %*% fixedSamps
   }

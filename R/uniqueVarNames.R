@@ -18,6 +18,8 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   ####	Distribution formula for entire region -- individual (artefact) datasets will be taken from this
   #Design matrix/raster for distribution
   tmpXX <- as.data.frame( raster::values( covarBrick))
+  #get rid of intercept in distribution formula (and make sure of it)
+  distForm <- stats::update.formula( distForm, ~.-1+0)
   #the model frame for the data
   XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, namy=NULL)
   #make new formula

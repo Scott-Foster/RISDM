@@ -11,10 +11,11 @@ importFrom( "sp", "SpatialPointsDataFrame", "CRS","plot", "over", "SpatialPoints
 importFrom( "parallel", "detectCores")
 importFrom( "methods", "as", "hasArg")
 importFrom( "stats","terms","update","dist","median","quantile","model.matrix", "qnorm", "predict", "rnorm", "update.formula")
-importFrom( "graphics", "abline", "hist", "legend", "lines", "points","par","plot.new")
+importFrom( "graphics", "abline", "hist", "legend", "lines", "points","par","plot.new", "matplot", "polygon")
 importFrom( "grDevices", "grey")
 importFrom( "maptools", "checkPolygonsHoles")
 importFrom( "methods","slot")
 importFrom( "utils", "tail","head")
 importFrom( "Matrix", "Diagonal")
+importFrom( colorRamps, "matlab.like2")
 
