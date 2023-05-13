@@ -22,7 +22,7 @@ install.packages('devtools')
 devtools::install_github( repo="Scott-Foster/RISDM", build_vignettes=FALSE)
 ```
 
-## Acknowledgements
+## Funding
 
 This work was part of The National Vertebrate Pests and Weeds
 Distribution project, which was partially funded by the Australian
