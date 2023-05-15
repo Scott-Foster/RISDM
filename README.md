@@ -55,7 +55,7 @@ and/or additions will be merged in the main `RISDM` repository.
 ## Reporting Bugs
 
 If you notice an issue with this repository, please report it using
-[Github Issues](https://github.com/skiptoniam/RISDM/issues). When
+[Github Issues](https://github.com/Scott-Foster/RISDM/issues). When
 reporting an implementation bug, include a small example that helps to
 reproduce the error (a non-working minimal example). The issue will be
 addressed as quickly as possible.
@@ -63,7 +63,7 @@ addressed as quickly as possible.
 ## Seeking Support
 
 If you have questions or need additional support, please open a [Github
-Issues](https://github.com/skiptoniam/RISDM/issues) or send a direct
+Issues](https://github.com/Scott-Foster/RISDM/issues) or send a direct
 email to <scott.foster@data61.csiro.au>.
 
 ## References
