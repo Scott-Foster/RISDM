@@ -129,13 +129,13 @@ plot( fm.noRand, covars=covars, nFigRow=2, ask=FALSE)
 ## ----pred,eval=TRUE,fig.cap="Predictions from the quadratic model including random effects. Upper two rows are for the intensity, and bottom two rows are predictions of the probability of presence (within a raster cell)", fig.height=3.5----
 #You should use a much(!) larger value of S.
 #You may want to choose a larger value of n.threads too.
-fm$preds <- predict( fm, covars=covars, S=5000, 
+fm$preds <- predict( fm, covars=covars, S=50, 
                        intercept.terms="PA_Intercept")
 plot( fm$preds$mean.field)
   
 #Predicting probability too
 fm$preds.probs <- predict( fm, covars=covars, 
-                           S=5000, intercept.terms="PA_Intercept", 
+                           S=50, intercept.terms="PA_Intercept", 
                            type="probability")
 plot( fm$preds.probs$mean.field)
 
@@ -165,11 +165,43 @@ polygon( x=c( pred.df$SMRZ, rev( pred.df$SMRZ)),
                                                     col=grey(0.95), bor=NA)
 lines( pred.df[,c("SMRZ","mu.median")], type='l', lwd=2)
 
+## ----singleDataPO, eval=TRUE, fig.height=3.5, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5----
+#PO data only
+fm.PO <- isdm( observationList=list( POdat=gamba_PO),
+            covars=covars, 
+            mesh=my.mesh,
+            responseNames=NULL,
+            sampleAreaNames=NULL,
+            distributionFormula=~0+poly( DEM, 2) + poly( SMRZ,2) + ACC,
+            biasFormula=~1+ACC,
+            artefactFormulas=NULL,
+            control=list( coord.names=c("x","y"), 
+                          int.sd=1000, other.sd=10, prior.mean=0,
+                          prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
+fm.PO$preds <- predict( fm.PO, covars=covars, S=50, 
+                       intercept.terms="PO_Intercept")
+plot( fm.PO$preds$mean.field)
+
+## ----singleDataPA, eval=TRUE, fig.height=3.5, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5----
+#PA data only
+fm.PA <- isdm( observationList=list( PAdat=gamba_PA),
+            covars=covars, 
+            mesh=my.mesh,
+            responseNames=c( PA="PA"),
+            sampleAreaNames=c( PA="Area"),
+            distributionFormula=~0+poly( DEM, 2) + poly( SMRZ,2) + ACC,
+            artefactFormulas=list( PA=~1),
+            control=list( coord.names=c("x","y"), 
+                          int.sd=1000, other.sd=10, prior.mean=0,
+                          prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
+fm.PA$preds <- predict( fm.PA, covars=covars, S=50, 
+                       intercept.terms="PA_Intercept")
+plot( fm.PA$preds$mean.field)
+
 ## ----Tidy, eval=FALSE---------------------------------------------------------
 #  #You may wish to tidy your workspace.
 #  rm( covars, fm, fm.noRand, fm.PA, fm.PO, gamba_PA, gamba_PO, filenames,
-#               my.biasForm, my.form, my.control, my.mesh, my.mesh.bad,
-#               covarsForInter, interpPreds, pred.df)
+#               my.biasForm, my.form, my.control, my.mesh, my.mesh.bad)
 
 ## ----sessionInfo, results = "asis", echo = FALSE------------------------------
 toLatex(sessionInfo())
