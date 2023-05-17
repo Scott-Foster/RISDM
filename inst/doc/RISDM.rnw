@@ -52,7 +52,7 @@ In this document, we illustrate the process of fitting an ISDM to an invasive we
 %<<prelim, echo = FALSE, results = "hide">>=
 <<prelim, echo = FALSE, results="hide">>=
 library( knitr)
-opts_chunk$set(cache=TRUE, message = FALSE, comment = "", dev="pdf",
+opts_chunk$set(cache=FALSE, message = FALSE, comment = "", dev="pdf",
                       dpi=50, fig.show = "hold", fig.align = "center")
 @
 
@@ -367,7 +367,7 @@ plot( fm.noRand, covars=covars, nFigRow=2, ask=FALSE)
 @
     
 One of the potential short-comings of RQR residuals is that they contain a random component. This component is largest for data types that have few categories dichotomous data, like PA data, are subject to the largest amount possible. This fact may contribute to the apparent adequate residual plots for the model without spatial random effects.
-  
+
 \subsection*{Prediction} \label{subsec:pred}
   
 Predictions from the fitted model are performed using the \texttt{predict.isdm} method. This method proceeds by taking posterior draws of the parameters, using \texttt{INLA}'s \texttt{inla.posterior.sample} function, and then predicting using the sampled parameters into a user-supplied raster stack. In this routine, the spatial random effects are treated the same as the parameters. This is demonstrated using both the model with (and without) spatial random effects.
@@ -383,13 +383,13 @@ The \texttt{predict} method outputs a list with a number of elements. Arguably, 
 <<pred,eval=TRUE,fig.cap="Predictions from the quadratic model including random effects. Upper two rows are for the intensity, and bottom two rows are predictions of the probability of presence (within a raster cell)", fig.height=3.5>>=
 #You should use a much(!) larger value of S.
 #You may want to choose a larger value of n.threads too.
-fm$preds <- predict( fm, covars=covars, S=50, 
+fm$preds <- predict( fm, covars=covars, S=5000, 
                        intercept.terms="PA_Intercept")
 plot( fm$preds$mean.field)
   
 #Predicting probability too
 fm$preds.probs <- predict( fm, covars=covars, 
-                           S=50, intercept.terms="PA_Intercept", 
+                           S=5000, intercept.terms="PA_Intercept", 
                            type="probability")
 plot( fm$preds.probs$mean.field)
 @
@@ -401,7 +401,7 @@ By default, the \texttt{predict.isdm} method includes the terms from the distrib
   \item The terms in the sampling bias model component (not included by default) can be included or not using the `includeBias' argument.
 \end{itemize}
 Combinations of these three arguments will give the user any combination of effect types that they want. This option is included to inspect the relative contribution from the terms, for understanding, education and possibly diagnosis. As yet, it is unclear if there is any inferential use.
-    
+
 \subsection*{Interpretation} \label{subsec:inter}
 
 Interpretation of any non-experimental (e.g. survey and unplanned) data requires care. This is because the inferences may change depending on what assumptions the analyst makes, and what data (covariates) are available. Just one example: if a key covariate is not measured, or is measured with high variance, then the effect of that covariate may be erroneously partitioned to other sources. Nevertheless, in the hope (and assumption) that these types of scenarios are the minority, it can be useful to try and understand how the model is working. Our opinion is that these procedures should be considered as `hypothesis generating' rather than hard evidence for any particular theory. The reason is that there could be multiple pathways to the result, just one of which is random chance.
@@ -481,21 +481,24 @@ fm.PA$preds <- predict( fm.PA, covars=covars, S=50,
                        intercept.terms="PA_Intercept")
 plot( fm.PA$preds$mean.field)
 @
-  
+
 \section*{Last Things Last}
-  
+
 The only remaining thing to do is to tidy up our workspace. This is just removing all objects for this analysis from your workspace. I like to do this, in tutorial situations, but you may not. It is entirely up to you whether you clean or not.
 <<Tidy, eval=FALSE>>=
 #You may wish to tidy your workspace.
 rm( covars, fm, fm.noRand, fm.PA, fm.PO, gamba_PA, gamba_PO, filenames, 
-             my.biasForm, my.form, my.control, my.mesh, my.mesh.bad)
+             my.biasForm, my.form, my.control, my.mesh, my.mesh.bad,
+             covarsForInter, interpPreds, pred.df)
 @
 
 \section*{Acknowledgements}
 
-This work was partially funded by the Australian Government Department of Agriculture, Fisheries and Forestry’s Established Pest Animals and Weeds Management Pipeline Program and Supporting Communities Manage Pests and Weeds Program.
-    
-\bibliography{./RISDM}
+This work was partially funded by the Australian Government Department of Agriculture, Fisheries and Forestry's Established Pest Animals and Weeds Management Pipeline Program and Supporting Communities Manage Pests and Weeds Program.
+
+\bibliography{RISDM}
+
+\end{document}
 
 \section*{Appendix}
   

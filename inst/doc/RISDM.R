@@ -1,6 +1,6 @@
 ## ----prelim, echo = FALSE, results="hide"-------------------------------------
 library( knitr)
-opts_chunk$set(cache=TRUE, message = FALSE, comment = "", dev="pdf",
+opts_chunk$set(cache=FALSE, message = FALSE, comment = "", dev="pdf",
                       dpi=50, fig.show = "hold", fig.align = "center")
 
 ## ----setup1, eval=FALSE-------------------------------------------------------
@@ -129,13 +129,13 @@ plot( fm.noRand, covars=covars, nFigRow=2, ask=FALSE)
 ## ----pred,eval=TRUE,fig.cap="Predictions from the quadratic model including random effects. Upper two rows are for the intensity, and bottom two rows are predictions of the probability of presence (within a raster cell)", fig.height=3.5----
 #You should use a much(!) larger value of S.
 #You may want to choose a larger value of n.threads too.
-fm$preds <- predict( fm, covars=covars, S=50, 
+fm$preds <- predict( fm, covars=covars, S=5000, 
                        intercept.terms="PA_Intercept")
 plot( fm$preds$mean.field)
   
 #Predicting probability too
 fm$preds.probs <- predict( fm, covars=covars, 
-                           S=50, intercept.terms="PA_Intercept", 
+                           S=5000, intercept.terms="PA_Intercept", 
                            type="probability")
 plot( fm$preds.probs$mean.field)
 
@@ -201,7 +201,8 @@ plot( fm.PA$preds$mean.field)
 ## ----Tidy, eval=FALSE---------------------------------------------------------
 #  #You may wish to tidy your workspace.
 #  rm( covars, fm, fm.noRand, fm.PA, fm.PO, gamba_PA, gamba_PO, filenames,
-#               my.biasForm, my.form, my.control, my.mesh, my.mesh.bad)
+#               my.biasForm, my.form, my.control, my.mesh, my.mesh.bad,
+#               covarsForInter, interpPreds, pred.df)
 
 ## ----sessionInfo, results = "asis", echo = FALSE------------------------------
 toLatex(sessionInfo())
