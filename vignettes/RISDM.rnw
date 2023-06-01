@@ -89,7 +89,7 @@ The \texttt{RISDM} package is introduced here using data on gamba grass in the N
 
 \subsubsection*{Covariate Data -- setting the environmental scene}\label{subsubsec:covs}
 
-The first piece of the data puzzle is the environmental data. These data are assumed to be defined on a raster (from the raster package) and must form a raster brick. Forming them into a raster stack ensures that the individual raster layers all have the same extent and the same resolution etc. It is not necessary, but it is highly recommended, that the analyst considers the pattern of missing values within the raster stack. Missing values in covariates in any correlative model can substantially reduce the information content.
+The first piece of the data puzzle is the environmental data. These data are assumed to be defined on a raster (from the raster package) and must form a raster brick. Forming them into a raster stack ensures that the individual raster layers all have the same extent and the same resolution etc. It is not necessary, but it is highly recommended, that the analyst considers the pattern of missing values within the raster stack -- where some covariates are available but others are not. Missing values in covariates in any correlative model can substantially reduce the information content.
 
 The covariate data for the gamba grass example is included as part of the \texttt{RISDM} package. There are three raster layers: 
 \begin{enumerate}
@@ -97,7 +97,7 @@ The covariate data for the gamba grass example is included as part of the \textt
   \item Elevation, measured through a digital elevation model \citep[DEM; from][]{gal15}, may delineate gamba grass distribution \citep{ada15}. Like accessibility, a square root transformation was used to endeavour to reduce leverage of unusual locations within the analysis.
   \item Soil moisture at the root zone \citep[SMRZ][]{fro18} may limit gamba grass distribution as it could require moist but not saturated soils \citep{flo05,pet12}.
 \end{enumerate}
-The gamba grass covariates can be read directly into R and compiled into a raster stack. The distribution of the covariate data has been inspected (elsewhere) and corrective steps (transformation here) have been employed. This is to reduce the leverage of these observations and to try and obtain the most amount of reliable information from these data. 
+The gamba grass covariates can be read directly into R and compiled into a raster stack. The distribution of the covariate data has been inspected (elsewhere) and corrective steps have been employed. For the gamba data, the accessibility and the DEM were square-root transformed to reduce skewness of their distributions, which will also lead to reducing the influence in the analysis of very high values. This is to reduce the leverage of these observations and to try and obtain the most amount of reliable information from these data. 
 <<readCovars, eval=TRUE,fig.cap="Environmental covariate data for the gamba grass example. Accessibility (ACC) measuring effective distance for humans to travel. Digital elevation model (DEM) giving the altitude. Soil moisture at the root zone (SMRZ) measuring the wetness where it matters for plants. See text for details and references.">>=
 filenames <- paste0( system.file("extdata", package="RISDM"), 
                    c("/GambaExample_sqrtACC_23Mar28.tif", 
@@ -378,20 +378,20 @@ By default the \texttt{predict} method will predict on the intensity scale. This
 
 The intensity and probability predictions in Figure \ref{fig:pred} appear to be very similar. They are. This is because the intensity and probability are very small, and when they are very small the non-linear transformation between them turns out to be very well approximated by the identity function.
   
-The \texttt{predict} method outputs a list with a number of elements. Arguably, the most useful of these is the mean.field element, which contains a raster stack with a number of summaries of the prediction posterior. Most notably, the prediction stack contains the median prediction and the 2.5\% percentile and the 97.5\% percentile. These values can be taken to be the point and the interval estimate for the predicted property. Also included in the prediction stack is the posterior mean and the posterior standard deviation. It has been the authors experience that the median is a more robust summary of central location in this situation, and it is recommended.
+The \texttt{predict} method outputs a list with a number of elements. Arguably, the most useful of these is the `field' element, which contains a raster stack with a number of summaries of the prediction posterior. Most notably, the prediction stack contains the median prediction and the 2.5\% percentile and the 97.5\% percentile. These values can be taken to be the point and the interval estimate for the predicted property. Also included in the prediction stack is the posterior mean and the posterior standard deviation. It has been the authors experience that the median is a more robust summary of central location in this situation, and it is recommended.
   
 <<pred,eval=TRUE,fig.cap="Predictions from the quadratic model including random effects. Upper two rows are for the intensity, and bottom two rows are predictions of the probability of presence (within a raster cell)", fig.height=3.5>>=
 #You should use a much(!) larger value of S.
 #You may want to choose a larger value of n.threads too.
 fm$preds <- predict( fm, covars=covars, S=50, 
                        intercept.terms="PA_Intercept")
-plot( fm$preds$mean.field)
+plot( fm$preds$field)
   
 #Predicting probability too
 fm$preds.probs <- predict( fm, covars=covars, 
                            S=50, intercept.terms="PA_Intercept", 
                            type="probability")
-plot( fm$preds.probs$mean.field)
+plot( fm$preds.probs$field)
 @
     
 By default, the \texttt{predict.isdm} method includes the terms from the distribution function (including spatial random effect) and whatever intercept is chosen. However, variations on this can be achieved:
@@ -404,7 +404,7 @@ Combinations of these three arguments will give the user any combination of effe
     
 \subsection*{Interpretation} \label{subsec:inter}
 
-Interpretation of any non-experimental (e.g. survey and unplanned) data requires care. This is because the inferences may change depending on what assumptions the analyst makes, and what data (covariates) are available. Just one example: if a key covariate is not measured, or is measured with high variance, then the effect of that covariate may be erroneously partitioned to other sources. Nevertheless, in the hope (and assumption) that these types of scenarios are the minority, it can be useful to try and understand how the model is working. Our opinion is that these procedures should be considered as `hypothesis generating' rather than hard evidence for any particular theory. The reason is that there could be multiple pathways to the result, just one of which is random chance.
+Interpretation of any non-experimental (e.g. survey and unplanned) data requires care. This is because the inferences may change depending on what assumptions the analyst makes, and what data (covariates) are available. Just one example: if a key covariate is not measured, or is measured with high variance, then the effect of that covariate may be erroneously partitioned to other sources. Nevertheless, in the hope (and assumption) that these types of scenarios are the minority, it can be useful to try and understand how the model is working. Our opinion is that these procedures should be considered as `hypothesis generating' rather than hard evidence for any particular theory. The reason is that there could be multiple pathways to the result. Just one of the probably less-interesting pathways is that the result depends just on random chance in the data.
 
 Interpreting the model involves inspecting the posterior distribution of the model's parameters. When the terms are linear, this is pretty simple to do.  However, when there is some sort of basis expansion in the formula (e.g. quadratic or B-spline) then it becomes more difficult. One solution (not used here) is to pre-compute all basis expansions before fitting the model. The responses can then be constructed using the posterior distributions. Another option is to let \texttt{predict.isdm} do the work -- we will use this now. Note that the data, for the covariate of interest, must be exactly the same as the data used in the model estimation. If this is not the case, then there will be a different basis expansion envoked which will create a different relationship (not the one modelled).
 
@@ -425,7 +425,7 @@ interpPreds <- predict( fm, covars=covarsForInter,
 
 #compile covariate and prediction
 pred.df <- as.data.frame( cbind( SMRZ=values( covars$SMRZ), 
-     values( interpPreds$mean.field[[c("mu.median","mu.lower","mu.upper")]])))
+     values( interpPreds$field[[c("mu.median","mu.lower","mu.upper")]])))
 #plot
 pred.df <- pred.df[!is.na( pred.df$SMRZ),]
 pred.df <- pred.df[order( pred.df$SMRZ),]
@@ -462,7 +462,7 @@ fm.PO <- isdm( observationList=list( POdat=gamba_PO),
                           prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
 fm.PO$preds <- predict( fm.PO, covars=covars, S=50, 
                        intercept.terms="PO_Intercept")
-plot( fm.PO$preds$mean.field)
+plot( fm.PO$preds$field)
 @
 
 <<singleDataPA, eval=TRUE, fig.height=3.5, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5>>=
@@ -479,7 +479,7 @@ fm.PA <- isdm( observationList=list( PAdat=gamba_PA),
                           prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
 fm.PA$preds <- predict( fm.PA, covars=covars, S=50, 
                        intercept.terms="PA_Intercept")
-plot( fm.PA$preds$mean.field)
+plot( fm.PA$preds$field)
 @
   
 \section*{Last Things Last}

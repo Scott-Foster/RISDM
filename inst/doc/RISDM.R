@@ -131,13 +131,13 @@ plot( fm.noRand, covars=covars, nFigRow=2, ask=FALSE)
 #You may want to choose a larger value of n.threads too.
 fm$preds <- predict( fm, covars=covars, S=50, 
                        intercept.terms="PA_Intercept")
-plot( fm$preds$mean.field)
+plot( fm$preds$field)
   
 #Predicting probability too
 fm$preds.probs <- predict( fm, covars=covars, 
                            S=50, intercept.terms="PA_Intercept", 
                            type="probability")
-plot( fm$preds.probs$mean.field)
+plot( fm$preds.probs$field)
 
 ## ----interp, eval=TRUE, fig.height=3.5, fig.cap="Relationship with Soil Moisture (SMRZ). Black solid line is the median relationship and grey shaded area is the 95 percent CI."----
 #the data for interpretation
@@ -154,7 +154,7 @@ interpPreds <- predict( fm, covars=covarsForInter,
 
 #compile covariate and prediction
 pred.df <- as.data.frame( cbind( SMRZ=values( covars$SMRZ), 
-     values( interpPreds$mean.field[[c("mu.median","mu.lower","mu.upper")]])))
+     values( interpPreds$field[[c("mu.median","mu.lower","mu.upper")]])))
 #plot
 pred.df <- pred.df[!is.na( pred.df$SMRZ),]
 pred.df <- pred.df[order( pred.df$SMRZ),]
@@ -180,7 +180,7 @@ fm.PO <- isdm( observationList=list( POdat=gamba_PO),
                           prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
 fm.PO$preds <- predict( fm.PO, covars=covars, S=50, 
                        intercept.terms="PO_Intercept")
-plot( fm.PO$preds$mean.field)
+plot( fm.PO$preds$field)
 
 ## ----singleDataPA, eval=TRUE, fig.height=3.5, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5----
 #PA data only
@@ -196,7 +196,7 @@ fm.PA <- isdm( observationList=list( PAdat=gamba_PA),
                           prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
 fm.PA$preds <- predict( fm.PA, covars=covars, S=50, 
                        intercept.terms="PA_Intercept")
-plot( fm.PA$preds$mean.field)
+plot( fm.PA$preds$field)
 
 ## ----Tidy, eval=FALSE---------------------------------------------------------
 #  #You may wish to tidy your workspace.

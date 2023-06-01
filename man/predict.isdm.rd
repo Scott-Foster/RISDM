@@ -27,7 +27,7 @@
 The covariate data, within \code{covars}, is treated to the same preparation as the covariate data for the model fit using \code{\link{isdm}}. This means that the use of the *same* rasters in both sets will have the desired results. However, if a different raster is provided for prediction than at estimation, then meaning is less clear. This includes prediction into new geographical areas or prediction using a different resolution. If these kinds of predictions are required, then it is recommended that the user `builds' their own raster layers for estimation and predictions. These raster layers should have the same scaling and the user should set control$scale=FALSE in the \code{\link{isdm}} estimation process.}
 
 \value{A list containing the following elements:
-\item{mean.field}{The predictions and summaries thereof. The summaries are for the cell-wise posterior: median, median, lower interval (2.5\%), upper interval (97.5\%), mean, and standard deviation. Note that the median it is possible that the median is a more robust measure of central tendancy than the mean.}
+\item{field}{The predictions and summaries thereof. The summaries are for the cell-wise posterior: median, lower interval (2.5\%), upper interval (97.5\%), mean, and standard deviation. Note that, in general, the median is a more robust measure of central tendancy than the mean.}
 \item{cell.samples}{All the S posterior draws for each cell.}
 \item{fixedSamples}{All the S posterior draws of the fixed effects.}
 \item{fixed.names}{The names of the fixed effects in the samples, fixedSamples}

@@ -33,32 +33,32 @@ testthat::test_that(
   "Checking the prediction from an isdm object.  Predicting to original raster only.",
   {
     fm$preds <- predict( object=fm, covars=dat$covarBrick, S=500)
-    testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
-    tmp <- raster::stack( raster::crop( dat$covarBrick$Intensity, fm$preds$mean.field), fm$preds$mean.field)
+    testthat::expect_s4_class( fm$preds$field, class="RasterBrick")
+    tmp <- raster::stack( raster::crop( dat$covarBrick$Intensity, fm$preds$field), fm$preds$field)
     raster::plot( tmp, nc=2)
 
     fm$preds <- predict( object=fm, covars=dat$covarBrick, S=50, n.batches = 3)
-    testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
+    testthat::expect_s4_class( fm$preds$field, class="RasterBrick")
     
     fm$preds <- predict( object=fm, covars=dat$covarBrick, S=5)  #checking another value of S
-    testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
+    testthat::expect_s4_class( fm$preds$field, class="RasterBrick")
 
     fm$preds <- predict( object=fm, covars=dat$covarBrick, S=5, intercept.terms=c( "DC_Intercept", "DC_SurveyDCsurvey_2"))
-    testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
+    testthat::expect_s4_class( fm$preds$field, class="RasterBrick")
 
     fm$preds <- predict( object=fm, covars=dat$covarBrick, S=5, n.threads=4)
-    testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
+    testthat::expect_s4_class( fm$preds$field, class="RasterBrick")
 
     fm$preds <- predict( object=fm, covars=dat$covarBrick, S=5, includeRandom=FALSE)
-    testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
+    testthat::expect_s4_class( fm$preds$field, class="RasterBrick")
 
     fm$preds <- predict( object=fm, covars=dat$covarBrick, S=5, includeFixed=FALSE)
-    testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
+    testthat::expect_s4_class( fm$preds$field, class="RasterBrick")
 
     fm$preds <- predict( object=fm, covars=dat$covarBrick, S=5, includeBias=FALSE)
-    testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
+    testthat::expect_s4_class( fm$preds$field, class="RasterBrick")
     
     fm$preds <- predict( object=fm, covars=dat$covarBrick, S=5, type="probability")
-    testthat::expect_s4_class( fm$preds$mean.field, class="RasterBrick")
+    testthat::expect_s4_class( fm$preds$field, class="RasterBrick")
   }
 )

@@ -191,7 +191,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   #sort out extent in case...
   muRaster <- raster::extend( muRaster, covars)  #just in case it is needed -- could be dropped throughout the creation of the raster.
 
-  res <- list( mean.field=muRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords)
+  res <- list( field=muRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords)
   
   return( res)
 }
