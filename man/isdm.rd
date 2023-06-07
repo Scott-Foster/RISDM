@@ -1,6 +1,6 @@
 \name{isdm}
 \alias{isdm}
-\title{Fits a spatial SDM to disparite data sources}
+\title{Fits a spatial SDM to disparate data sources}
 \description{ This function fits a SDM to presence-only and/or presence-absence and/or abundance-absence data amd/or double-count transect data. It does so using INLA (Rue et al.; 2009), a Poisson process approximateion, and is wrapped up in the integrated methods described in Fltetcher et al. (2019) and Isaac et al. (2020). Currently, data in any of the previously mentioned three data types can be used. The model rests on the assumption that the underlying distribution of the species is a log-Guassian Cox process (a Poisson process with a spatial random effect). The code started as an altered version of that supplied with Isaac et al. (2020), but has undergone method development and extension since then.}
 \usage{
  isdm( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCdat=NULL),
