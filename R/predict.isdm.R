@@ -87,7 +87,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   #extract the covariates
   
   #Get expanded data (model matrix) and corresponding formulae
-  newInfo <- uniqueVarNames( obsList=list(), covarBrick=covars, distForm=object$distributionFormula, biasForm=object$biasFormula, arteForm=list(), habitatArea="myCellAreas", DCsurvID=attr( object, "DCobserverInfo"), coord.names=attr( res, "coord.names"), responseNames=object$responseNames, sampleAreaNames=NULL, stdCovs=object$control$standardiseCovariates)
+  newInfo <- uniqueVarNames( obsList=list(), covarBrick=covars, distForm=object$distributionFormula, biasForm=object$biasFormula, arteForm=list(), habitatArea="myCellAreas", DCsurvID=attr( object, "DCobserverInfo"), coord.names=attr( res, "coord.names"), responseNames=object$responseNames, sampleAreaNames=NULL, stdCovs=object$control$standardiseCovariates, na.action=object$control$na.action)
   #putting it into a data frame
   covarData <- as.data.frame( raster::extract( newInfo$covarBrick, predcoords[,1:2]))#[,names( newInfo$covarBrick), drop=FALSE])
   myCellAreas <- as.matrix( raster::extract( covars, predcoords[,1:2])[,"myCellAreas", drop=FALSE])

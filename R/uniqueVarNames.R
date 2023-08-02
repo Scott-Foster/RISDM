@@ -13,7 +13,7 @@
 ###############################################################################################
 ###############################################################################################
 
-uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, habitatArea, DCsurvID, coord.names, responseNames, sampleAreaNames, stdCovs){
+uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, habitatArea, DCsurvID, coord.names, responseNames, sampleAreaNames, stdCovs, na.action){
 
   ####	Distribution formula for entire region -- individual (artefact) datasets will be taken from this
   #Design matrix/raster for distribution
@@ -21,7 +21,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   #get rid of intercept in distribution formula (and make sure of it)
   distForm <- stats::update.formula( distForm, ~.-1+0)
   #the model frame for the data
-  XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, namy=NULL)
+  XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, na.action=na.action, namy=NULL)
   #make new formula
   newDistForm <- stats::reformulate( colnames( XX))
   newDistForm <- stats::update.formula( newDistForm, ~.-1)
@@ -38,7 +38,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   ####	Bias formula, if present
   if( !is.null( biasForm)){
   #Design matrix/raster for distribution
-    XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( raster::values( covarBrick)), namy="PO")
+    XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( raster::values( covarBrick)), na.action=na.action, namy="PO")
     #make new formula
     newBiasForm <- stats::reformulate( colnames( XX))
     #put it in the 'correct' environment

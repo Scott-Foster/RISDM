@@ -14,20 +14,21 @@
 ###############################################################################################
 
 
-isdm.model.matrix <- function( formmy, obsy, namy=NULL) {
+isdm.model.matrix <- function( formmy, obsy, na.action='na.omit',namy=NULL) {
 
   #check NA patterns
   allNAs.id <- apply( obsy, 1, function(zz) all( is.na( zz)))
   anyNAs.id <- apply( obsy, 1, function(zz) any( is.na( zz)))
   if( !all( allNAs.id == anyNAs.id))
-    stop( paste0("NA present in some, but not all, covariates: data name: ",namy," (if blank then in the raster)"))
-  obsy.noNA <- obsy[!allNAs.id,,drop=FALSE]
+    warning( paste0("NA present in some, but not all, covariates. From data: ",namy," (if blank then in the raster covariate brick). Will be dealt with using control parameter na.action: ",na.action," See ?isdm."))
+#  obsy.noNA <- obsy[!allNAs.id,,drop=FALSE]
 
   #make the model frame
-  modFrame <- stats::model.frame( formmy, obsy.noNA, na.action='na.pass')
+#  modFrame <- stats::model.frame( formmy, obsy.noNA, na.action=na.action)
+  modFrame <- stats::model.frame( formmy, obsy, na.action=na.action)
   
   #The model matrix
-  XX_noNA <- stats::model.matrix( formmy, modFrame)  #should work fine with poly etc, NAs have already been dropped.
+  XX_noNA <- stats::model.matrix( formmy, modFrame)  #should work fine with poly etc, NAs have already been dropped (depending on na.action).
   
   #paste back together
   XX <- matrix( NA, nrow=length(allNAs.id), ncol=ncol( XX_noNA))

@@ -72,12 +72,14 @@ makeControl <- function( contr) {
     contr$DCmethod <- "TaylorsLinApprox"  #the other option is "plugin"
   if( !"standardiseCovariates" %in% names( contr))
     contr$standardiseCovariates <- TRUE
+  if( !"na.action" %in% names( contr))
+    contr$na.action <- 'na.omit'
   
   #add to as we go along
   #check remaining input -- user may have specified stuff that is not there accidentally.
   if( !all( names( contr) %in% c("n.threads","tag.pred","spat.index", "coord.names", "verbose",
                                  "prior.list", "prior.mean","int.prec","other.prec", "int.sd","other.sd","calcICs", "prior.range", 
-                                 "prior.space.sigma", "addRandom", "returnStack", "DCmethod", "standardiseCovariates")))
+                                 "prior.space.sigma", "addRandom", "returnStack", "DCmethod", "standardiseCovariates", "na.action")))
     warning( "There are control parameters specified that are not used.")
   return( contr)
 }

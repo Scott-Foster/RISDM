@@ -1,0 +1,214 @@
+\begin{thebibliography}{27}
+\newcommand{\enquote}[1]{``#1''}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi:\discretionary{}{}{}#1}\else
+  \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
+  \urlstyle{rm}\Url}\fi
+\providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem[{Adams \emph{et~al.}(2015)Adams, Petty, Douglas, Buckley, Ferdinands,
+  Okazaki, Ko, and Setterfield}]{ada15}
+Adams VM, Petty AM, Douglas MM, Buckley YM, Ferdinands KB, Okazaki T, Ko DW,
+  Setterfield SA (2015).
+\newblock \enquote{Distribution, demography and dispersal model of spatial
+  spread of invasive plant populations with limited data.}
+\newblock \emph{Methods in Ecology and Evolution}, \textbf{6}(7), 782--794.
+\newblock \doi{https://doi.org/10.1111/2041-210X.12392}.
+
+\bibitem[{Bakka \emph{et~al.}(2018)Bakka, Rue, Fuglstad, Riebler, Bolin,
+  Illian, Krainski, Simpson, and Lindgren}]{bak18}
+Bakka H, Rue H, Fuglstad GA, Riebler A, Bolin D, Illian J, Krainski E, Simpson
+  D, Lindgren F (2018).
+\newblock \enquote{Spatial modeling with R-INLA: A review.}
+\newblock \emph{WIREs Computational Statistics}, \textbf{10}(6), e1443.
+\newblock \doi{https://doi.org/10.1002/wics.1443}.
+
+\bibitem[{Dunn and Smyth(1996)}]{dun96}
+Dunn PK, Smyth GK (1996).
+\newblock \enquote{Randomized Quantile Residuals.}
+\newblock \emph{Journal of Computational and Graphical Statistics},
+  \textbf{5}(3), 236--244.
+\newblock \doi{10.1080/10618600.1996.10474708}.
+
+\bibitem[{Fletcher~Jr. \emph{et~al.}(2019)Fletcher~Jr., Hefley, Robertson,
+  Zuckerberg, McCleery, and Dorazio}]{fle19}
+Fletcher~Jr RJ, Hefley TJ, Robertson EP, Zuckerberg B, McCleery RA, Dorazio RM
+  (2019).
+\newblock \enquote{A practical guide for combining data to model species
+  distributions.}
+\newblock \emph{Ecology}, \textbf{100}(6), e02710.
+\newblock \doi{10.1002/ecy.2710}.
+
+\bibitem[{Flores \emph{et~al.}(2005)Flores, Setterfield, and Douglas}]{flo05}
+Flores TA, Setterfield SA, Douglas MM (2005).
+\newblock \enquote{Seedling recruitment of the exotic grass Andropogon gayanus
+  (Poaceae) in northern Australia.}
+\newblock \emph{Australian Journal of Botany}, \textbf{53}, 243--249.
+
+\bibitem[{Foster \emph{et~al.}(in review)Foster, Peel, Hosack, Hoskins,
+  Mitchell, Proft, and Froese}]{fos24}
+Foster S, Peel D, Hosack G, Hoskins A, Mitchell D, Proft K, Froese J (in
+  review).
+\newblock \enquote{RISDM: Species Distribution Modelling from Multiple Data
+  Sources in R.}
+\newblock \emph{TBA}, \textbf{NA}, NA--NA.
+
+\bibitem[{Frost \emph{et~al.}(2018)Frost, Ramchurn, and Smith}]{fro18}
+Frost A, Ramchurn A, Smith A (2018).
+\newblock \enquote{The Australian landscape water balance model (AWRA-L v6).
+  Technical description of the Australian water resources assessment landscape
+  model version 6.}
+
+\bibitem[{Gallant and Austin(2015)}]{gal15}
+Gallant JC, Austin JM (2015).
+\newblock \enquote{Derivation of terrain covariates for digital soil mapping in
+  Australia.}
+\newblock \emph{Soil Research}, (53), 895--906.
+
+\bibitem[{Gelman \emph{et~al.}(2013)Gelman, Carlin, Stern, Dunson, Vehtari, and
+  Rubin}]{gel13}
+Gelman A, Carlin J, Stern H, Dunson D, Vehtari A, Rubin D (2013).
+\newblock \emph{Bayesian Data Analysis, Third Edition}.
+\newblock Chapman \& Hall/CRC Texts in Statistical Science. Taylor \& Francis.
+\newblock ISBN 9781439840955.
+
+\bibitem[{{{Geosciences Australia}}(2006)}]{geo06}
+{{Geosciences Australia}} (2006).
+\newblock \enquote{GEODATA TOPO 250K Series 3 (Shape file format).}
+
+\bibitem[{Hijmans(2022)}]{hij22}
+Hijmans RJ (2022).
+\newblock \emph{raster: Geographic Data Analysis and Modeling}.
+\newblock R package version 3.6-3,
+  \urlprefix\url{https://CRAN.R-project.org/package=raster}.
+
+\bibitem[{Isaac \emph{et~al.}(2020)Isaac, Jarzyna, Keil, Dambly, Boersch-Supan,
+  Browning, Freeman, Golding, Guillera-Arroita, Henrys, Jarvis, Lahoz-Monfort,
+  Pagel, Pescott, Schmucki, Simmonds, and O’Hara}]{isa20}
+Isaac NJ, Jarzyna MA, Keil P, Dambly LI, Boersch-Supan PH, Browning E, Freeman
+  SN, Golding N, Guillera-Arroita G, Henrys PA, Jarvis S, Lahoz-Monfort J,
+  Pagel J, Pescott OL, Schmucki R, Simmonds EG, O’Hara RB (2020).
+\newblock \enquote{Data Integration for Large-Scale Models of Species
+  Distributions.}
+\newblock \emph{Trends in Ecology \& Evolution}, \textbf{35}(1), 56 -- 67.
+\newblock \doi{https://doi.org/10.1016/j.tree.2019.08.006}.
+
+\bibitem[{Kass and Raftery(1995)}]{kas95}
+Kass RE, Raftery AE (1995).
+\newblock \enquote{Bayes Factors.}
+\newblock \emph{Journal of the American Statistical Association},
+  \textbf{90}(430), 773--795.
+
+\bibitem[{Krainski \emph{et~al.}(2019)Krainski, G\'{o}mez-Rubio, Bakka, Lenzi,
+  Castro-Camilo, Simpson, Lindgren, and Rue}]{kra19}
+Krainski E, G\'{o}mez-Rubio V, Bakka H, Lenzi A, Castro-Camilo D, Simpson D,
+  Lindgren F, Rue H (2019).
+\newblock \emph{Advanced Spatial Modeling with Stochastic Partial Differential
+  Equations Using R and INLA}.
+\newblock Chapman \& Hall/CRC Press.
+
+\bibitem[{Lindgren and Rue(2015)}]{lin15}
+Lindgren F, Rue H (2015).
+\newblock \enquote{Bayesian Spatial Modelling with R-INLA.}
+\newblock \emph{Journal of Statistical Software, Articles}, \textbf{63}(19),
+  1--25.
+\newblock ISSN 1548-7660.
+\newblock \doi{10.18637/jss.v063.i19}.
+
+\bibitem[{Lindgren \emph{et~al.}(2011)Lindgren, Rue, and Lindstr\"{o}m}]{lin11}
+Lindgren F, Rue H, Lindstr\"{o}m J (2011).
+\newblock \enquote{An explicit link between Gaussian fields and Gaussian Markov
+  random fields: the stochastic partial differential equation approach.}
+\newblock \emph{Journal of the Royal Statistical Society: Series B (Statistical
+  Methodology)}, \textbf{73}(4), 423--498.
+\newblock \doi{10.1111/j.1467-9868.2011.00777.x}.
+
+\bibitem[{Miller \emph{et~al.}(2019)Miller, Pacifici, Sanderlin, and
+  Reich}]{mil19}
+Miller DAW, Pacifici K, Sanderlin JS, Reich BJ (2019).
+\newblock \enquote{The recent past and promising future for data integration
+  methods to estimate species’ distributions.}
+\newblock \emph{Methods in Ecology and Evolution}, \textbf{10}(1), 22--37.
+\newblock \doi{10.1111/2041-210X.13110}.
+
+\bibitem[{Neter \emph{et~al.}(1996)Neter, Kutner, Nachtsheim, and
+  Wasserman}]{net96}
+Neter J, Kutner MH, Nachtsheim CJ, Wasserman W (1996).
+\newblock \emph{Applied Linear Statistical Models}.
+\newblock Irwin, Chicago.
+
+\bibitem[{Petty \emph{et~al.}(2012)Petty, Setterfield, Ferdinands, and
+  Barrow}]{pet12}
+Petty AM, Setterfield SA, Ferdinands KB, Barrow P (2012).
+\newblock \enquote{Inferring habitat suitability and spread patterns from
+  large-scale distributions of an exotic invasive pasture grass in north
+  Australia.}
+\newblock \emph{Journal of Applied Ecology}, \textbf{49}(3), 742--752.
+\newblock \doi{https://doi.org/10.1111/j.1365-2664.2012.02128.x}.
+
+\bibitem[{{R Core Team}(2022)}]{R22}
+{R Core Team} (2022).
+\newblock \emph{R: A Language and Environment for Statistical Computing}.
+\newblock R Foundation for Statistical Computing, Vienna, Austria.
+\newblock \urlprefix\url{https://www.R-project.org/}.
+
+\bibitem[{Righetto \emph{et~al.}(2020)Righetto, Faes, Vandendijck, and
+  Ribeiro~Jr.}]{rig20}
+Righetto A, Faes C, Vandendijck Y, Ribeiro~Jr P (2020).
+\newblock \enquote{On the choice of the mesh for the analysis of geostatistical
+  data using R-INLA.}
+\newblock \emph{Communications in Statistics - Theory and Methods},
+  \textbf{49}(1), 203--220.
+\newblock \doi{10.1080/03610926.2018.1536209}.
+
+\bibitem[{Rue \emph{et~al.}(2009)Rue, Martino, and Chopin}]{rue09}
+Rue H, Martino S, Chopin N (2009).
+\newblock \enquote{Approximate Bayesian inference for latent Gaussian models by
+  using integrated nested Laplace approximations.}
+\newblock \emph{Journal of the Royal Statistical Society: Series B (Statistical
+  Methodology)}, \textbf{71}(2), 319--392.
+\newblock \doi{10.1111/j.1467-9868.2008.00700.x}.
+
+\bibitem[{Simpson \emph{et~al.}(2017)Simpson, Rue, Riebler, Martins, and
+  S{\o}rbye}]{sim17}
+Simpson DP, Rue H, Riebler A, Martins TG, S{\o}rbye SH (2017).
+\newblock \enquote{{Penalising model component complexity: A principled,
+  practical approach to constructing priors}.}
+\newblock \emph{Statistical Science}, \textbf{32}(1), 1--28.
+
+\bibitem[{Verdoy(2021)}]{ver21a}
+Verdoy PJ (2021).
+\newblock \enquote{Enhancing the SPDE modeling of spatial point processes with
+  INLA, applied to wildfires. Choosing the best mesh for each database.}
+\newblock \emph{Communications in Statistics - Simulation and Computation},
+  \textbf{50}(10), 2990--3030.
+\newblock \doi{10.1080/03610918.2019.1618473}.
+
+\bibitem[{Warton \emph{et~al.}(2013)Warton, Renner, and Ramp}]{war13}
+Warton D, Renner I, Ramp D (2013).
+\newblock \enquote{Model-Based Control of Observer Bias for the Analysis of
+  Presence-Only Data in Ecology.}
+\newblock \emph{PLoS ONE}, \textbf{8}(11), 1--9.
+\newblock \doi{10.1371/journal.pone.0079168}.
+
+\bibitem[{Weiss \emph{et~al.}(2018)Weiss, Nelson, Gibson, Temperley, Peedell,
+  Lieber, Hancher, Poyart, Belchior, Fullman, Mappin, Dalrymple, Rozier, Lucas,
+  Howes, Tusting, Kang, Cameron, Bisanzio, Battle, Bhatt, and Gething}]{wei18}
+Weiss DJ, Nelson A, Gibson HS, Temperley W, Peedell S, Lieber A, Hancher M,
+  Poyart E, Belchior S, Fullman N, Mappin B, Dalrymple U, Rozier J, Lucas TCD,
+  Howes RE, Tusting LS, Kang SY, Cameron E, Bisanzio D, Battle KE, Bhatt S,
+  Gething PW (2018).
+\newblock \enquote{A global map of travel time to cities to assess inequalities
+  in accessibility in 2015.}
+\newblock \emph{Nature}, \textbf{553}, 333--336.
+\newblock \doi{10.1038/nature25181}.
+
+\bibitem[{Wood(2017)}]{woo17}
+Wood S (2017).
+\newblock \emph{Generalized Additive Models: An Introduction with R}.
+\newblock 2 edition. Chapman and Hall/CRC.
+
+\end{thebibliography}

@@ -54,7 +54,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   }
 
   #make variable names in artefact models unique -- so that factor levels etc are not shared between data types
-  newInfo <- uniqueVarNames( obsList=observationList, covarBrick=covars, distForm=distributionFormula, biasForm=biasFormula, arteForm=artefactFormulas, habitatArea=habitatArea, DCsurvID=DCobserverInfo$SurveyID, coord.names=control$coord.names, responseNames=responseNames, sampleAreaNames=sampleAreaNames, stdCovs=control$standardiseCovariates)
+  newInfo <- uniqueVarNames( obsList=observationList, covarBrick=covars, distForm=distributionFormula, biasForm=biasFormula, arteForm=artefactFormulas, habitatArea=habitatArea, DCsurvID=DCobserverInfo$SurveyID, coord.names=control$coord.names, responseNames=responseNames, sampleAreaNames=sampleAreaNames, stdCovs=control$standardiseCovariates, na.action=control$na.action)
 
 #  artefactFormulas <- tmp$arteForm
 #  #same for observation list (the species data)
