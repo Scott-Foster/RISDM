@@ -20,7 +20,7 @@ isdm.model.matrix <- function( formmy, obsy, na.action=na.omit,namy=NULL) {
   allNAs.id <- apply( obsy, 1, function(zz) all( is.na( zz)))
   anyNAs.id <- apply( obsy, 1, function(zz) any( is.na( zz)))
   if( !all( allNAs.id == anyNAs.id))
-    warning( paste0("NA present in some, but not all, covariates. From data: ",namy," (if blank then in the raster covariate brick). Will be dealt with using control parameter na.action: ",na.action," See ?isdm."))
+    warning( paste0("NA present in some, but not all, covariates. From data: ",namy," (if blank then in the raster covariate brick). Will be dealt with using control parameter na.action. See ?isdm."))
 #  obsy.noNA <- obsy[!allNAs.id,,drop=FALSE]
 
   #make the model frame
