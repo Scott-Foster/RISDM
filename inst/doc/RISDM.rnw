@@ -2,57 +2,7 @@
 %\VignettePackage{RISDM}
 %\VignetteEngine{knitr::knitr}
 
-\documentclass[article,shortnames,nojss]{jss}\usepackage[]{graphicx}\usepackage[]{xcolor}
-% maxwidth is the original width if it is less than linewidth
-% otherwise use linewidth (to make sure the graphics do not exceed the margin)
-\makeatletter
-\def\maxwidth{ %
-  \ifdim\Gin@nat@width>\linewidth
-    \linewidth
-  \else
-    \Gin@nat@width
-  \fi
-}
-\makeatother
-
-\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
-\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
-\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
-\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
-\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
-\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
-\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
-\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
-\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
-\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
-\let\hlipl\hlkwb
-
-\usepackage{framed}
-\makeatletter
-\newenvironment{kframe}{%
- \def\at@end@of@kframe{}%
- \ifinner\ifhmode%
-  \def\at@end@of@kframe{\end{minipage}}%
-  \begin{minipage}{\columnwidth}%
- \fi\fi%
- \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
- \colorbox{shadecolor}{##1}\hskip-\fboxsep
-     % There is no \\@totalrightmargin, so:
-     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
- \MakeFramed {\advance\hsize-\width
-   \@totalleftmargin\z@ \linewidth\hsize
-   \@setminipage}}%
- {\par\unskip\endMakeFramed%
- \at@end@of@kframe}
-\makeatother
-
-\definecolor{shadecolor}{rgb}{.97, .97, .97}
-\definecolor{messagecolor}{rgb}{0, 0, 0}
-\definecolor{warningcolor}{rgb}{1, 0, 1}
-\definecolor{errorcolor}{rgb}{1, 0, 0}
-\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
-
-\usepackage{alltt}
+\documentclass[article,shortnames,nojss]{jss}
 
 %% almost as usual
 \author{Scott D. Foster\\Data61, CSIRO, Hobart, Tasmania, Australia}
@@ -94,36 +44,32 @@ In this document, we illustrate the process of fitting an ISDM to an invasive we
 \usepackage{color}
 
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
-\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+
 \begin{document}
 
 \footnotetext{This is an introduction to the RISDM R-pacakge (available from \url{https://cran.r-project.org/package=RISDM}).}
 
 %<<prelim, echo = FALSE, results = "hide">>=
-
+<<prelim, echo = FALSE, results="hide">>=
+library( knitr)
+opts_chunk$set(cache=FALSE, message = FALSE, comment = "", dev="pdf",
+                      dpi=50, fig.show = "hold", fig.align = "center")
+@
 
 \section*{First Things First (setting up R for using \texttt{RISDM})}
 
-Before starting with this introduction to \texttt{RISDM}, we need to make sure that everything is set up properly. Much of this will vary from computer to computer, but you must have a working version of R installed (preferably the recent release) and a working version of INLA \citep{rue09}. This vignette was created using R-version R version 4.2.1 (2022-06-23), \texttt{INLA} release 23.04.24, and \texttt{RISDM} release 1.2.7. It does not matter whether you prefer to use R through a development environment (such as RStudio) or through the command line -- the results will be the same. You will need to have installed a recent version of \texttt{INLA} and \texttt{RISDM}. These can be installed by starting R and then submitting (at command line):
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{install.packages}\hlstd{(}\hlstr{"INLA"}\hlstd{,}\hlkwc{repos}\hlstd{=}\hlkwd{c}\hlstd{(}\hlkwd{getOption}\hlstd{(}\hlstr{"repos"}\hlstd{),}
-                \hlkwc{INLA}\hlstd{=}\hlstr{"https://inla.r-inla-download.org/R/stable"}\hlstd{),} \hlkwc{dep}\hlstd{=}\hlnum{TRUE}\hlstd{)}
-\hlcom{#vignette not built to save computation}
-\hlstd{devtools}\hlopt{::}\hlkwd{install_github}\hlstd{(} \hlkwc{repo}\hlstd{=}\hlstr{"Scott-Foster/RISDM"}\hlstd{,} \hlkwc{build_vignettes}\hlstd{=}\hlnum{FALSE}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+Before starting with this introduction to \texttt{RISDM}, we need to make sure that everything is set up properly. Much of this will vary from computer to computer, but you must have a working version of R installed (preferably the recent release) and a working version of INLA \citep{rue09}. This vignette was created using R-version \Sexpr{sessionInfo()$R.version$version.string}, \texttt{INLA} release 23.04.24, and \texttt{RISDM} release 1.2.7. It does not matter whether you prefer to use R through a development environment (such as RStudio) or through the command line -- the results will be the same. You will need to have installed a recent version of \texttt{INLA} and \texttt{RISDM}. These can be installed by starting R and then submitting (at command line):
+<<setup1, eval=FALSE>>=
+install.packages("INLA",repos=c(getOption("repos"),
+                INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
+#vignette not built to save computation
+devtools::install_github( repo="Scott-Foster/RISDM", build_vignettes=FALSE)
+@
 The \texttt{RISDM} package will then need to be loaded. The raster package is also loaded to handle spatial data.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{library}\hlstd{( RISDM)}
-\hlkwd{library}\hlstd{( raster)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<setup2>>=
+library( RISDM)
+library( raster)
+@
 
 \section*{Introduction to RISDM, via Example}
 
@@ -152,33 +98,16 @@ The covariate data for the gamba grass example is included as part of the \textt
   \item Soil moisture at the root zone \citep[SMRZ][]{fro18} may limit gamba grass distribution as it could require moist but not saturated soils \citep{flo05,pet12}.
 \end{enumerate}
 The gamba grass covariates can be read directly into R and compiled into a raster stack. The distribution of the covariate data has been inspected (elsewhere) and corrective steps have been employed. For the gamba data, the accessibility and the DEM were square-root transformed to reduce skewness of their distributions, which will also lead to reducing the influence in the analysis of very high values. This is to reduce the leverage of these observations and to try and obtain the most amount of reliable information from these data. 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{filenames} \hlkwb{<-} \hlkwd{paste0}\hlstd{(} \hlkwd{system.file}\hlstd{(}\hlstr{"extdata"}\hlstd{,} \hlkwc{package}\hlstd{=}\hlstr{"RISDM"}\hlstd{),}
-                   \hlkwd{c}\hlstd{(}\hlstr{"/GambaExample_sqrtACC_23Mar28.tif"}\hlstd{,}
-                     \hlstr{"/GambaExample_sqrtDEM_23Mar28.tif"}\hlstd{,}
-                     \hlstr{"/GambaExample_SMRZ_23Mar28.tif"}\hlstd{))}
-\hlstd{covars} \hlkwb{<-} \hlkwd{stack}\hlstd{( filenames)}
-\hlkwd{names}\hlstd{( covars)} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"ACC"}\hlstd{,}\hlstr{"DEM"}\hlstd{,}\hlstr{"SMRZ"}\hlstd{)}
-\hlkwd{print}\hlstd{(} \hlkwd{colnames}\hlstd{(} \hlkwd{coordinates}\hlstd{( covars)))}  \hlcom{#to see how things are labelled.}
-\end{alltt}
-\begin{verbatim}
-[1] "x" "y"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{plot}\hlstd{( covars)}
-\end{alltt}
-\end{kframe}\begin{figure}
-
-{\centering \includegraphics[width=\maxwidth]{figure/readCovars-1} 
-
-}
-
-\caption[Environmental covariate data for the gamba grass example]{Environmental covariate data for the gamba grass example. Accessibility (ACC) measuring effective distance for humans to travel. Digital elevation model (DEM) giving the altitude. Soil moisture at the root zone (SMRZ) measuring the wetness where it matters for plants. See text for details and references.}\label{fig:readCovars}
-\end{figure}
-
-\end{knitrout}
+<<readCovars, eval=TRUE,fig.cap="Environmental covariate data for the gamba grass example. Accessibility (ACC) measuring effective distance for humans to travel. Digital elevation model (DEM) giving the altitude. Soil moisture at the root zone (SMRZ) measuring the wetness where it matters for plants. See text for details and references.">>=
+filenames <- paste0( system.file("extdata", package="RISDM"), 
+                   c("/GambaExample_sqrtACC_23Mar28.tif", 
+                     "/GambaExample_sqrtDEM_23Mar28.tif", 
+                     "/GambaExample_SMRZ_23Mar28.tif"))
+covars <- stack( filenames)
+names( covars) <- c("ACC","DEM","SMRZ")
+print( colnames( coordinates( covars)))  #to see how things are labelled.
+plot( covars)
+@
 It may be that the raster data that an analyst wants to use comes in different resolutions, different projections, different extents and so on. If the analyst is not familiar with conversion of these, then it is suggested that they should look into the \texttt{projectRaster}, \texttt{aggregate}, \texttt{disaggregate}, \texttt{mask}, \texttt{crop} and \texttt{stack} functions from the \texttt{raster} package \citep{hij22}.
 
 For the environmental data in this example (see Figure \ref{fig:readCovars}), we have used an equal area project (UTM zone 52 south) with kilometre map units. We recommend the use of projected rasters, as this eases specification and interpretation of spatial processes. However, \texttt{RISDM} will still work with whatever coordinate reference system is chosen.
@@ -205,46 +134,19 @@ The observation data are those that inform the where the species is, is not, and
 \end{description}
 
 The gamba grass observational data is included in the \texttt{RISDM} package. To load them into R and to get an idea about their content, use:
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{gamba_PO} \hlkwb{<-} \hlkwd{readRDS}\hlstd{(} \hlkwd{system.file}\hlstd{(}\hlstr{"extdata"}\hlstd{,} \hlstr{"Gamba_PO_23Mar28.RDS"}\hlstd{,}
-                                   \hlkwc{package}\hlstd{=}\hlstr{"RISDM"}\hlstd{))}
-\hlstd{gamba_PA} \hlkwb{<-} \hlkwd{readRDS}\hlstd{(} \hlkwd{system.file}\hlstd{(}\hlstr{"extdata"}\hlstd{,} \hlstr{"Gamba_PA_23Mar28.RDS"}\hlstd{,}
-                                 \hlkwc{package}\hlstd{=}\hlstr{"RISDM"}\hlstd{))}
+<<readObs, eval=TRUE>>=
+gamba_PO <- readRDS( system.file("extdata", "Gamba_PO_23Mar28.RDS", 
+                                   package="RISDM"))
+gamba_PA <- readRDS( system.file("extdata", "Gamba_PA_23Mar28.RDS", 
+                                 package="RISDM"))
 
-\hlkwd{str}\hlstd{( gamba_PO)}
-\end{alltt}
-\begin{verbatim}
-'data.frame':	4219 obs. of  6 variables:
- $ genus  : chr  "andropogon" "andropogon" "andropogon" "andropogon" ...
- $ species: chr  "gayanus" "gayanus" "gayanus" "gayanus" ...
- $ date   : Date, format: "2000-06-29" "2001-04-18" ...
- $ year   : num  2000 2001 2001 2001 2001 ...
- $ x      : num  747 737 738 735 728 ...
- $ y      : num  8605 8607 8611 8613 8612 ...
-\end{verbatim}
-\begin{alltt}
-\hlkwd{str}\hlstd{( gamba_PA)}
-\end{alltt}
-\begin{verbatim}
-'data.frame':	500 obs. of  9 variables:
- $ genus   : chr  "andropogon" "andropogon" "andropogon" "andropogon" ...
- $ species : chr  "gayanus" "gayanus" "gayanus" "gayanus" ...
- $ date    : Date, format: "2016-07-01" "2016-07-01" ...
- $ observer: Factor w/ 4 levels "B","J","P","Missing": 4 2 1 1 4 3 4 3 4 4 ...
- $ PA      : logi  FALSE TRUE TRUE TRUE FALSE TRUE ...
- $ Area    : num  40000 40000 40000 40000 40000 40000 40000 40000 40000 40000 ...
- $ year    : num  2016 2016 2016 2016 2016 ...
- $ x       : num  732 732 720 710 740 ...
- $ y       : num  8619 8615 8585 8585 8589 ...
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+str( gamba_PO)
+str( gamba_PA)
+@
   
-For the gamba grass PO data, there are \verb|4219| observations, and their locations are stored in the columns `x' and `y'. These labels match the covariate raster stack from before. There is possible confusion as there is also a longitude and a latitude variable, but these are a legacy of a previous reference system. As stated before however, these observation data will be used in a projected form. The remainder of the data provides contextual information about date of sample, survey program, and so on. These data, for PO observations, are not currently used in \texttt{RISDM}.
+For the gamba grass PO data, there are \verb|\Sexpr{nrow( gamba_PO)}| observations, and their locations are stored in the columns `x' and `y'. These labels match the covariate raster stack from before. There is possible confusion as there is also a longitude and a latitude variable, but these are a legacy of a previous reference system. As stated before however, these observation data will be used in a projected form. The remainder of the data provides contextual information about date of sample, survey program, and so on. These data, for PO observations, are not currently used in \texttt{RISDM}.
 
-For the PA data, there are \verb|500| observations, that are randomly chosen from a much larger database. Of these observations (outcome in the `PA' column), a proportion of \verb|0.45| were presences and \verb|0.55| absences. The locations of the observations are in the `x' and `y' columns, and the sampling area is stored in the \texttt{Area} column. The sampling area is the same for all observations in these data (they arise from a formal survey methodology). Most of the contextual variables in gamba\_PA are not all that useful. However, there might be some detectability differences between observers, and this variable could be added as a sampling artefact.
+For the PA data, there are \verb|\Sexpr{nrow( gamba_PA)}| observations, that are randomly chosen from a much larger database. Of these observations (outcome in the `PA' column), a proportion of \verb|\Sexpr{sum( gamba_PA$PA)/nrow( gamba_PA)}| were presences and \verb|\Sexpr{1-sum(gamba_PA$PA)/nrow(gamba_PA)}| absences. The locations of the observations are in the `x' and `y' columns, and the sampling area is stored in the \texttt{Area} column. The sampling area is the same for all observations in these data (they arise from a formal survey methodology). Most of the contextual variables in gamba\_PA are not all that useful. However, there might be some detectability differences between observers, and this variable could be added as a sampling artefact.
 
 \subsubsection*{Analysis Mesh} \label{subsubsec:mesh}
 
@@ -252,46 +154,22 @@ The geostatistical method utilised in \texttt{RISDM}, that of \citet{lin11}, rel
   
 In \texttt{makeMesh}, the mesh creation task is primarily parameterised by the analyst's guess as to the likely effective range for the spatial random effect (distance to small $\sim 0.1$ expected correlation) and also the number of nodes in both the analysis area and an extension area. The analysis area is taken to be a nonconvex hull surrounding the non-NA values in one of the covariate raster layers, and the extension area is simply a buffered version of the hull. The extension is useful to allow for spatial dependence to be properly described at locations near the edges. For finer control, other arguments can also be given. If not supplied, then defaults are set using rules-of-thumbs obtained largely from \citet{bak18} and \citet{kra19}. An elementary mesh for gamba grass is now generated (note that doPlot=FALSE is chosen as \texttt{checkMesh} reproduces these shortly). In this example, the expected dependence is 3km -- so the mesh should be OK to estimate dependencies of that order (order larger). There are up to 1000 nodes in the analysis area and up to 350 in the extension area.
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.mesh} \hlkwb{<-} \hlkwd{makeMesh}\hlstd{( covars}\hlopt{$}\hlstd{DEM,} \hlkwc{max.n}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{1000}\hlstd{,} \hlnum{350}\hlstd{),} \hlkwc{dep.range}\hlstd{=}\hlnum{3}\hlstd{,} \hlkwc{doPlot}\hlstd{=}\hlnum{FALSE}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<makeMesh1, eval=TRUE>>=
+my.mesh <- makeMesh( covars$DEM, max.n=c(1000, 350), dep.range=3, doPlot=FALSE)
+@
 
 A `good' mesh is one that covers the regions, particularly the inner region, with triangles that are approximately equally sized and are approximately equilateral \citep{kra19}. Further, the edge lengths should be relatively small compared to the (posterior) range of spatial dependence -- otherwise the model might erroneously report that there is no dependence in the data when there is. If the edge lengths are too small however, then excessive computation may be needed. The first two conditions can be checked visually using a plot of the mesh \citep[shown in][]{kra19} but also looking at the distribution of triangle areas and angles. The \texttt{RISDM} function \texttt{checkMesh} produces these plots.
   
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{checkMesh}\hlstd{( my.mesh, my.mesh}\hlopt{$}\hlstd{hull,} \hlkwc{ras}\hlstd{=covars}\hlopt{$}\hlstd{DEM)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=\maxwidth]{figure/checkMesh1-1} 
-
-}
-
-
-\end{knitrout}
+<<checkMesh1, eval=TRUE, fig.height=3>>=
+checkMesh( my.mesh, my.mesh$hull, ras=covars$DEM)
+@
     
 This mesh appears to be adequate -- there are not too many large or small triangles and not too many triangles with overly small or large angles. However, in \citet{fos24}, we chose (perhaps unnecessarily) to extend the outer boundary slightly to allow for a better distribution of nodes. This was achieved by adding the argument \texttt{offset=7.5}, which is measured in map units (kilometres in this case). As an example of a `bad' mesh, consider the same spatial region but with fewer nodes.
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.mesh.bad} \hlkwb{<-} \hlkwd{makeMesh}\hlstd{( covars}\hlopt{$}\hlstd{DEM,} \hlkwc{max.n}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{250}\hlstd{,} \hlnum{30}\hlstd{),} \hlkwc{dep.range}\hlstd{=}\hlnum{3}\hlstd{,} \hlkwc{doPlot}\hlstd{=}\hlnum{FALSE}\hlstd{)}
-\hlkwd{checkMesh}\hlstd{( my.mesh.bad, my.mesh}\hlopt{$}\hlstd{hull,} \hlkwc{ras}\hlstd{=covars}\hlopt{$}\hlstd{DEM)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=\maxwidth]{figure/makeBadMesh1-1} 
-
-}
-
-
-\end{knitrout}
+<<makeBadMesh1, eval=TRUE, fig.height=3>>=
+my.mesh.bad <- makeMesh( covars$DEM, max.n=c(250, 30), dep.range=3, doPlot=FALSE)
+checkMesh( my.mesh.bad, my.mesh$hull, ras=covars$DEM)
+@
 
 The resulting `bad' mesh has mostly good shaped trianlges, but those around the corners of the inner and outer areas are much smaller and more `bunched' than elsewhere. This is picked up in the distribution of the triangle areas, which is quite bimodal. However, the triangle shapes appear to be adequate. In general, the more regular the survey area (non-NA values in the raster layer), the easier it will be to produce an adequate mesh. The survey area for gamba grass is quite regular and hence even this `bad' mesh is not spectacularly bad.
  
@@ -307,22 +185,18 @@ Like the \texttt{glm} function, the distributionFormula argument can be specifie
 
 To give some concrete examples about what formulas can be considered in the distribution model, consider these. The last one is the one that is used in \citet{fos24} and is the one that will be continued with here.
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#linear in SMRZ only}
-\hlstd{my.form} \hlkwb{<-} \hlopt{~}\hlnum{0}\hlopt{+}\hlstd{SMRZ}
-\hlcom{#interacting between SMRZ and DEM}
-\hlstd{my.form} \hlkwb{<-} \hlopt{~}\hlnum{0}\hlopt{+}\hlstd{SMRZ}\hlopt{*}\hlstd{DEM}
-\hlcom{#a B-spline regression basis with low degrees of freedom}
-\hlstd{my.form} \hlkwb{<-} \hlopt{~}\hlnum{0}\hlopt{+}\hlstd{splines}\hlopt{::}\hlkwd{bs}\hlstd{(SMRZ,} \hlkwc{df}\hlstd{=}\hlnum{3}\hlstd{)}
-\hlcom{#a(n orthogonal) polynomial in SMRZ and DEM}
-\hlstd{my.form} \hlkwb{<-} \hlopt{~}\hlnum{0}\hlopt{+}\hlkwd{poly}\hlstd{(SMRZ,}\hlnum{2}\hlstd{)}\hlopt{+}\hlkwd{poly}\hlstd{(DEM,}\hlnum{2}\hlstd{)}
-\hlcom{#adding accessibility too (as per paper).}
-\hlstd{my.form} \hlkwb{<-} \hlopt{~}\hlnum{0}\hlopt{+}\hlkwd{poly}\hlstd{(SMRZ,}\hlnum{2}\hlstd{)}\hlopt{+}\hlkwd{poly}\hlstd{(DEM,}\hlnum{2}\hlstd{)}\hlopt{+}\hlstd{acc}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<specifyDist, eval=TRUE>>=
+#linear in SMRZ only
+my.form <- ~0+SMRZ
+#interacting between SMRZ and DEM
+my.form <- ~0+SMRZ*DEM
+#a B-spline regression basis with low degrees of freedom
+my.form <- ~0+splines::bs(SMRZ, df=3)
+#a(n orthogonal) polynomial in SMRZ and DEM
+my.form <- ~0+poly(SMRZ,2)+poly(DEM,2)
+#adding accessibility too (as per paper).
+my.form <- ~0+poly(SMRZ,2)+poly(DEM,2)+acc
+@
 
 The default action for all covariates in the distribution formula is that they are standardised. This means that they are transformed (linearly -- subtracating mean and deviding by standard deviation), so that the covariate will have zero mean and standard deviation one. This also applies for basis-exansion covariates (like those from \texttt{poly} or {bs}) -- we have found that the scaling for \texttt{poly} is too small. This does not effect the fit of the model but it does improve the numerical stability and has the side effect of altering the scale of the associated model parameter. In turn, this side-effect can make it easier to specify priors for the covariate parameters -- see \ref{subsubsec:priors} for details about how this is done. This behaviour can be `turned off' by using the \texttt{standardiseCovariates} element of the control argument to \texttt{isdm}.
   
@@ -341,18 +215,14 @@ The biasFormula argument should contain terms that are likely to affect the anat
 In the gamba grass example, \citet{fos24} used a simple structure based on accessibility. There is no estimability issue with including the term in both the biasFormula and in the distributionFormula -- the latter is based on both PO and PA/AA data, while the former is based only on the PO data. However, in the particular case when there is only PO data, then the same covariate should not be included in both formulas.
 
 Here are some examples of bias formulas for the gamba grass example. We take the last, simple formula to progress with.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#intercept only == no heterogeneity in search effort}
-\hlstd{my.biasForm} \hlkwb{<-} \hlnum{1}
-\hlcom{#regression spline in acc}
-\hlstd{my.biasForm} \hlkwb{<-} \hlopt{~}\hlnum{1}\hlopt{+}\hlstd{splines}\hlopt{::}\hlkwd{bs}\hlstd{( acc,} \hlkwc{df}\hlstd{=}\hlnum{3}\hlstd{)}
-\hlcom{#linear in acc}
-\hlstd{my.biasForm} \hlkwb{<-} \hlopt{~}\hlnum{1}\hlopt{+}\hlstd{acc}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<biasForm, eval=TRUE>>=
+#intercept only == no heterogeneity in search effort
+my.biasForm <- 1
+#regression spline in acc
+my.biasForm <- ~1+splines::bs( acc, df=3)
+#linear in acc
+my.biasForm <- ~1+acc
+@
 
 \subsubsection*{Sampling Artefacts (for AA and PA data)}
 
@@ -363,27 +233,13 @@ There should be a sampling artefact formula for each of the data types included 
 Once again, there is no restriction about what varaibles are included in the artefactFormulas. Variables can appear in here that also appear in the distributionFormula (for example). However, the user must seriously ask themselves `why'? Why would the variation within the PA/AA data be dependent on that variable \textit{after the distribution has been conditioned out}?
     
 For the gamba grass example, there is only one source of PA data (and no AA data). The PA data all come from a single data source, which were all measured using the same sampling tool (an aerial survey). For this reason, it is likely to be reasonable to assume that there are no sampling artefacts within these PA data. This is the assumption made in \citet{fos24} and is the assumption that we move forward with. However, the data also contain the observer that took the measurement. Different observers may see/perceive/report differently and so we present their inclusion an (untested) alternative for instructional purposes.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#observer differences as a sampling artefact}
-\hlkwd{list}\hlstd{(} \hlkwc{PA}\hlstd{=}\hlopt{~}\hlnum{1}\hlopt{+}\hlstd{observer)}
-\end{alltt}
-\begin{verbatim}
-$PA
-~1 + observer
-\end{verbatim}
-\begin{alltt}
-\hlcom{#intercept only == no sampling artefact }
-\hlcom{#               == no heterogeneity within each data type}
-\hlkwd{list}\hlstd{(} \hlkwc{PA}\hlstd{=}\hlopt{~}\hlnum{1}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-$PA
-~1
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+<<arteForm, eval=TRUE>>=
+#observer differences as a sampling artefact
+list( PA=~1+observer)
+#intercept only == no sampling artefact 
+#               == no heterogeneity within each data type
+list( PA=~1)
+@
     
 \subsubsection*{Bringing it All Together: an initial model estimation}
   
@@ -397,22 +253,18 @@ The sampleAreaNames argument informs which variable within each of the PA and AA
   
 Finally, \texttt{isdm} must be told what the coordinates are called. These must be the same for all data structures. It is specified through the control\$coord.names argument.
   
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fm} \hlkwb{<-} \hlkwd{isdm}\hlstd{(} \hlkwc{observationList}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{POdat}\hlstd{=gamba_PO,}
-                                  \hlkwc{PAdat}\hlstd{=gamba_PA),}
-            \hlkwc{covars}\hlstd{=covars,}
-            \hlkwc{mesh}\hlstd{=my.mesh,}
-            \hlkwc{responseNames}\hlstd{=}\hlkwd{c}\hlstd{(} \hlkwc{PO}\hlstd{=}\hlkwa{NULL}\hlstd{,} \hlkwc{PA}\hlstd{=}\hlstr{"PA"}\hlstd{),}
-            \hlkwc{sampleAreaNames}\hlstd{=}\hlkwd{c}\hlstd{(} \hlkwc{PO}\hlstd{=}\hlkwa{NULL}\hlstd{,} \hlkwc{PA}\hlstd{=}\hlstr{"Area"}\hlstd{),}
-            \hlkwc{distributionFormula}\hlstd{=}\hlopt{~}\hlnum{0}\hlopt{+}\hlkwd{poly}\hlstd{( DEM,} \hlnum{2}\hlstd{)} \hlopt{+} \hlkwd{poly}\hlstd{( SMRZ,}\hlnum{2}\hlstd{)} \hlopt{+} \hlstd{ACC,}
-            \hlkwc{biasFormula}\hlstd{=}\hlopt{~}\hlnum{1}\hlopt{+}\hlstd{ACC,}
-            \hlkwc{artefactFormulas}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{PA}\hlstd{=}\hlopt{~}\hlnum{1}\hlstd{),}
-            \hlkwc{control}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{coord.names}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"x"}\hlstd{,}\hlstr{"y"}\hlstd{)))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<initFit, eval=TRUE>>=
+fm <- isdm( observationList=list( POdat=gamba_PO, 
+                                  PAdat=gamba_PA),
+            covars=covars, 
+            mesh=my.mesh,
+            responseNames=c( PO=NULL, PA="PA"),
+            sampleAreaNames=c( PO=NULL, PA="Area"),
+            distributionFormula=~0+poly( DEM, 2) + poly( SMRZ,2) + ACC,
+            biasFormula=~1+ACC,
+            artefactFormulas=list( PA=~1),
+            control=list( coord.names=c("x","y")))
+@
     
 The return from \texttt{isdm} is silent, so there is nothing special to see upon its successful completion. Given this initial fit, further refinements of the model can be demonstrated.
   
@@ -429,18 +281,14 @@ Remember, from Section \ref{subsubsec:disForm} that all covariates are scaled pr
 If the user wants to specify priors directly, then they can by specifying prior.list element of the control list directly. This argument is \textit{passed directly} to the INLA call, and so the specification is solely the responsibility of the user. INLA requires that these are passed as a list of two named elements: mean and prec. Each element contains the named vector of values for the prior. Note that only those effects that are desired to be \textit{different} from the default are required to be named and specified (I think).
 
 Here are some control list examples that specifies various prior formulations. Note that these specify only those control elements for the priors; other terms may be added to this list to control other aspects of the model or the computational aspects.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#the very vague everything}
-\hlstd{my.control} \hlkwb{<-} \hlkwd{list}\hlstd{(} \hlkwc{prior.mean}\hlstd{=}\hlnum{0}\hlstd{,} \hlkwc{int.sd}\hlstd{=}\hlnum{1000}\hlstd{,} \hlkwc{other.sd}\hlstd{=}\hlnum{1000}\hlstd{)}
-\hlcom{#(much) tighter prior for effects}
-\hlstd{my.control} \hlkwb{<-} \hlkwd{list}\hlstd{(} \hlkwc{prior.mean}\hlstd{=}\hlnum{0}\hlstd{,} \hlkwc{int.sd}\hlstd{=}\hlnum{1000}\hlstd{,} \hlkwc{other.sd}\hlstd{=}\hlnum{0.1}\hlstd{)}
-\hlcom{#the default}
-\hlstd{my.control} \hlkwb{<-} \hlkwd{list}\hlstd{(} \hlkwc{prior.mean}\hlstd{=}\hlnum{0}\hlstd{,} \hlkwc{int.sd}\hlstd{=}\hlnum{1000}\hlstd{,} \hlkwc{other.sd}\hlstd{=}\hlnum{10}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<contrEG, eval=TRUE>>=
+#the very vague everything
+my.control <- list( prior.mean=0, int.sd=1000, other.sd=1000)
+#(much) tighter prior for effects
+my.control <- list( prior.mean=0, int.sd=1000, other.sd=0.1)
+#the default
+my.control <- list( prior.mean=0, int.sd=1000, other.sd=10)
+@
 
 \subsubsection*{Spatial Effects via SPDE}
 
@@ -448,45 +296,37 @@ The \texttt{RISDM} model, by default, includes a spatial random effect. This spa
 
 The specification of the distribution of the random effects depends on two parameters: the standard deviation of the effects, and the spatial range of their dependence. The spatial range is approximately the distance that samples must be separated by before data from those locations are expected to be almost independent (correlation of approximately 0.1). Both these parameters require a prior distribution to be specified, and \texttt{RISDM}, like \texttt{INLA}, follows \citet{sim17} by using complexity priors. These priors are defined by defining the prior chance that the parameter falls above (for prior standard deviation) or below (for spatial range) specified values. For the gamba grass example, it may be reasonable that the standard deviation has probability of 0.1 (10\% chance) of being above 5. We feel that this is a vague prior for random effects on a log-link scale. Likewise, a vague prior for spatial dependence could be that there is a probability of 0.1 that the range is less than 1km. The previous initial model can be updated using these priors, giving the model in \citet{fos24}.
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fm} \hlkwb{<-} \hlkwd{isdm}\hlstd{(} \hlkwc{observationList}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{POdat}\hlstd{=gamba_PO,}
-                                  \hlkwc{PAdat}\hlstd{=gamba_PA),}
-            \hlkwc{covars}\hlstd{=covars,}
-            \hlkwc{mesh}\hlstd{=my.mesh,}
-            \hlkwc{responseNames}\hlstd{=}\hlkwd{c}\hlstd{(} \hlkwc{PO}\hlstd{=}\hlkwa{NULL}\hlstd{,} \hlkwc{PA}\hlstd{=}\hlstr{"PA"}\hlstd{),}
-            \hlkwc{sampleAreaNames}\hlstd{=}\hlkwd{c}\hlstd{(} \hlkwc{PO}\hlstd{=}\hlkwa{NULL}\hlstd{,} \hlkwc{PA}\hlstd{=}\hlstr{"Area"}\hlstd{),}
-            \hlkwc{distributionFormula}\hlstd{=}\hlopt{~}\hlnum{0}\hlopt{+}\hlkwd{poly}\hlstd{( DEM,} \hlnum{2}\hlstd{)} \hlopt{+} \hlkwd{poly}\hlstd{( SMRZ,}\hlnum{2}\hlstd{)} \hlopt{+} \hlstd{ACC,}
-            \hlkwc{biasFormula}\hlstd{=}\hlopt{~}\hlnum{1}\hlopt{+}\hlstd{ACC,}
-            \hlkwc{artefactFormulas}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{PA}\hlstd{=}\hlopt{~}\hlnum{1}\hlstd{),}
-            \hlkwc{control}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{coord.names}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"x"}\hlstd{,}\hlstr{"y"}\hlstd{),}
-                          \hlkwc{int.sd}\hlstd{=}\hlnum{1000}\hlstd{,} \hlkwc{other.sd}\hlstd{=}\hlnum{10}\hlstd{,} \hlkwc{prior.mean}\hlstd{=}\hlnum{0}\hlstd{,}
-                          \hlkwc{prior.range}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{0.1}\hlstd{),} \hlkwc{prior.space.sigma}\hlstd{=}\hlkwd{c}\hlstd{(} \hlnum{5}\hlstd{,}\hlnum{0.1}\hlstd{)))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<fos24Fit, eval=TRUE>>=
+fm <- isdm( observationList=list( POdat=gamba_PO, 
+                                  PAdat=gamba_PA),
+            covars=covars, 
+            mesh=my.mesh,
+            responseNames=c( PO=NULL, PA="PA"),
+            sampleAreaNames=c( PO=NULL, PA="Area"),
+            distributionFormula=~0+poly( DEM, 2) + poly( SMRZ,2) + ACC,
+            biasFormula=~1+ACC,
+            artefactFormulas=list( PA=~1),
+            control=list( coord.names=c("x","y"), 
+                          int.sd=1000, other.sd=10, prior.mean=0,
+                          prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
+@
 
 The addition of the spatial random effect can be suppressed by the control list element. That is by including addRandom=FALSE into the control=list($\ldots$) argument. Code below. The model will be much (!) faster to estimate.  We'll return to this model later in the vignette.
   
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fm.noRand} \hlkwb{<-} \hlkwd{isdm}\hlstd{(} \hlkwc{observationList}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{POdat}\hlstd{=gamba_PO,}
-                                         \hlkwc{PAdat}\hlstd{=gamba_PA),}
-                   \hlkwc{covars}\hlstd{=covars,}
-                   \hlkwc{mesh}\hlstd{=my.mesh,}
-                   \hlkwc{responseNames}\hlstd{=}\hlkwd{c}\hlstd{(} \hlkwc{PO}\hlstd{=}\hlkwa{NULL}\hlstd{,} \hlkwc{PA}\hlstd{=}\hlstr{"PA"}\hlstd{),}
-                   \hlkwc{sampleAreaNames}\hlstd{=}\hlkwd{c}\hlstd{(} \hlkwc{PO}\hlstd{=}\hlkwa{NULL}\hlstd{,} \hlkwc{PA}\hlstd{=}\hlstr{"Area"}\hlstd{),}
-                   \hlkwc{distributionFormula}\hlstd{=}\hlopt{~}\hlnum{0}\hlopt{+}\hlkwd{poly}\hlstd{( DEM,} \hlnum{2}\hlstd{)} \hlopt{+} \hlkwd{poly}\hlstd{( SMRZ,}\hlnum{2}\hlstd{)} \hlopt{+} \hlstd{ACC,}
-                   \hlkwc{biasFormula}\hlstd{=}\hlopt{~}\hlnum{1}\hlopt{+}\hlstd{ACC,}
-                   \hlkwc{artefactFormulas}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{PA}\hlstd{=}\hlopt{~}\hlnum{1}\hlstd{),}
-                   \hlkwc{control}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{coord.names}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"x"}\hlstd{,}\hlstr{"y"}\hlstd{),}
-                                  \hlkwc{int.sd}\hlstd{=}\hlnum{1000}\hlstd{,} \hlkwc{other.sd}\hlstd{=}\hlnum{10}\hlstd{,} \hlkwc{prior.mean}\hlstd{=}\hlnum{0}\hlstd{,}
-                                  \hlkwc{addRandom}\hlstd{=}\hlnum{FALSE}\hlstd{))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<noRandFit, eval=TRUE>>=
+fm.noRand <- isdm( observationList=list( POdat=gamba_PO, 
+                                         PAdat=gamba_PA),
+                   covars=covars, 
+                   mesh=my.mesh,
+                   responseNames=c( PO=NULL, PA="PA"),
+                   sampleAreaNames=c( PO=NULL, PA="Area"),
+                   distributionFormula=~0+poly( DEM, 2) + poly( SMRZ,2) + ACC,
+                   biasFormula=~1+ACC,
+                   artefactFormulas=list( PA=~1),
+                   control=list( coord.names=c("x","y"), 
+                                  int.sd=1000, other.sd=10, prior.mean=0,
+                                  addRandom=FALSE))
+@
     
 \subsection*{Diagnostics and Summary}
   
@@ -498,42 +338,9 @@ To obtain an elementary understanding of the estimated model, a \texttt{summary}
 
 The printed summary object shows univariate summaries of the modelled parameters' posterior distributions. These are arranged into the type of effect (distribution, bias, artefact) for ease of interpretation. In this case, we see that both quadratic terms in the distribution formula poly.DEM.2.2 and poly.SMRZ.2.2 are negative and with credible intervals that do not cover zero. This implies that both relationships are concave in shape, over the observed covariate ranges. This is reassuring as it aggrees somewhat with niche theory, but it is not the final word (linear effect may still outweigh the quadratic). The accessibility covariate is strongly negative, implying that those locations that are remote (high accessibility values) are less likely to have gamba grass. The other model components can be likewise interpreted.
   
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{summary}\hlstd{( fm)}
-\end{alltt}
-\begin{verbatim}
-$DISTRIBUTION
-                     mean         sd    0.025quant    0.5quant 0.975quant
-poly.DEM.2.1   0.23898279 0.12155317 -0.0008501594  0.23948557  0.4759722
-poly.DEM.2.2  -0.39567315 0.08560623 -0.5635820572 -0.39567217 -0.2277701
-poly.SMRZ.2.1  0.03762871 0.24846410 -0.4561825083  0.03957789  0.5204453
-poly.SMRZ.2.2 -0.56086587 0.20891208 -0.9757263351 -0.55928330 -0.1549695
-ACC           -1.93507665 0.20521489 -2.3398860438 -1.93425929 -1.5348902
-
-$PO_BIAS
-                  mean        sd 0.025quant  0.5quant 0.975quant
-PO_Intercept -3.378855 0.2483792  -3.894271 -3.369569 -2.9173456
-PO_ACC       -1.141882 0.1378065  -1.412156 -1.141877 -0.8716359
-
-$PA_ARTEFACT
-                  mean        sd 0.025quant  0.5quant 0.975quant
-PA_Intercept -14.09951 0.2767023   -14.6647 -14.09211  -13.57715
-
-$SPATIAL
-                            mean         sd 0.025quant 0.5quant 0.975quant
-Range for isdm.spat.XXX 3.050350 0.37128116   2.417175 3.015973   3.876087
-Stdev for isdm.spat.XXX 2.269715 0.09543608   2.086649 2.267875   2.463519
-
-$marg.lik
-[1] -3868.7
-
-attr(,"class")
-[1] "summary.isdm"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+<<summ,eval=TRUE>>=
+summary( fm)
+@
     
 \subsubsection*{Model Comparison}
 
@@ -549,39 +356,15 @@ In \texttt{RISDM}, randomised quantile residuals \citep[RQR;][]{dun96} are used.
   
 In \texttt{RISDM} there are multiple sets of residuals -- one for each data type. All these residuals can be calculated using the \texttt{residuals.isdm} method. Most often, the user will want to plot these residuals and this can be done in an automated way using the \texttt{plot.isdm} method, in ways that may be useful for diagnosing inadequacies. These mirror the treatment in introductory textbooks on linear models \citep[e.g.][]{net96}. Resdiuals are plotted per data type using a residuals versus fitted and a quantile-quantile (Q-Q) plot. There should be no patterning in the residuals versus fitted plot, in either mean pattern or in residual variation. The following plot for PA residuals shows no cause for concern here, and the PO residuals are harder to interpret. The Q-Q plot should follow a straight line. The following plot seems fine for PA data, but questionable for PO data. \texttt{RISDM} will also plot the PO RQR residuals as a spatial layer. Like any covariate, there should be no patterning and its presence could indicate deficiencies.
   
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{plot}\hlstd{( fm,} \hlkwc{covars}\hlstd{=covars,} \hlkwc{nFigRow}\hlstd{=}\hlnum{2}\hlstd{,} \hlkwc{ask}\hlstd{=}\hlnum{FALSE}\hlstd{)}
-\end{alltt}
-\end{kframe}\begin{figure}
-
-{\centering \includegraphics[width=\maxwidth]{figure/residPlots-1} 
-
-}
-
-\caption[Residual plots for the gamba grass data, and the model containing quadratic effects and a spatial term]{Residual plots for the gamba grass data, and the model containing quadratic effects and a spatial term.}\label{fig:residPlots}
-\end{figure}
-
-\end{knitrout}
+<<residPlots, eval=TRUE, fig.height=3.5, fig.cap="Residual plots for the gamba grass data, and the model containing quadratic effects and a spatial term.">>=
+plot( fm, covars=covars, nFigRow=2, ask=FALSE)
+@
     
 One open research questions around residuals is trying to determine how large the departures need to be before the model needs altering. This will depend on many different aspects, including the type of inference sought. Hence, it is not clear if the residuals in Figure \ref{fig:residPlots} indicate an adequate model or not. However, it is possible (and easy) to demonstrate a model with \textit{a worse fit}. To do this, we revisit the model but exclude the spatial random effects. The resulting residual plots are in Figure \ref{fig:residPlots2}. The PA data still seem adequately represented but the patterns in the PO data are accentuated and are now obviously worrisome. There are strong spatial patterns and the residuals are obviously non-normal.
   
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{plot}\hlstd{( fm.noRand,} \hlkwc{covars}\hlstd{=covars,} \hlkwc{nFigRow}\hlstd{=}\hlnum{2}\hlstd{,} \hlkwc{ask}\hlstd{=}\hlnum{FALSE}\hlstd{)}
-\end{alltt}
-\end{kframe}\begin{figure}
-
-{\centering \includegraphics[width=\maxwidth]{figure/residPlots2-1} 
-
-}
-
-\caption[Residual plots for the gamba grass data, and the model containing quadratic effects 	extit{but no spatial term}]{Residual plots for the gamba grass data, and the model containing quadratic effects 	extit{but no spatial term}.}\label{fig:residPlots2}
-\end{figure}
-
-\end{knitrout}
+<<residPlots2, eval=TRUE, fig.height=3.5, fig.cap="Residual plots for the gamba grass data, and the model containing quadratic effects \textit{but no spatial term}.">>=
+plot( fm.noRand, covars=covars, nFigRow=2, ask=FALSE)
+@
     
 One of the potential short-comings of RQR residuals is that they contain a random component. This component is largest for data types that have few categories dichotomous data, like PA data, are subject to the largest amount possible. This fact may contribute to the apparent adequate residual plots for the model without spatial random effects.
   
@@ -597,32 +380,19 @@ The intensity and probability predictions in Figure \ref{fig:pred} appear to be 
   
 The \texttt{predict} method outputs a list with a number of elements. Arguably, the most useful of these is the `field' element, which contains a raster stack with a number of summaries of the prediction posterior. Most notably, the prediction stack contains the median prediction and the 2.5\% percentile and the 97.5\% percentile. These values can be taken to be the point and the interval estimate for the predicted property. Also included in the prediction stack is the posterior mean and the posterior standard deviation. It has been the authors experience that the median is a more robust summary of central location in this situation, and it is recommended.
   
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#You should use a much(!) larger value of S.}
-\hlcom{#You may want to choose a larger value of n.threads too.}
-\hlstd{fm}\hlopt{$}\hlstd{preds} \hlkwb{<-} \hlkwd{predict}\hlstd{( fm,} \hlkwc{covars}\hlstd{=covars,} \hlkwc{S}\hlstd{=}\hlnum{50}\hlstd{,}
-                       \hlkwc{intercept.terms}\hlstd{=}\hlstr{"PA_Intercept"}\hlstd{)}
-\hlkwd{plot}\hlstd{( fm}\hlopt{$}\hlstd{preds}\hlopt{$}\hlstd{field)}
-
-\hlcom{#Predicting probability too}
-\hlstd{fm}\hlopt{$}\hlstd{preds.probs} \hlkwb{<-} \hlkwd{predict}\hlstd{( fm,} \hlkwc{covars}\hlstd{=covars,}
-                           \hlkwc{S}\hlstd{=}\hlnum{50}\hlstd{,} \hlkwc{intercept.terms}\hlstd{=}\hlstr{"PA_Intercept"}\hlstd{,}
-                           \hlkwc{type}\hlstd{=}\hlstr{"probability"}\hlstd{)}
-\hlkwd{plot}\hlstd{( fm}\hlopt{$}\hlstd{preds.probs}\hlopt{$}\hlstd{field)}
-\end{alltt}
-\end{kframe}\begin{figure}
-
-{\centering \includegraphics[width=\maxwidth]{figure/pred-1} 
-\includegraphics[width=\maxwidth]{figure/pred-2} 
-
-}
-
-\caption[Predictions from the quadratic model including random effects]{Predictions from the quadratic model including random effects. Upper two rows are for the intensity, and bottom two rows are predictions of the probability of presence (within a raster cell)}\label{fig:pred}
-\end{figure}
-
-\end{knitrout}
+<<pred,eval=TRUE,fig.cap="Predictions from the quadratic model including random effects. Upper two rows are for the intensity, and bottom two rows are predictions of the probability of presence (within a raster cell)", fig.height=3.5>>=
+#You should use a much(!) larger value of S.
+#You may want to choose a larger value of n.threads too.
+fm$preds <- predict( fm, covars=covars, S=50, 
+                       intercept.terms="PA_Intercept")
+plot( fm$preds$field[[1:3]], nc=3)
+  
+#Predicting probability too
+fm$preds.probs <- predict( fm, covars=covars, 
+                           S=50, intercept.terms="PA_Intercept", 
+                           type="probability")
+plot( fm$preds.probs$field[[1:3]], nc=3)
+@
     
 By default, the \texttt{predict.isdm} method includes the terms from the distribution function (including spatial random effect) and whatever intercept is chosen. However, variations on this can be achieved:
 \begin{itemize}
@@ -640,44 +410,32 @@ Interpreting the model involves inspecting the posterior distribution of the mod
 
 The covariate effects for gamba grass are presented in Figure \ref{fig:interp}. Note that there is a bit of coding involved; there is no function within \texttt{RISDM} to do this directly and the predict function must be `appropriately tricked'. Besides plotting nearly always takes some extra lines of code. Whilst details are important, the process is actually fairly straight-forward: 1) create a raster layer with a constant value for the habitatArea offset, 2) predict specifying which terms should be included, and 3) plot)
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#the data for interpretation}
-\hlcom{#adding a temporary cell area layer}
-\hlstd{covarsForInter} \hlkwb{<-} \hlkwd{addLayer}\hlstd{( covars, covars[[}\hlnum{1}\hlstd{]])}
-\hlkwd{names}\hlstd{( covarsForInter)} \hlkwb{<-} \hlkwd{c}\hlstd{(} \hlkwd{names}\hlstd{( covars),} \hlstr{"tmp.habiArea"}\hlstd{)}
-\hlcom{#area is now constant with log(1)=0 contribution}
-\hlkwd{values}\hlstd{( covarsForInter}\hlopt{$}\hlstd{tmp.habiArea)} \hlkwb{<-} \hlnum{1}
+<<interp, eval=TRUE, fig.height=3.5, fig.cap="Relationship with Soil Moisture (SMRZ). Black solid line is the median relationship and grey shaded area is the 95 percent CI.">>=
+#the data for interpretation
+#adding a temporary cell area layer
+covarsForInter <- addLayer( covars, covars[[1]])
+names( covarsForInter) <- c( names( covars), "tmp.habiArea")
+#area is now constant with log(1)=0 contribution
+values( covarsForInter$tmp.habiArea) <- 1 
 
-\hlcom{#You could use a much(!) larger value of S.}
-\hlstd{interpPreds} \hlkwb{<-} \hlkwd{predict}\hlstd{( fm,} \hlkwc{covars}\hlstd{=covarsForInter,}
-                        \hlkwc{habitatArea}\hlstd{=}\hlstr{"tmp.habiArea"}\hlstd{,} \hlkwc{S}\hlstd{=}\hlnum{50}\hlstd{,}
-                        \hlkwc{includeFixed}\hlstd{=}\hlstr{"SMRZ"}\hlstd{,} \hlkwc{includeRandom}\hlstd{=}\hlnum{FALSE}\hlstd{,} \hlkwc{type}\hlstd{=}\hlstr{"link"}\hlstd{)}
+#You could use a much(!) larger value of S.
+interpPreds <- predict( fm, covars=covarsForInter, 
+                        habitatArea="tmp.habiArea", S=50, 
+                        includeFixed="SMRZ", includeRandom=FALSE, type="link")
 
-\hlcom{#compile covariate and prediction}
-\hlstd{pred.df} \hlkwb{<-} \hlkwd{as.data.frame}\hlstd{(} \hlkwd{cbind}\hlstd{(} \hlkwc{SMRZ}\hlstd{=}\hlkwd{values}\hlstd{( covars}\hlopt{$}\hlstd{SMRZ),}
-     \hlkwd{values}\hlstd{( interpPreds}\hlopt{$}\hlstd{field[[}\hlkwd{c}\hlstd{(}\hlstr{"mu.median"}\hlstd{,}\hlstr{"mu.lower"}\hlstd{,}\hlstr{"mu.upper"}\hlstd{)]])))}
-\hlcom{#plot}
-\hlstd{pred.df} \hlkwb{<-} \hlstd{pred.df[}\hlopt{!}\hlkwd{is.na}\hlstd{( pred.df}\hlopt{$}\hlstd{SMRZ),]}
-\hlstd{pred.df} \hlkwb{<-} \hlstd{pred.df[}\hlkwd{order}\hlstd{( pred.df}\hlopt{$}\hlstd{SMRZ),]}
-\hlkwd{matplot}\hlstd{( pred.df[,}\hlnum{1}\hlstd{], pred.df[,}\hlnum{2}\hlopt{:}\hlnum{4}\hlstd{],} \hlkwc{pch}\hlstd{=}\hlstr{""}\hlstd{,} \hlkwc{xlab}\hlstd{=}\hlstr{"SMRZ"}\hlstd{,} \hlkwc{ylab}\hlstd{=}\hlstr{"Effect"}\hlstd{,}
-                                                \hlkwc{main}\hlstd{=}\hlstr{"Effect plot for SMRZ"}\hlstd{)}
-\hlkwd{polygon}\hlstd{(} \hlkwc{x}\hlstd{=}\hlkwd{c}\hlstd{( pred.df}\hlopt{$}\hlstd{SMRZ,} \hlkwd{rev}\hlstd{( pred.df}\hlopt{$}\hlstd{SMRZ)),}
-            \hlkwd{c}\hlstd{(pred.df}\hlopt{$}\hlstd{mu.upper,} \hlkwd{rev}\hlstd{(pred.df}\hlopt{$}\hlstd{mu.lower)),}
-                                                    \hlkwc{col}\hlstd{=}\hlkwd{grey}\hlstd{(}\hlnum{0.95}\hlstd{),} \hlkwc{bor}\hlstd{=}\hlnum{NA}\hlstd{)}
-\hlkwd{lines}\hlstd{( pred.df[,}\hlkwd{c}\hlstd{(}\hlstr{"SMRZ"}\hlstd{,}\hlstr{"mu.median"}\hlstd{)],} \hlkwc{type}\hlstd{=}\hlstr{'l'}\hlstd{,} \hlkwc{lwd}\hlstd{=}\hlnum{2}\hlstd{)}
-\end{alltt}
-\end{kframe}\begin{figure}
-
-{\centering \includegraphics[width=\maxwidth]{figure/interp-1} 
-
-}
-
-\caption[Relationship with Soil Moisture (SMRZ)]{Relationship with Soil Moisture (SMRZ). Black solid line is the median relationship and grey shaded area is the 95 percent CI.}\label{fig:interp}
-\end{figure}
-
-\end{knitrout}
+#compile covariate and prediction
+pred.df <- as.data.frame( cbind( SMRZ=values( covars$SMRZ), 
+     values( interpPreds$field[[c("mu.median","mu.lower","mu.upper")]])))
+#plot
+pred.df <- pred.df[!is.na( pred.df$SMRZ),]
+pred.df <- pred.df[order( pred.df$SMRZ),]
+matplot( pred.df[,1], pred.df[,2:4], pch="", xlab="SMRZ", ylab="Effect", 
+                                                main="Effect plot for SMRZ")
+polygon( x=c( pred.df$SMRZ, rev( pred.df$SMRZ)), 
+            c(pred.df$mu.upper, rev(pred.df$mu.lower)), 
+                                                    col=grey(0.95), bor=NA)
+lines( pred.df[,c("SMRZ","mu.median")], type='l', lwd=2)
+@
 
 \subsection*{DIY Extensions}
 
@@ -687,90 +445,53 @@ To enable this, the \texttt{isdm} function returns some useful data objects. Top
 
 \subsection*{Single Data Types}
 
-Whilst created with multiple data types in mind, \texttt{RISDM} will quite happily estimate models based on single data types too. We'll do this now for a bit of comparative `fun'. The fits produce numerical issues (see output), which should be investigated and corrected for in a real analysis setting. However, to demonstrate the mechanics of fitting single data type models they are \textit{almost} ignorable. In part, their existance supports the thesis that combining data can produce more information and better models than any single species model. If the warnings weren't present, then these models and predictions could be compared against the integrated model (e.g. Figure \ref{fig:pred}).
+Whilst created with multiple data types in mind, \texttt{RISDM} will quite happily estimate models based on single data types too. We'll do this now for a bit of comparative `fun'. The fits produce numerical issues (see output), which should be investigated and corrected for in a real analysis setting. The PO data analysis produces a warning that \textit{may} be \textit{almost} ignorable, but we present its result just to demonstrate the mechanics of the process. The INLA message/error thrown for the PA data analysis is slightly more concerning (even though a result is given). It is highly recommended these types of errors are investigated further before using these outputs for meaningful inference.
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#PO data only}
-\hlstd{fm.PO} \hlkwb{<-} \hlkwd{isdm}\hlstd{(} \hlkwc{observationList}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{POdat}\hlstd{=gamba_PO),}
-            \hlkwc{covars}\hlstd{=covars,}
-            \hlkwc{mesh}\hlstd{=my.mesh,}
-            \hlkwc{responseNames}\hlstd{=}\hlkwa{NULL}\hlstd{,}
-            \hlkwc{sampleAreaNames}\hlstd{=}\hlkwa{NULL}\hlstd{,}
-            \hlkwc{distributionFormula}\hlstd{=}\hlopt{~}\hlnum{0}\hlopt{+}\hlkwd{poly}\hlstd{( DEM,} \hlnum{2}\hlstd{)} \hlopt{+} \hlkwd{poly}\hlstd{( SMRZ,}\hlnum{2}\hlstd{)} \hlopt{+} \hlstd{ACC,}
-            \hlkwc{biasFormula}\hlstd{=}\hlopt{~}\hlnum{1}\hlopt{+}\hlstd{ACC,}
-            \hlkwc{artefactFormulas}\hlstd{=}\hlkwa{NULL}\hlstd{,}
-            \hlkwc{control}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{coord.names}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"x"}\hlstd{,}\hlstr{"y"}\hlstd{),}
-                          \hlkwc{int.sd}\hlstd{=}\hlnum{1000}\hlstd{,} \hlkwc{other.sd}\hlstd{=}\hlnum{10}\hlstd{,} \hlkwc{prior.mean}\hlstd{=}\hlnum{0}\hlstd{,}
-                          \hlkwc{prior.range}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{0.1}\hlstd{),} \hlkwc{prior.space.sigma}\hlstd{=}\hlkwd{c}\hlstd{(} \hlnum{5}\hlstd{,}\hlnum{0.1}\hlstd{)))}
-\hlstd{fm.PO}\hlopt{$}\hlstd{preds} \hlkwb{<-} \hlkwd{predict}\hlstd{( fm.PO,} \hlkwc{covars}\hlstd{=covars,} \hlkwc{S}\hlstd{=}\hlnum{50}\hlstd{,}
-                       \hlkwc{intercept.terms}\hlstd{=}\hlstr{"PO_Intercept"}\hlstd{)}
-\hlkwd{plot}\hlstd{( fm.PO}\hlopt{$}\hlstd{preds}\hlopt{$}\hlstd{field)}
-\end{alltt}
-\end{kframe}\begin{figure}
+Whilst not conclusive, the existence of these errors supports the thesis that combining data can produce more information and better models than any single species model. If the warnings weren't present, then these models and predictions could be compared against the integrated model (e.g. Figure \ref{fig:pred}).
 
-{\centering \includegraphics[width=\maxwidth]{figure/singleDataPO-1} 
+<<singleDataPO, eval=TRUE, fig.height=3.5, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5>>=
+#PO data only
+fm.PO <- isdm( observationList=list( POdat=gamba_PO),
+            covars=covars, 
+            mesh=my.mesh,
+            responseNames=NULL,
+            sampleAreaNames=NULL,
+            distributionFormula=~0 + poly( DEM, 2) + poly( SMRZ, 2) + ACC,
+            biasFormula=~1,  #ACC has been removed as with a single data type it is confounded
+            artefactFormulas=NULL,
+            control=list( coord.names=c("x","y"), 
+                          int.sd=1000, other.sd=10, prior.mean=0,
+                          prior.range=c(1,0.1), prior.space.sigma=c(5,0.1)))
+fm.PO$preds <- predict( fm.PO, covars=covars, S=50, 
+                       intercept.terms="PO_Intercept")
+plot( fm.PO$preds$field[[1:3]], nc=3)
+@
 
-}
-
-\caption[Intensity model and predictions from estimation using only PA data]{Intensity model and predictions from estimation using only PA data.}\label{fig:singleDataPO}
-\end{figure}
-
-\end{knitrout}
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#PA data only}
-\hlstd{fm.PA} \hlkwb{<-} \hlkwd{isdm}\hlstd{(} \hlkwc{observationList}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{PAdat}\hlstd{=gamba_PA),}
-            \hlkwc{covars}\hlstd{=covars,}
-            \hlkwc{mesh}\hlstd{=my.mesh,}
-            \hlkwc{responseNames}\hlstd{=}\hlkwd{c}\hlstd{(} \hlkwc{PA}\hlstd{=}\hlstr{"PA"}\hlstd{),}
-            \hlkwc{sampleAreaNames}\hlstd{=}\hlkwd{c}\hlstd{(} \hlkwc{PA}\hlstd{=}\hlstr{"Area"}\hlstd{),}
-            \hlkwc{distributionFormula}\hlstd{=}\hlopt{~}\hlnum{0}\hlopt{+}\hlkwd{poly}\hlstd{( DEM,} \hlnum{2}\hlstd{)} \hlopt{+} \hlkwd{poly}\hlstd{( SMRZ,}\hlnum{2}\hlstd{)} \hlopt{+} \hlstd{ACC,}
-            \hlkwc{artefactFormulas}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{PA}\hlstd{=}\hlopt{~}\hlnum{1}\hlstd{),}
-            \hlkwc{control}\hlstd{=}\hlkwd{list}\hlstd{(} \hlkwc{coord.names}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"x"}\hlstd{,}\hlstr{"y"}\hlstd{),}
-                          \hlkwc{int.sd}\hlstd{=}\hlnum{1000}\hlstd{,} \hlkwc{other.sd}\hlstd{=}\hlnum{10}\hlstd{,} \hlkwc{prior.mean}\hlstd{=}\hlnum{0}\hlstd{,}
-                          \hlkwc{prior.range}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{0.1}\hlstd{),} \hlkwc{prior.space.sigma}\hlstd{=}\hlkwd{c}\hlstd{(} \hlnum{5}\hlstd{,}\hlnum{0.1}\hlstd{)))}
-\end{alltt}
-\begin{verbatim}
-Error in inla.inlaprogram.has.crashed() : 
-  The inla-program exited with an error. Unless you interupted it yourself, please rerun with verbose=TRUE and check the output carefully.
-  If this does not help, please contact the developers at <help@r-inla.org>.
-
- *** inla.core.safe:  inla.program has crashed: rerun to get better initial values. try=1/2 
-
- *** inla.core.safe:  rerun with improved initial values 
-\end{verbatim}
-\begin{alltt}
-\hlstd{fm.PA}\hlopt{$}\hlstd{preds} \hlkwb{<-} \hlkwd{predict}\hlstd{( fm.PA,} \hlkwc{covars}\hlstd{=covars,} \hlkwc{S}\hlstd{=}\hlnum{50}\hlstd{,}
-                       \hlkwc{intercept.terms}\hlstd{=}\hlstr{"PA_Intercept"}\hlstd{)}
-\hlkwd{plot}\hlstd{( fm.PA}\hlopt{$}\hlstd{preds}\hlopt{$}\hlstd{field)}
-\end{alltt}
-\end{kframe}\begin{figure}
-
-{\centering \includegraphics[width=\maxwidth]{figure/singleDataPA-1} 
-
-}
-
-\caption[Intensity model and predictions from estimation using only PA data]{Intensity model and predictions from estimation using only PA data.}\label{fig:singleDataPA}
-\end{figure}
-
-\end{knitrout}
+<<singleDataPA, eval=TRUE, fig.height=3.5, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5>>=
+#PA data only
+fm.PA <- isdm( observationList=list( PAdat=gamba_PA),
+            covars=covars, 
+            mesh=my.mesh,
+            responseNames=c( PA="PA"),
+            sampleAreaNames=c( PA="Area"),
+            distributionFormula=~0+poly( DEM, 2) + poly( SMRZ, 2) + ACC,# + poly( SMRZ,2),
+            artefactFormulas=list( PA=~1),
+            control=list( coord.names=c("x","y"), 
+                          int.sd=1000, other.sd=10, prior.mean=0,
+                          prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
+fm.PA$preds <- predict( fm.PA, covars=covars, S=50, 
+                       intercept.terms="PA_Intercept")
+plot( fm.PA$preds$field[[1:3]], nc=3)
+@
   
 \section*{Last Things Last}
   
 The only remaining thing to do is to tidy up our workspace. This is just removing all objects for this analysis from your workspace. I like to do this, in tutorial situations, but you may not. It is entirely up to you whether you clean or not.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#You may wish to tidy your workspace.}
-\hlkwd{rm}\hlstd{( covars, fm, fm.noRand, fm.PA, fm.PO, gamba_PA, gamba_PO, filenames,}
-             \hlstd{my.biasForm, my.form, my.control, my.mesh, my.mesh.bad)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<Tidy, eval=FALSE>>=
+#You may wish to tidy your workspace.
+rm( covars, fm, fm.noRand, fm.PA, fm.PO, gamba_PA, gamba_PO, filenames, 
+             my.biasForm, my.form, my.control, my.mesh, my.mesh.bad)
+@
 
 \section*{Acknowledgements}
 
@@ -783,26 +504,9 @@ This work was partially funded by the Australian Government Department of Agricu
 \subsection*{Computational details}
 This vignette was created using the following R and add-on package versions
   
-\begin{itemize}\raggedright
-  \item R version 4.2.1 (2022-06-23), \verb|x86_64-pc-linux-gnu|
-  \item Locale: \verb|LC_CTYPE=en_AU.UTF-8|, \verb|LC_NUMERIC=C|, \verb|LC_TIME=en_AU.UTF-8|, \verb|LC_COLLATE=en_AU.UTF-8|, \verb|LC_MONETARY=en_AU.UTF-8|, \verb|LC_MESSAGES=en_AU.UTF-8|, \verb|LC_PAPER=en_AU.UTF-8|, \verb|LC_NAME=C|, \verb|LC_ADDRESS=C|, \verb|LC_TELEPHONE=C|, \verb|LC_MEASUREMENT=en_AU.UTF-8|, \verb|LC_IDENTIFICATION=C|
-  \item Running under: \verb|Ubuntu 20.04.6 LTS|
-  \item Matrix products: default
-  \item BLAS:   \verb|/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0|
-  \item LAPACK: \verb|/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.9.0|
-  \item Base packages: base, datasets, graphics, grDevices, methods,
-    stats, utils
-  \item Other packages: knitr~1.39, raster~3.6-3, RISDM~1.2.9, sp~1.6-0
-  \item Loaded via a namespace (and not attached): codetools~0.2-18,
-    colorRamps~2.3, compiler~4.2.1, deldir~1.0-9, evaluate~0.21,
-    foreign~0.8-82, grid~4.2.1, highr~0.8, INLA~23.04.24,
-    lattice~0.20-45, magrittr~2.0.3, maptools~1.1-5, Matrix~1.5-3,
-    MatrixModels~0.5-1, mnormt~2.0.2, numDeriv~2016.8-1.1,
-    parallel~4.2.1, Rcpp~1.0.10, rgdal~1.5-32, rgeos~0.5-9, sn~2.1.1,
-    splancs~2.01-40, splines~4.2.1, stats4~4.2.1, stringi~1.5.3,
-    stringr~1.4.0, terra~1.7-29, tmvnsim~1.0-2, tools~4.2.1, xfun~0.31
-\end{itemize}
+<<sessionInfo, results = "asis", echo = FALSE>>=
+toLatex(sessionInfo())
+@
 
-    
 \end{document}
   

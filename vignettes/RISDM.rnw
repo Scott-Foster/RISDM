@@ -385,13 +385,13 @@ The \texttt{predict} method outputs a list with a number of elements. Arguably, 
 #You may want to choose a larger value of n.threads too.
 fm$preds <- predict( fm, covars=covars, S=50, 
                        intercept.terms="PA_Intercept")
-plot( fm$preds$field)
+plot( fm$preds$field[[1:3]], nc=3)
   
 #Predicting probability too
 fm$preds.probs <- predict( fm, covars=covars, 
                            S=50, intercept.terms="PA_Intercept", 
                            type="probability")
-plot( fm$preds.probs$field)
+plot( fm$preds.probs$field[[1:3]], nc=3)
 @
     
 By default, the \texttt{predict.isdm} method includes the terms from the distribution function (including spatial random effect) and whatever intercept is chosen. However, variations on this can be achieved:
@@ -445,7 +445,9 @@ To enable this, the \texttt{isdm} function returns some useful data objects. Top
 
 \subsection*{Single Data Types}
 
-Whilst created with multiple data types in mind, \texttt{RISDM} will quite happily estimate models based on single data types too. We'll do this now for a bit of comparative `fun'. The fits produce numerical issues (see output), which should be investigated and corrected for in a real analysis setting. However, to demonstrate the mechanics of fitting single data type models they are \textit{almost} ignorable. In part, their existance supports the thesis that combining data can produce more information and better models than any single species model. If the warnings weren't present, then these models and predictions could be compared against the integrated model (e.g. Figure \ref{fig:pred}).
+Whilst created with multiple data types in mind, \texttt{RISDM} will quite happily estimate models based on single data types too. We'll do this now for a bit of comparative `fun'. The fits produce numerical issues (see output), which should be investigated and corrected for in a real analysis setting. The PO data analysis produces a warning that \textit{may} be \textit{almost} ignorable, but we present its result just to demonstrate the mechanics of the process. The INLA message/error thrown for the PA data analysis is slightly more concerning (even though a result is given). It is highly recommended these types of errors are investigated further before using these outputs for meaningful inference.
+
+Whilst not conclusive, the existence of these errors supports the thesis that combining data can produce more information and better models than any single species model. If the warnings weren't present, then these models and predictions could be compared against the integrated model (e.g. Figure \ref{fig:pred}).
 
 <<singleDataPO, eval=TRUE, fig.height=3.5, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5>>=
 #PO data only
@@ -454,15 +456,15 @@ fm.PO <- isdm( observationList=list( POdat=gamba_PO),
             mesh=my.mesh,
             responseNames=NULL,
             sampleAreaNames=NULL,
-            distributionFormula=~0+poly( DEM, 2) + poly( SMRZ,2) + ACC,
-            biasFormula=~1+ACC,
+            distributionFormula=~0 + poly( DEM, 2) + poly( SMRZ, 2) + ACC,
+            biasFormula=~1,  #ACC has been removed as with a single data type it is confounded
             artefactFormulas=NULL,
             control=list( coord.names=c("x","y"), 
                           int.sd=1000, other.sd=10, prior.mean=0,
-                          prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
+                          prior.range=c(1,0.1), prior.space.sigma=c(5,0.1)))
 fm.PO$preds <- predict( fm.PO, covars=covars, S=50, 
                        intercept.terms="PO_Intercept")
-plot( fm.PO$preds$field)
+plot( fm.PO$preds$field[[1:3]], nc=3)
 @
 
 <<singleDataPA, eval=TRUE, fig.height=3.5, fig.cap="Intensity model and predictions from estimation using only PA data.", fig.height=3.5>>=
@@ -472,14 +474,14 @@ fm.PA <- isdm( observationList=list( PAdat=gamba_PA),
             mesh=my.mesh,
             responseNames=c( PA="PA"),
             sampleAreaNames=c( PA="Area"),
-            distributionFormula=~0+poly( DEM, 2) + poly( SMRZ,2) + ACC,
+            distributionFormula=~0+poly( DEM, 2) + poly( SMRZ, 2) + ACC,# + poly( SMRZ,2),
             artefactFormulas=list( PA=~1),
             control=list( coord.names=c("x","y"), 
                           int.sd=1000, other.sd=10, prior.mean=0,
                           prior.range=c(1,0.1), prior.space.sigma=c( 5,0.1)))
 fm.PA$preds <- predict( fm.PA, covars=covars, S=50, 
                        intercept.terms="PA_Intercept")
-plot( fm.PA$preds$field)
+plot( fm.PA$preds$field[[1:3]], nc=3)
 @
   
 \section*{Last Things Last}
@@ -505,6 +507,6 @@ This vignette was created using the following R and add-on package versions
 <<sessionInfo, results = "asis", echo = FALSE>>=
 toLatex(sessionInfo())
 @
-    
+
 \end{document}
   
