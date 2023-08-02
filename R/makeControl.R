@@ -73,7 +73,7 @@ makeControl <- function( contr) {
   if( !"standardiseCovariates" %in% names( contr))
     contr$standardiseCovariates <- TRUE
   if( !"na.action" %in% names( contr))
-    contr$na.action <- 'na.omit'
+    contr$na.action <- na.omit
   
   #add to as we go along
   #check remaining input -- user may have specified stuff that is not there accidentally.

@@ -14,7 +14,7 @@
 ###############################################################################################
 
 
-isdm.model.matrix <- function( formmy, obsy, na.action='na.omit',namy=NULL) {
+isdm.model.matrix <- function( formmy, obsy, na.action=na.omit,namy=NULL) {
 
   #check NA patterns
   allNAs.id <- apply( obsy, 1, function(zz) all( is.na( zz)))
@@ -25,7 +25,7 @@ isdm.model.matrix <- function( formmy, obsy, na.action='na.omit',namy=NULL) {
 
   #make the model frame
 #  modFrame <- stats::model.frame( formmy, obsy.noNA, na.action=na.action)
-  modFrame <- stats::model.frame( formmy, obsy, na.action=na.action)
+  modFrame <- stats::model.frame( formmy, na.action( obsy))
   
   #The model matrix
   XX_noNA <- stats::model.matrix( formmy, modFrame)  #should work fine with poly etc, NAs have already been dropped (depending on na.action).
