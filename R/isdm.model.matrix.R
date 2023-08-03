@@ -32,7 +32,7 @@ isdm.model.matrix <- function( formmy, obsy, na.action=na.omit,namy=NULL) {
   
   #paste back together
   XX <- matrix( NA, nrow=length(allNAs.id), ncol=ncol( XX_noNA))
-  XX[!allNAs.id,] <- XX_noNA
+  XX[!anyNAs.id,] <- XX_noNA
   colnames( XX) <- colnames( XX_noNA)
   
   if( !is.null( namy)){
