@@ -17,7 +17,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
 
   ####	Distribution formula for entire region -- individual (artefact) datasets will be taken from this
   #Design matrix/raster for distribution
-  tmpXX <- as.data.frame( raster::values( covarBrick))
+  tmpXX <- as.data.frame( terra::values( covarBrick))
   #get rid of intercept in distribution formula (and make sure of it)
   distForm <- stats::update.formula( distForm, ~.-1+0)
   #the model frame for the data
@@ -28,31 +28,33 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   #put it in the 'correct' environment
   environment( newDistForm) <- environment( distForm)
   #assign the design matrix spatially
-  newCovarBrick <- raster::brick( covarBrick[[rep(1,ncol( XX))]])
-  raster::values( newCovarBrick) <- XX
+  newCovarBrick <- terra::rast( covarBrick[[1]], nlyrs=ncol( XX))#raster::brick( covarBrick[[rep(1,ncol( XX))]])
+  terra::values( newCovarBrick) <- XX
+  names( newCovarBrick) <- colnames( XX)
   #put it in the 'correct' environent
   environment( newCovarBrick) <- environment( covarBrick)
   if( stdCovs)
-    raster::values( newCovarBrick) <- standardiseThatDesMatrix( raster::values( newCovarBrick))
+    terra::values( newCovarBrick) <- standardiseThatDesMatrix( terra::values( newCovarBrick))
 
   ####	Bias formula, if present
   if( !is.null( biasForm)){
   #Design matrix/raster for distribution
-    XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( raster::values( covarBrick)), na.action=na.action, namy="PO")
+    XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( terra::values( covarBrick)), na.action=na.action, namy="PO")
     #make new formula
     newBiasForm <- stats::reformulate( colnames( XX))
     #put it in the 'correct' environment
     environment( newBiasForm) <- environment( biasForm)
     #assign the design matrix
     newBiasCovarBrick <- covarBrick[[rep(1,ncol( XX))]]
-    raster::values( newBiasCovarBrick) <- XX
+    terra::values( newBiasCovarBrick) <- XX
     names( newBiasCovarBrick) <- colnames( XX)  
     if( stdCovs)
-      raster::values( newBiasCovarBrick) <- standardiseThatDesMatrix( raster::values( newBiasCovarBrick))
+      terra::values( newBiasCovarBrick) <- standardiseThatDesMatrix( terra::values( newBiasCovarBrick))
   
     ####	Combine distribution and bias
     tmpNames <- c( names( newCovarBrick), names( newBiasCovarBrick))
-    raster::values( newCovarBrick) <- cbind( raster::values( newCovarBrick), raster::values( newBiasCovarBrick))
+    newCovarBrick <- c( newCovarBrick, newBiasCovarBrick)
+#    terra::values( newCovarBrick) <- cbind( terra::values( newCovarBrick, na.rm=FALSE), terra::values( newBiasCovarBrick, na.rm=FALSE))
     names( newCovarBrick) <- tmpNames
   }
   else
@@ -60,14 +62,14 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   
   ####	HabitatArea variable too
   if( !is.null( habitatArea))
-    newCovarBrick <- addLayer( newCovarBrick, covarBrick[[habitatArea]])
+    newCovarBrick <- c( newCovarBrick, covarBrick[[habitatArea]]) #addLayer( newCovarBrick, covarBrick[[habitatArea]])
   #put it in the 'correct' environent
   environment( newCovarBrick) <- environment( covarBrick)
 
   #### Artefact data (not standardised)
   #container for the altered observation lists (names to match newForm)
   #note using the unexpanded covarBrick rather than newCovarBrick
-  newObs <- lapply( obsList, function(xx) as.data.frame( cbind( xx, raster::extract( x=covarBrick, xx[,coord.names]))))
+  newObs <- lapply( obsList, function(xx) as.data.frame( cbind( xx, terra::extract( x=covarBrick, xx[,coord.names]))))
   #indicator for if there is that type of data
   ind <- c( PO=0, PA=0, AA=0, DC=0) #for PO, PA, AA, DC
 
@@ -100,19 +102,21 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
       XX <- cbind( newObs[[dataname]][,responseNames[ii]], XX)
       colnames( XX)[1] <- responseNames[ii]
     }
-    #convert to SpatialPoints*
-    XX <- sp::SpatialPointsDataFrame( coords=newObs[[dataname]][,coord.names], data=as.data.frame( XX))
+    #convert to sf (used to be SpatialPoints*)
+    XX <- cbind( XX, as.matrix( newObs[[dataname]][,coord.names]))
+    XX <- sf::st_as_sf( as.data.frame( XX), coords=coord.names)
+#    XX <- sp::SpatialPointsDataFrame( coords=newObs[[dataname]][,coord.names], data=as.data.frame( XX))
     #rename variables to something that will parse
     names( XX) <- removeParsingChars( names( XX))
     #if there are variable in both the survey data *and* the distribution+bias variables
-    for( jj in colnames( XX)){
+    for( jj in setdiff( colnames( XX), "geometry")){
       if( jj %in% paste0(ii,"_",names( covarBrick))){
 	tmpID <- which( jj %in% paste0(ii,"_",names( covarBrick)))
-	XX[,jj] <- raster::extract( x=newCovarBrick[[tmpID]], coords=newObs[[dataname]][,coord.names])
+	XX[,jj] <- terra::extract( x=newCovarBrick[[tmpID]], coords=newObs[[dataname]][,coord.names])
       }
     }
     #add in the distribution variables -- data
-    XXdist <- raster::extract( newCovarBrick, XX)
+    XXdist <- terra::extract( newCovarBrick, XX)
     #remove the bias terms from the data -- they will have "PO_" as a prefix.
     XXdist <- XXdist[,!grepl( "PO_", colnames( XXdist))]
     #combine
@@ -132,8 +136,9 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   ####	Casting PO data too, if it is there
   if( "POdat" %in% names( newObs)){
     ind['PO'] <- 1
-    if( !inherits( newObs$POdat, "SpatialPoints"))
-      newObs$POdat <- sp::SpatialPoints( coords=newObs$POdat[,coord.names])
+    if( !inherits( newObs$POdat, "sf"))
+      newObs$POdat <- sf::st_multipoint( as.matrix( newObs$POdat[,coord.names]))
+#      newObs$POdat <- sp::SpatialPoints( coords=newObs$POdat[,coord.names])
   }
    
   ###	the return object

@@ -19,7 +19,7 @@ ExtractCovarsAtNodes <- function( mesh=NULL, covars=NULL){
   locs <- as.matrix( mesh$loc)
   #blinear to follow Krainski et al and Flagg + Koegh.  Well almost consistent (different packages and methods)
   #FWIW, I'd use 'simple' to avoid Berkson errors.
-  covarAtLocs <- raster::extract( covars, locs[,1:2], cellnumbers=TRUE)#, small=TRUE, buffer=min( res( covars)), fun='median', methd='simple')
+  covarAtLocs <- terra::extract( covars, locs[,1:2], cells=TRUE)#, small=TRUE, buffer=min( res( covars)), fun='median', methd='simple')
 
   return( covarAtLocs)
 }

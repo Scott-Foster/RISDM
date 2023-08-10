@@ -11,7 +11,7 @@
 ###############################################################################################
 ###############################################################################################
 
-prepareDCdata <- function( DCdat, DCobserverInfo, sampAreaDC, DCmethod){
+prepareDCdata <- function( DCdat, DCobserverInfo, sampAreaDC, DCmethod, coord.names){
 
   #the number of DC surveys to include (multiplied by 2 to get the number of observer probs).
   nsurvey <- length( unique( DCdat[,DCobserverInfo$SurveyID]))
@@ -36,6 +36,10 @@ prepareDCdata <- function( DCdat, DCobserverInfo, sampAreaDC, DCmethod){
   DCdatExpand <- do.call( "rbind", tmp)
   #remove excess
   DCdatExpand <- DCdatExpand[,!colnames( DCdatExpand) %in% DCcols]
+  #add locations
+  ntimes <- nrow( DCdatExpand) / nrow( DCdat)
+  DCdatExpand <- cbind( kronecker( matrix(1,nrow=ntimes,ncol=1), as.matrix( DCdat[,coord.names])), DCdatExpand)
+  colnames( DCdatExpand)[1:2] <- coord.names
   
   return( DCdatExpand)
 }

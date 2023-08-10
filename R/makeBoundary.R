@@ -17,29 +17,28 @@ makeBoundary <- function( r, doPlot=TRUE){
   #r is raster to base poly off.  If rasterStack or Brick, then only first dim used.
   #doPlot is bool to indicate if plots of polygon should be produced.
 
-  r.orig <- r
   myDims <- dim( r)
   #just use the first raster in a rasterLayer/brick to find dimensions
   if( myDims[3]>1)
     r <- r[[1]]
   
-#  #so we know what is inside nd outside
-#  raster::values( r) <- ifelse( !is.na( raster::values( r)), 1, 0)#ifelse( values( tmp)>-1, 1, NA)
-  
   #make the lower res poly (for mesh creation)
-  r <- r.orig
   #lower the resoulation
   facs <- myDims[1:2] %/% 100
   if( any( facs >1 ))
-    r <- raster::aggregate( r, fact=facs, expand=TRUE, na.rm=TRUE)  #expand means that the new raster contains the old one.
+    r <- terra::aggregate( r, fact=facs, expand=TRUE, na.rm=TRUE)  #expand means that the new raster contains the old one.
 
-  raster::values( r) <- ifelse( !is.na( raster::values( r)), 1, 0)
+  terra::values( r) <- ifelse( !is.na( terra::values( r, na.rm=FALSE)), 1, NA)
   #covert to polygon for hole finding.
-  statePoly.low <- raster::rasterToPolygons( x=r, dissolve=TRUE, fun=function(xx){xx==1}) 
+  #statePoly.low <- raster::rasterToPolygons( x=raster::raster( r), dissolve=TRUE, fun=function(xx){xx==1}) 
+  statePoly.low <- terra::as.polygons( x=r, values=FALSE, aggregate=TRUE) 
   #weed out the interior holes.  They aren't so interesting here.  I HOPE!
-  tmp.low <- as( remove.holes( statePoly.low), "SpatialPolygons")
+  statePoly.low <- terra::fillHoles( statePoly.low)
+  statePoly.low <- terra::union( statePoly.low)
+  
+#  tmp.low <- as( remove.holes( statePoly.low), "SpatialPolygons")
 
-  res <- list( lower.res=tmp.low)  
+  res <- list( lower.res=statePoly.low, lower.res.ras=r)  
   
   return( res)
   

@@ -22,32 +22,13 @@ MakeAAstack=function( observs, mesh = NULL, abundname = "abund", tag = "AA", sam
   # Function to create stack for ABUNDANCE absence points
     
   #casting to numeric
-  y.pp <- as.integer( observs@data[,abundname])
+  y.pp <- as.integer( terra::as.data.frame( observs[,abundname])[,1])
 
   #the area sampled
-  offy <- observs@data[,sampleAreaName]
-  
+  offy <- terra::as.data.frame( observs[,sampleAreaName])[,1]
+    
   #expanding the artefact formulas, just to make sure that they get expanded properly in the INLA call (funny parsing for aliasing?)
-  covars <- observs@data[,-(1:2),drop=FALSE]#stats::model.matrix( artForm, as.data.frame( observs))
-
-#  tmptmp <- stats::model.matrix( artForm, as.data.frame( observs))
-#  colnames( tmptmp) <- paste0( "Intercept.AA_", colnames( tmptmp))
-#  colnames( tmptmp) <- gsub( "_(Intercept)", "", colnames( tmptmp), fixed=TRUE)
-#  #without this substituion the ordering of the compound variable names can sometimes be reversed
-#  #best to remove things that are parsed by formulas
-#  colnames( tmptmp) <- gsub( ":", "_", colnames( tmptmp), fixed=TRUE)
-#  observs@data <- cbind( observs@data, as.data.frame( tmptmp))
-  
-#  #a new formula for the new data labels
-#  newArtForm <- reformulate( colnames( tmptmp))
-  
-#  #a new formula for the expanded data
-#  newFullForm.AA <- reformulate( c( strsplit( deparse1( distForm[[2]]), " + ", fixed=TRUE)[[1]], strsplit( deparse1(newArtForm[[2]]), " + ", fixed=TRUE)[[1]]))
-##  newFullForm.AA <- reformulate( attr( terms( reformulate( c( attr( terms( distForm), "term.labels"), attr( terms( newArtForm), "term.labels")))),"term.labels"))
-  
-#  #just those covariates needed (with sensible labels)
-#  covars <- as.data.frame( observs@data[,attr( terms( newFullForm.AA), "term.labels")])
-#  colnames( covars) <- attr( terms( newFullForm.AA), "term.labels")
+  covars <- terra::as.data.frame( observs[,-(1:2),drop=FALSE])[,1:(ncol( observs)-3), drop=FALSE]
 
   #building the response matrix.
   resp <- matrix( NA, nrow=nrow( covars), ncol=sum( ind))
@@ -55,7 +36,7 @@ MakeAAstack=function( observs, mesh = NULL, abundname = "abund", tag = "AA", sam
   resp[,"AA"] <- y.pp
 
   # Projector matrix from mesh to data.
-  projmat <- INLA::inla.spde.make.A( mesh, as.matrix( raster::coordinates( observs))) # from mesh to point observations
+  projmat <- INLA::inla.spde.make.A( mesh, as.matrix( sf::st_coordinates( observs))) # from mesh to point observations
 
   #make the stack
   stk.abund <- INLA::inla.stack(data=list(resp=resp, e=rep( 1, nrow( covars)), offy=log( offy)),

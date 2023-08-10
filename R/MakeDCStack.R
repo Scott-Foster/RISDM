@@ -20,30 +20,13 @@ MakeDCstack=function( observs, mesh = NULL, DCname = "DCabund", tag = "DC", samp
   # Function to create stack for DC abundance absence points
   
   #casting to numeric
-  y.pp <- as.integer( observs@data[,DCname])
+  y.pp <- as.integer( terra::as.data.frame( observs[,DCname])[,1])
   
   #the area sampled
-  offy <- observs@data[,sampleAreaName]
+  offy <- terra::as.data.frame( observs[,sampleAreaName])[,1]
   
 #  #expanding the artefact formulas, just to make sure that they get expanded properly in the INLA call (funny parsing for aliasing?)
-  covars <- observs@data[,-(1:2),drop=FALSE]#stats::model.matrix( artForm, as.data.frame( observs))
-#  tmptmp <- stats::model.matrix( artForm, as.data.frame( observs))
-#  colnames( tmptmp) <- paste0( "Intercept.DC_", colnames( tmptmp))
-#  colnames( tmptmp) <- gsub( "_(Intercept)", "", colnames( tmptmp), fixed=TRUE)
-#  #without this substituion the ordering of the compound variable names can sometimes be reversed
-#  #best to remove things that are parsed by formulas
-#  colnames( tmptmp) <- gsub( ":", "_", colnames( tmptmp), fixed=TRUE)
-#  observs@data <- cbind( observs@data, as.data.frame( tmptmp))
-  
-#  #a new formula for the new data labels
-#  newArtForm <- reformulate( colnames( tmptmp))
-  
-#  #a new formula for the expanded data
-#  newFullForm.DC <- reformulate( c( strsplit( deparse1( distForm[[2]]), " + ", fixed=TRUE)[[1]], strsplit( deparse1(newArtForm[[2]]), " + ", fixed=TRUE)[[1]]))
-  
-#  #just those covariates needed (with sensible labels)
-#  covars <- as.data.frame( observs@data[,attr( terms( newFullForm.DC), "term.labels")])
-#  colnames( covars) <- attr( terms( newFullForm.DC), "term.labels")
+  covars <- terra::as.data.frame( observs[,-(1:2),drop=FALSE])[,1:(ncol( observs)-3), drop=FALSE]
   
   #building the response matrix.
   resp <- matrix( NA, nrow=nrow( covars), ncol=sum( ind))
@@ -51,7 +34,7 @@ MakeDCstack=function( observs, mesh = NULL, DCname = "DCabund", tag = "DC", samp
   resp[,"DC"] <- y.pp
 
   # Projector matrix from mesh to data.
-  projmat <- INLA::inla.spde.make.A(mesh, as.matrix( raster::coordinates( observs))) # from mesh to point observations
+  projmat <- INLA::inla.spde.make.A(mesh, as.matrix( sf::st_coordinates( observs))) # from mesh to point observations
   
   #make the stack
   stk.DCabund <- INLA::inla.stack(data=list(resp=resp, e=rep( 1, nrow( covars)), offy=log( offy)),

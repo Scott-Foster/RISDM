@@ -3,13 +3,14 @@ library( testthat)
 
 ####testing isdm
 
-f <- system.file("external/test.grd", package="raster")
-r <- raster::raster(f)
-raster::values( r)[ !is.na( raster::values( r))] <- 1
+f <- system.file("ex/meuse.tif", package="terra")
+r <- terra::rast(f)
+terra::values( r)[ !is.na( raster::values( r))] <- 1
 rm( f)
 dat <- simulateData.isdm( expected.pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))
-raster::crs( dat$covarBrick) <- raster::crs( r)
-meshy <- makeMesh( dat$covarBrick[[1]], max.n=c(500, 150), dep.range=25, expans.mult=20, offset=500, max.edge=5, doPlot=FALSE)
+terra::crs( dat$covarBrick) <- terra::crs( r)
+meshy <- makeMesh( dat$covarBrick[[1]], max.n=c(500, 250), dep.range=25, expans.mult=15, offset=250, max.edge=5, doPlot=FALSE)
+#terra::values( r)[terra::crds(r)[,1] > 179900 & terra::crds(r)[,1] < 180100 & terra::crds(r)[,2]>331400 & terra::crds(r)[,2]<331600] <- NA
 
 testthat::test_that(
   "Checking the model fitting ISDM on irregular boundary",
@@ -30,7 +31,7 @@ testthat::test_that(
 			  n.threads=8, addRandom=TRUE,
 			  DCmethod="TaylorsLinApprox"))
 			  
-    fm1[[2]] <- isdm( observationList=list( DCdat=as.data.frame( dat$DC)),
+    fm1[[2]] <- isdm( observationList=list( DCdat=dat$DC),
                       covars=dat$covarBrick, 
                       mesh=meshy,
                       responseNames=c( DC="somebloodything"),
@@ -78,8 +79,8 @@ testthat::test_that(
 
     fm1[[5]] <- isdm( observationList=list( POdat=as.data.frame( dat$PO), 
                                             DCdat=as.data.frame( dat$DC),
-                                            AAdat=as.data.frame( dat$AA)),
-                      #                                        PAdat=as.data.frame( simDat1$PA)),
+                                            AAdat=as.data.frame( dat$AA)),#,
+#                                            PAdat=as.data.frame( dat$PA)),
                       covars=dat$covarBrick, 
                       mesh=meshy,
                       responseNames=c( AA="AA"),#, PA="PA"),

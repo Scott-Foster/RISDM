@@ -35,6 +35,9 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
 
   #preliminary checks.  Aimed to catch obvious mis-specification only
   flag <- checkInput( responseNames, biasFormula, artefactFormulas, DCobserverInfo, observationList)
+  #covnert raster -> terra
+  if( inherits( covars, "Raster"))
+    covars <- terra::rast( covars)
   #Check for mesh too
   if( is.null( mesh))
     stop("No mesh provided. Please create one using the function makeMesh() and pass it in using the mesh argument")
@@ -47,7 +50,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
     if( !control$DCmethod %in% c( "plugin", "TaylorsLinApprox"))
       stop( "Specified DC method not supported. Currently must be either 'TaylorsLinApprox' or 'plugin'.  Please see control$DCmethod argument.")
     responseNames['DC'] <- "DCcountDC"
-    observationList$DCdat <- prepareDCdata( DCdat=observationList$DCdat, DCobserverInfo=DCobserverInfo, sampAreaDC=sampleAreaNames["DC"], control$DCmethod)
+    observationList$DCdat <- prepareDCdata( DCdat=observationList$DCdat, DCobserverInfo=DCobserverInfo, sampAreaDC=sampleAreaNames["DC"], DCmethod=control$DCmethod, coord.names=control$coord.names)
     #add terms to the formula for the Taylor series approach.  But not if method is 'plugin'
     if( control$DCmethod == "TaylorsLinApprox")
       artefactFormulas$DC <- update( artefactFormulas$DC, paste0("~.+", DCobserverInfo$SurveyID,":(alpha1Coef+alpha2Coef)"))

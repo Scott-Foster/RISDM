@@ -19,43 +19,47 @@ MakePPPstack <- function( observs, covarBrick, habitatArea, Mesh, presname="pres
   ##update 17-May-22  Going on the grid -- increase robustness (hopefully) with little increase in computation (for coarse enough grid)
 
   #create a raster to perform approximation and analysis on.  Assumed to be the same as the covariate brick.
-  tmp <- raster::rasterize( x=coordinates( observs), y=covarBrick, background=0, fun='count')
-  tmp <- raster::mask( tmp, covarBrick[[1]])
+  tmp <- terra::rasterize( x=sf::st_coordinates( observs)[,1:2], y=covarBrick, background=0, fun='count')
+  tmp <- terra::mask( tmp, covarBrick[[1]])
   #the cell areas will act as an offset for the PPP
   if( !is.null( habitatArea)){
-    tmp <- raster::addLayer( tmp, covarBrick[[habitatArea]])
-    if( any( unique( raster::values( tmp[[1]]>0 & !(tmp[[2]] > 0))), na.rm=TRUE)){
-      xxz <- sum( unique( raster::values( tmp[[1]]>0 & !(tmp[[2]] > 0))), na.rm=TRUE)
+    tmp <- c(tmp, covarBrick[[habitatArea]])#raster::addLayer( tmp, covarBrick[[habitatArea]])
+    if( any( unique( terra::values( tmp[[1]]>0 & !(tmp[[2]] > 0))), na.rm=TRUE)){
+      xxz <- sum( unique( terra::values( tmp[[1]]>0 & !(tmp[[2]] > 0))), na.rm=TRUE)
       warning( paste0( "Presences occur in cells with zero (or NA) habitat area. Please check POdat and habitatArea arguments.\n For now, these observations will be removed. There are ",xxz," of them."))
-      raster::values( tmp[[1]])[raster::values( tmp[[1]]>0 & !(tmp[[2]] > 0))] <- 0
+      terra::values( tmp[[1]])[terra::values( tmp[[1]]>0 & !(tmp[[2]] > 0))] <- 0
     }
   }
   else{
-    if( raster::isLonLat( tmp))
-      tmp <- raster::addLayer( tmp, raster::area(tmp))
+    if( terra::is.lonlat( tmp))
+      tmp <- c( tmp, terra::area(tmp))
     else{
-      tmp1 <- prod( raster::res( tmp))
+      tmp1 <- prod( terra::res( tmp))
       tmp2 <- tmp[[1]]
-      raster::values( tmp2) <- tmp1
-      tmp <- raster::addLayer( tmp, tmp2)
+      terra::values( tmp2) <- tmp1
+      tmp <- c( tmp, tmp2)
+      tmp <- terra::mask( tmp, covarBrick[[1]])
     }
   }  
   names( tmp) <- c( "count", "cellArea")
 
   #change to spatial data for some ease.
-  observs <- SpatialPointsDataFrame( coords=coordinates( tmp), data=cbind( raster::as.data.frame( tmp), raster::as.data.frame( covarBrick)))
+#  observs <- SpatialPointsDataFrame( coords=terra::crds( tmp), data=cbind( ter::as.data.frame( tmp), raster::as.data.frame( covarBrick)))
+  #or non-spatial df
+  observs <- cbind( terra::as.data.frame( tmp, na.rm=FALSE), terra::as.data.frame( covarBrick, na.rm=FALSE), terra::crds( tmp, na.rm=FALSE))
+
   abundname <- 'count'
   sampleAreaName <- "cellArea"
   #remove the cells that are not within the study area (masked out)
   observs <- observs[!is.na( observs$count),]  
   #remove the cells that have zero habitat
-  observs <- observs[!is.na( observs@data[,sampleAreaName]) & observs@data[,sampleAreaName]>0,]
+  observs <- observs[!is.na( observs[,sampleAreaName]) & observs[,sampleAreaName]>0,]
   
   ### This is copied from makeAAStack.  Changes here or there will need to be transfered
-  y.pp <- as.integer( observs@data[,abundname])
+  y.pp <- as.integer( observs[,abundname])
   
   #the area sampled
-  offy <- observs@data[,sampleAreaName]
+  offy <- observs[,sampleAreaName]
   
 #  #covariates 'n' stuff
 #  tmp <- varNames %in% colnames( observs@data)
@@ -78,12 +82,12 @@ MakePPPstack <- function( observs, covarBrick, habitatArea, Mesh, presname="pres
   resp[,"PO"] <- y.pp
   
   # Projector matrix from mesh to data.
-  projmat <- INLA::inla.spde.make.A( Mesh$mesh, as.matrix( raster::coordinates( observs))) # from mesh to point observations
+  projmat <- INLA::inla.spde.make.A( Mesh$mesh, as.matrix( observs[,ncol( observs)- (1:0)])) # from mesh to point observations
   
   #make the stack
   stk.po <- INLA::inla.stack(data=list(resp=resp, e=rep( 1, nrow( observs)), offy=log( offy)),
                                 A=list(1,projmat), tag=tag,
-                                effects=list( observs@data[,-(1:2)], list(isdm.spat.XXX=1:Mesh$mesh$n)))
+                                effects=list( observs[,-c( 1:2, ncol(observs)-(1:0))], list(isdm.spat.XXX=1:Mesh$mesh$n)))
 
   return( stk.po)
 

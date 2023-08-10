@@ -25,7 +25,7 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
   #check input for important parameters.  Set (possibly dumb) defaults.  
   if( is.null( dep.range)){
     message( "No range of dependence specified (dep.range argument). Assuming that this range is 1/5 of the extent of the raster. Maybe(?) this isn't a good value.  Please check.\n")
-    tmp <- matrix( as.vector( raster::extent( ras)), ncol=2, byrow=TRUE)
+    tmp <- matrix( as.vector( terra::ext( ras)), ncol=2, byrow=TRUE)
     diagLen <- sqrt(sum(apply(tmp, 1, diff)^2))
     dep.range <- diagLen / 3
     rm(tmp, diagLen)
@@ -34,8 +34,10 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
   #boundary of the sampling area
   boundary <- list( poly=makeBoundary( ras, doPlot=FALSE))
   #as a raster
-  boundary$ras <- list( lower.res=raster::rasterize( boundary$poly$lower.res, ras))  
-
+  boundary$ras <- list( lower.res=boundary$poly$lower.res.ras, specified.res=terra::rasterize( boundary$poly$lower.res, ras))
+  #clean up poly list
+  boundary$poly <- boundary$poly[1]
+  
   #if the region is going to be expanded, then expanded. This is often a good idea.
   if( expandRegion){
     #a default ('cause something has to be right?
@@ -46,7 +48,8 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
     convex.expansion <- expans.mult * dep.range  
   
     #the hull surrounding the spatial domain.
-    hully <- INLA::inla.nonconvex.hull( raster::coordinates( ras)[!is.na( raster::values( ras)),], convex = convex.expansion, resolution = rep(hull.res,2))
+    hully <- INLA::inla.nonconvex.hull( terra::crds( boundary$ras$lower.res, na.rm=TRUE), convex=convex.expansion, resolution=rep( hull.res,2))
+#    hully <- INLA::inla.nonconvex.hull( terra::crds( ras, na.rm=FALSE)[!is.na( terra::values( ras)),], convex = convex.expansion, resolution = rep(hull.res,2))
   }
   else
     hully <- INLA::inla.sp2segment( boundary$poly$lower.res)
@@ -84,8 +87,8 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
   
   #is the result going to be plotted?
   if( doPlot){
-    plot( meshy, asp=1)
-    sp::plot(     raster::buffer( boundary$poly$lower.res, width=1e-5), add=TRUE, border='green') 
+    INLA:::plot.inla.mesh( meshy, asp=1)
+    terra::plot( terra::buffer( boundary$poly$lower.res, width=1e-5), add=TRUE, border='green')
 #    sp::plot( boundary$poly$lower.res, add=TRUE, border='green')
     legend("topright", col=c("blue","green",'red'), legend=c("Nonconvex hull defining inner/outer domains","Boundary of raster values (low res)"), lty=c(1,1), lwd=c(2,2))
   }
