@@ -74,7 +74,7 @@ residuals.isdm <- function( object, ...){
     #get the outcomes and arrange them appropriately
     outcomes <- object$observationList$PAdat[,object$responseNames["PA"]]
     #calculate the two probs for RQR (lower and upper)
-    tmp1 <- stats::pbinom( outcomes, size=1, prob=max(min(preds,1),))
+    tmp1 <- stats::pbinom( outcomes, size=1, prob=max(min(preds,1),0))
     tmp2 <- stats::pbinom( pmax( outcomes-1, 0), size=1, prob=max(min(preds,1),0))
     #make sure that lower isn't too low...
     tmp2[outcomes==0] <- 0
