@@ -98,6 +98,7 @@ residuals.isdm <- function( object, ...){
     #get the outcomes and arrange them appropriately
     rasCount <- raster::rasterize( POspP, object$data$covars, fun='count', background=0)
     rasCount <- raster::mask( rasCount, object$data$covars[[1]])
+    ###Something to go in here...
 
 #####  General solution, but use the quick one for now...
     #number of draws to use in the simulation
