@@ -11,7 +11,7 @@
 ###############################################################################################
 ###############################################################################################
 
-residuals.isdm <- function( object, covars, ...){
+residuals.isdm <- function( object, ...){
 
   #number of data types
   numTypes <- 0
@@ -74,8 +74,8 @@ residuals.isdm <- function( object, covars, ...){
     #get the outcomes and arrange them appropriately
     outcomes <- object$observationList$PAdat[,object$responseNames["PA"]]
     #calculate the two probs for RQR (lower and upper)
-    tmp1 <- stats::pbinom( outcomes, size=1, prob=max(min(preds,1),0))
-    tmp2 <- stats::pbinom( pmax( outcomes-1, 0), size=1, prob=max(min(preds,1),0))
+    tmp1 <- stats::pbinom( outcomes, size=1, prob=preds)
+    tmp2 <- stats::pbinom( pmax( outcomes-1, 0), size=1, prob=preds)
     #make sure that lower isn't too low...
     tmp2[outcomes==0] <- 0
     #guard against numerical erros
@@ -94,10 +94,10 @@ residuals.isdm <- function( object, covars, ...){
     #increase the plotting columns to 3 (default is 2)
     ncolly <- 3
     
-    POspP <- sp::SpatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=crs( covars))
+    POspP <- sp::SpatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=crs( object$data$covars))
     #get the outcomes and arrange them appropriately
-    rasCount <- raster::rasterize( POspP, covars, fun='count', background=0)
-    rasCount <- raster::mask( rasCount, covars[[1]])
+    rasCount <- raster::rasterize( POspP, object$data$covars, fun='count', background=0)
+    rasCount <- raster::mask( rasCount, object$data$covars[[1]])
 
 #####  General solution, but use the quick one for now...
     #number of draws to use in the simulation

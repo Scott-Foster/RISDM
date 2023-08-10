@@ -11,9 +11,9 @@
 ###############################################################################################
 ###############################################################################################
 
-plot.isdm <- function( x, covars, nFigRow=1, ask=TRUE, ...){
+plot.isdm <- function( x, nFigRow=1, ask=TRUE, ...){
  
-  ressy <- residuals.isdm( x, covars)
+  ressy <- residuals.isdm( x)
  
   #plotting up the residuals. RQR versus fitted and for PO data the raster.
   if( ask){
