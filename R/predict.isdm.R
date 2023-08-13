@@ -66,31 +66,31 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   if( !is.null( habitatArea)){
     tmp <- covars[[habitatArea]]
     names( tmp) <- "blah"  #will be changed in a bit anyway
-    covars <- raster::addLayer( covars, tmp)  #this wastes memory a bit, temporarily (only really doing to rename things easily)
-    covars <- raster::dropLayer( covars, which( names( covars) == habitatArea))
+    covars <- c( covars, tmp)#raster::addLayer( covars, tmp)  #this wastes memory a bit, temporarily (only really doing to rename things easily)
+    covars <- covars[[names( covars) != habitatArea]]
   }
   else{
-    if( raster::isLonLat( covars))
-      covars <- raster::addLayer( covars, raster::area( covars))
+    if( terra::is.lonlat( covars))
+      covars <- c( covars, terra::area( covars))
     else{
       tmp <- covars[[1]]
       names( tmp) <- "tmpName"
-      raster::values( tmp) <- prod( raster::res( tmp))
-      covars <- raster::addLayer( covars, tmp)
+      terra::values( tmp) <- prod( terra::res( tmp))
+      covars <- c( covars, tmp)
     }
   }
-  names( covars)[raster::nlayers( covars)] <- "myCellAreas"
-  covars[["myCellAreas"]] <- raster::mask( covars[["myCellAreas"]], covars[[1]])
+  names( covars)[terra::nlyr( covars)] <- "myCellAreas"
+  covars[["myCellAreas"]] <- terra::mask( covars[["myCellAreas"]], covars[[1]])
 
   #get the coordinates of the prediction points
-  predcoords <- raster::coordinates( covars)
+  predcoords <- terra::crds( covars, na.rm=FALSE)
   #extract the covariates
   
   #Get expanded data (model matrix) and corresponding formulae
   newInfo <- uniqueVarNames( obsList=list(), covarBrick=covars, distForm=object$distributionFormula, biasForm=object$biasFormula, arteForm=list(), habitatArea="myCellAreas", DCsurvID=attr( object, "DCobserverInfo"), coord.names=attr( res, "coord.names"), responseNames=object$responseNames, sampleAreaNames=NULL, stdCovs=object$control$standardiseCovariates, na.action=object$control$na.action)
   #putting it into a data frame
-  covarData <- as.data.frame( raster::extract( newInfo$covarBrick, predcoords[,1:2]))#[,names( newInfo$covarBrick), drop=FALSE])
-  myCellAreas <- as.matrix( raster::extract( covars, predcoords[,1:2])[,"myCellAreas", drop=FALSE])
+  covarData <- as.data.frame( terra::extract( newInfo$covarBrick, predcoords[,1:2]))#[,names( newInfo$covarBrick), drop=FALSE])
+  myCellAreas <- as.matrix( terra::extract( covars, predcoords[,1:2])[,"myCellAreas", drop=FALSE])
     
   #cut down to just those areas without NAs.
   noNAid <- apply( covarData, 1, function(x) !any( is.na( x)))
@@ -182,14 +182,14 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   mu.sd <- apply( mu.all, 1, stats::sd)
   
   #raster format
-  muRaster <- raster::rasterFromXYZ( cbind( predcoords, mu.median), crs=raster::crs( covars))
-  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.lower), crs=raster::crs( covars)))
-  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.upper), crs=raster::crs( covars)))
-  muRaster <- raster::addLayer( muRaster, raster::rasterFromXYZ(cbind( predcoords, mu.mean), crs=raster::crs( covars)))
-  muRaster <- raster::addLayer(muRaster, raster::rasterFromXYZ( cbind( predcoords,mu.sd), crs=raster::crs( covars)))
+  muRaster <- terra::rast( cbind( predcoords, mu.median), crs=terra::crs( covars), type='xyz')
+  muRaster <- c(muRaster, terra::rast( cbind( predcoords, mu.lower), crs=terra::crs( covars), type='xyz'))
+  muRaster <- c(muRaster, terra::rast( cbind( predcoords, mu.upper), crs=terra::crs( covars), type='xyz'))
+  muRaster <- c(muRaster, terra::rast( cbind( predcoords, mu.mean), crs=terra::crs( covars), type='xyz'))
+  muRaster <- c(muRaster, terra::rast( cbind( predcoords, mu.sd), crs=terra::crs( covars), type='xyz'))
 
   #sort out extent in case...
-  muRaster <- raster::extend( muRaster, covars)  #just in case it is needed -- could be dropped throughout the creation of the raster.
+  muRaster <- terra::extend( muRaster, terra::ext( covars))  #just in case it is needed -- could be dropped throughout the creation of the raster.
 
   res <- list( field=muRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords)
   

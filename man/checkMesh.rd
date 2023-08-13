@@ -3,12 +3,10 @@
 \title{Performs elementary checks for a mesh.}
 \description{ This is a helper function. It is designed to simplify the process of creating a good mesh to perform spatial computing over. Hence, it is useful prior to calling \code{\link{isdm}} and in conjunction with \code{\link{makeMesh}}. The function takes a mesh and provides some primitive diagnostics to see if its component triangles are likely to be suitable. We hope that it simplifies the mesh creation process. These checks are performed only on the inner domain -- the outer domain will often (?) have quite different sized triangles.}
 \usage{
- checkMesh( mesh, hull, ras=NULL)
+ checkMesh( mesh)
 }
 \arguments{
 \item{mesh}{A mesh generated from \code{\link{makeMesh}} or \code{\link{inla.mesh.2d}}.}
-\item{hull}{A spatial boundary corresponding to the boundary of the mesh's inner and outer domains. The easiest way to obtain this object is through using \code{\link{makeMesh}} or \code{\link{inla.nonconvex.hull}}. If using makeMesh, then the necessary object is stored in the list element 'hull'}
-\item{ras}{An object of type raster. The raster's NA pattern is taken to illustrate the sampling region boundary.}
 }
 \details{
  This function does three things: 1) produces a plot of the mesh (duplicating what you probably already have done), 2) produces a histogram of the distribution of the areas of the mesh's component triangles, and 3) produces a histogram of the distribution of all the internal angles for all the triangles. The rule of thumbs, mostly from Krainsky et al. (2017), suggest that there should be

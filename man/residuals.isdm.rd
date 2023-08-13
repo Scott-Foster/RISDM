@@ -3,11 +3,10 @@
 \alias{residuals.isdm}
 \title{Calculating Randomised Quantile Residuals for isdm objects}
 \usage{
-  \method{residuals}{isdm}(object, covars, \dots)
+  \method{residuals}{isdm}(object, \dots)
 }
 \arguments{
   \item{object}{an object of class \code{"isdm"}, usually, a result of a call to \code{\link{isdm}}.}
-  \item{covars}{a raster, or something that inheritits from a raster (raster*), to calculate residuals for PO data.}
   \item{\dots}{argments passed to other sub-functions.  Currently not implemented.}
 }
 \description{

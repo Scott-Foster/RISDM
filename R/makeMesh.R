@@ -52,7 +52,7 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
 #    hully <- INLA::inla.nonconvex.hull( terra::crds( ras, na.rm=FALSE)[!is.na( terra::values( ras)),], convex = convex.expansion, resolution = rep(hull.res,2))
   }
   else
-    hully <- INLA::inla.sp2segment( boundary$poly$lower.res)
+    hully <- INLA::inla.sp2segment( as( boundary$poly$lower.res, "Spatial"))
 
   #more checks for defaults
   if( is.null( max.edge)){

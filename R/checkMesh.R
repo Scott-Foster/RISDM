@@ -11,23 +11,28 @@
 ###############################################################################################
 ###############################################################################################
 
-checkMesh <- function( mesh, hull, ras=NULL){
+checkMesh <- function( mesh){
   #check inner domain area
   #find inner domain
-  nodeLocs <- sp::SpatialPoints( mesh$loc[,1:2])
+  nodeLocs <- sf::st_multipoint( mesh$loc[,1:2])#sp::SpatialPoints( mesh$loc[,1:2])
   #and the bounding hull.
-  dom <- sp::SpatialPolygons( list( sp::Polygons( list( sp::Polygon( hull$loc)), 1)))
+  dom <- sf::st_polygon( list( rbind( mesh$hull$loc, mesh$hull$loc[1,])))
+#  dom <- sp::SpatialPolygons( list( sp::Polygons( list( sp::Polygon( mesh$hull$loc)), 1)))
   #buffer the node locations
   #first find the buffer width
-  buffWidth <- 0.001 * min( stats::dist( mesh$loc[1:(min(1000,nrow(mesh$loc))),1:2]))
-  domBuff <- raster::buffer( dom, width=buffWidth)
-  sp::proj4string(nodeLocs) <- sp::proj4string( domBuff)
-  polyNum <- sp::over( nodeLocs, domBuff)
+  buffWidth <- 0.001 * min( stats::dist( mesh$loc[1:(min(1000,nrow(mesh$loc))),]))
+  domBuff <- sf::st_buffer( dom, dist=buffWidth)
+#  sf::st_crs(nodeLocs) <- sf::st_crs( domBuff)
+#  polyNum <- sp::over( nodeLocs, domBuff)
+  polyNum <- sf::st_intersection( x=nodeLocs, y=domBuff)
   
   #find angles and areas outside area
-  ouPts <- which( is.na( polyNum))
+#  ouPts <- which( is.na( polyNum))
+  ouPts <- sf::st_difference( x=nodeLocs, y=domBuff)
   
-  inTris <- !apply( mesh$graph$tv, 1, function(xx) any( xx %in% ouPts))
+  #which nodeLocs are outside?
+  inTris <- !apply( nodeLocs, 1, function(xx) any( xx %in% ouPts))
+#  inTris <- !apply( mesh$graph$tv, 1, function(xx) any( xx %in% ouPts))
   inTris <- mesh$graph$tv[inTris,] #the idx of the locations of each inside triangle's vertice.
   
   #area and angle properties of triangles inside area
@@ -35,22 +40,17 @@ checkMesh <- function( mesh, hull, ras=NULL){
   areas <- triSumms[1,]
   angles <- as.vector( triSumms[-1,])
   
-  #find the boundary of the sampling area, if ras is non-NULL
-  if( !is.null(ras))
-    boundary <- list( poly=makeBoundary( ras, doPlot=FALSE))
-  
   par( mfrow=c(1,3))
   
   #plotting mesh and inner/outer
   plot( mesh)
   plot( dom, add=TRUE)
-  if( !is.null( ras))
-    sp::plot(     raster::buffer( boundary$poly$lower.res, width=1e-5), add=TRUE, border='green') 
 #    sp::plot( boundary$poly$lower.res, add=TRUE, border='green')
 
-  points( nodeLocs[!is.na( polyNum),], col=polyNum[!is.na( polyNum)]+2, pch=20, cex=0.2)
-  points( nodeLocs[is.na( polyNum),], col='red', pch=3, cex=0.1)
-  
+#  points( nodeLocs[!is.na( polyNum),], col=polyNum[!is.na( polyNum)]+2, pch=20, cex=0.2)
+#  points( nodeLocs[is.na( polyNum),], col='red', pch=3, cex=0.1)
+  plot( polyNum, add=TRUE, col='darkgreen', cex=0.1)
+  plot( ouPts, add=TRUE, col='red', pch=3, cex=0.1) 
 #  legend("topright", legend=c("Inner Nodes","Outer Nodes"), pch=c(20,3), col=c(2+1:(length( unique(polyNum))-1),'red'))
   
   #distribution of triangles inside area.
@@ -72,8 +72,8 @@ cosRule <- function( s){
 
 find1TriInfo <- function( in1Tri, nl){
   #for each triangle, find the area and the angle.
-  pts <- coordinates( nl[in1Tri])
-  sides <- as.vector( dist( pts))
+  pts <- nl[in1Tri,]
+  sides <- as.vector( stats::dist( pts))
   angles <- rep( NA, 3)
   angles[1] <- cosRule( sides[c(1,2,3)])
   angles[2] <- cosRule( sides[c(1,3,2)])

@@ -3,12 +3,12 @@ library( testthat)
 
 ####testing isdm
 
-f <- system.file("external/test.grd", package="raster")
-r <- raster::raster(f)
-raster::values( r)[ !is.na( raster::values( r))] <- 1
+f <- system.file("ex/test.grd", package="terra")
+r <- terra::rast(f)
+terra::values( r)[ !is.na( terra::values( r, na.rm=FALSE))] <- 1
 rm( f)
 dat <- simulateData.isdm( expected.pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))
-raster::crs( dat$covarBrick) <- raster::crs( r)
+terra::crs( dat$covarBrick) <- terra::crs( r)
 meshy <- makeMesh( dat$covarBrick[[1]], max.n=c(500, 150), dep.range=25, expans.mult=20, offset=500, max.edge=5, doPlot=FALSE)
 fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO), 
                                   DCdat=as.data.frame( dat$DC),

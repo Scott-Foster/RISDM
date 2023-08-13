@@ -12,7 +12,7 @@
 ###############################################################################################
 
 simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA=150, n.AA=50, n.DC=50,
-                           coefs=list(dist=c(-1.5,-0.25,0.75), bias=c(-2,-1.5)), 
+                           coefs=list(dist=c(-1.5,-0.25,0.75), bias=c(-2,-0.75)), 
                            DC.pis=matrix( c(0.8,0.76, 0.7,0.73, 0.82,0.67), nrow=3, ncol=2, byrow=TRUE),
                            transect.size = 0.125, #a proportion of cell size.
                            rasterBoundary=NULL,
@@ -30,14 +30,14 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
     xSeq <- seq( from=0, to=10, length=control$raster.dim[1])
     ySeq <- seq( from=0, to=10, length=control$raster.dim[2])
     X <- expand.grid( x=xSeq, y=ySeq)
-    my.scale <- sqrt( 100+100) / 10 #1/10 of observed
+    my.scale <- sqrt( 100+100) / 20 #1/10 of observed
   }
   #or survey area based on unit square
   else{
     X <- as.data.frame( terra::crds( rasterBoundary, na.rm=FALSE))
     xSeq <- sort( unique( X[,1]))
     ySeq <- sort( unique( X[,2]))
-    my.scale <- sqrt( (utils::tail( xSeq,1) - utils::head( xSeq,1))^2 + (utils::tail( ySeq,1) - utils::head( ySeq,1))^2) / 10  #arbitrary
+    my.scale <- sqrt( (utils::tail( xSeq,1) - utils::head( xSeq,1))^2 + (utils::tail( ySeq,1) - utils::head( ySeq,1))^2) / 20  #arbitrary
   }
   
   simmy1 <- fftGPsim( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)  #5/2 as the a big value -- most gaussian...
@@ -93,16 +93,16 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
 
   ####  Create the PA data
   #first create the design -- an equal probability spat-bal design
-  PAdata <- MBHdesign::quasiSamp.raster( n=n.PA, raster::raster( tmpBoundary))
+  PAdata <- MBHdesign::quasiSamp.raster( n=n.PA, tmpBoundary)
   
   #now simulate the PA response at those sites (based on point process)
-  PAdata$PA <- stats::rbinom( n=n.PA, size=1, prob=max( 0, min( 1-exp( -terra::values( dataBrick$Intensity)[PAdata$ID]*transect.size),1)))
+  PAdata$PA <- stats::rbinom( n=n.PA, size=1, prob=pmax( 0, pmin( 1-exp( -terra::values( dataBrick$Intensity)[PAdata$ID]*transect.size),1)))
   
   #add the transect area
   PAdata$transectArea <- transect.size * prod( terra::res( dataBrick))
   
   ####  Create the count data (AA)
-  AAData <- MBHdesign::quasiSamp.raster( n=n.AA, raster::raster( tmpBoundary))
+  AAData <- MBHdesign::quasiSamp.raster( n=n.AA, tmpBoundary)
   
   #now simulate the AA response at those sites (based on point process)
   AAData$AA <- stats::rpois( n=n.AA, lambda=terra::values( dataBrick$Intensity)[AAData$ID]*transect.size)
@@ -111,7 +111,7 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
   AAData$transectArea <- transect.size * prod( terra::res( dataBrick))
 
   ####  Create the double count data (DC)
-  DCData <- MBHdesign::quasiSamp.raster( n=n.DC, raster::raster( tmpBoundary))
+  DCData <- MBHdesign::quasiSamp.raster( n=n.DC, tmpBoundary)
   
   #now simulate the DC response at those sites (based on point process)
   #total number of animals available along a transect
@@ -141,8 +141,17 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
   ####  Now deal with the biassed observations
   
   #distance to city, or a proxy (something quite like it)...
-  maxTmp <- terra::ext( dataBrick)[2] + terra::ext( dataBrick)[4]
-  dataBrick <- c( dataBrick, terra::rast( cbind( terra::crds( dataBrick, na.rm=FALSE)[,1:2], dist2City=(maxTmp-rowSums( terra::crds(dataBrick, na.rm=FALSE))) / maxTmp), type='xyz', crs=terra::crs( rasterBoundary)))
+  tmptmptmp <- dataBrick[[1]]
+  myCRDS <- terra::crds( tmptmptmp, na.rm=FALSE)
+  ref <- 4200
+  myCRDS[,1] <- (myCRDS[,1] - myCRDS[ref,1])^2
+  myCRDS[,2] <- (myCRDS[,2] - myCRDS[ref,2])^2
+  myCRDS <- sqrt( rowSums( myCRDS))
+  terra::values( tmptmptmp) <- myCRDS
+#  terra::values( tmptmptmp) <- max( myCRDS, na.rm=TRUE) - myCRDS
+  tmptmptmp <- terra::mask( tmptmptmp, dataBrick[[1]])
+  terra::values( tmptmptmp) <- scale( terra::values( tmptmptmp, na.rm=FALSE))
+  dataBrick <- c( dataBrick, tmptmptmp)
   names( dataBrick)[length( names( dataBrick))] <- "dist2City"
   
   #probability of being observed (thinning process) -- cloglog link for prob
@@ -154,7 +163,7 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
   
   if( !is.null( rasterBoundary))
     dataBrick <- terra::mask( dataBrick, rasterBoundary)
-  dataBrick$dist2City <- raster::scale( dataBrick$dist2City, center=TRUE, scale=FALSE)
+#  dataBrick$dist2City <- terra::scale( dataBrick$dist2City, center=TRUE, scale=FALSE)
   
   ####  Take the sample of po data
   N <- stats::rpois( n=1, lambda=expected.n.PO)

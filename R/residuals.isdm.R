@@ -94,12 +94,11 @@ residuals.isdm <- function( object, ...){
     #increase the plotting columns to 3 (default is 2)
     ncolly <- 3
     
-    POspP <- sp::SpatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=crs( object$data$covars))
+#    POspP <- sp::SpatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=terra::crs( object$data$covars))
     #get the outcomes and arrange them appropriately
-    rasCount <- raster::rasterize( POspP, object$data$covars, fun='count', background=0)
-    rasCount <- raster::mask( rasCount, object$data$covars[[1]])
-    ###Something to go in here...
-
+    rasCount <- terra::rasterize( x=as.matrix( object$observationList$PO[,attr( object, "coord.names")]), y=object$data$covars, fun='count', background=0)
+    rasCount <- terra::mask( rasCount, object$data$covars[[1]])
+    
 #####  General solution, but use the quick one for now...
     #number of draws to use in the simulation
 #    if( !methods::hasArg( S))
@@ -111,16 +110,17 @@ residuals.isdm <- function( object, ...){
 #####	Quick running solution
     preds <- list()
     preds$mean.field <- list()
-    preds$mean.field$mu.mean <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount)[!is.na( raster::values( rasCount)),], object$mod$summary.fitted.values[inla.stack.index(object$stack,"PO")$data,"mean"]))
-    preds$mean.field$mu.mean <- raster::extend( preds$mean.field$mu.mean, rasCount)
-    preds$mean.field$mu.mean <- raster::crop( preds$mean.field$mu.mean, rasCount)
-    preds$mean.field$mu.mean <- raster::mask( preds$mean.field$mu.mean, rasCount)
+    preds$mean.field$mu.mean <- terra::rast( cbind( terra::crds( rasCount, na.rm=FALSE)[!is.na( terra::values( rasCount, na.rm=FALSE)),], object$mod$summary.fitted.values[inla.stack.index(object$stack,"PO")$data,"mean"]), type="xyz", crs=terra::crs( rasCount))
+    names( preds$mean.field$mu.mean) <- "fitted"
+    preds$mean.field$mu.mean <- terra::extend( preds$mean.field$mu.mean, rasCount)
+    preds$mean.field$mu.mean <- terra::crop( preds$mean.field$mu.mean, rasCount)
+    preds$mean.field$mu.mean <- terra::mask( preds$mean.field$mu.mean, rasCount)
     
     #calculate the two probs for RQR (lower and upper)
-    tmp1 <- stats::ppois( raster::values( rasCount), raster::values( preds$mean.field$mu.mean))
-    tmp2 <- stats::ppois( pmax( raster::values( rasCount)-1, 0), raster::values( preds$mean.field$mu.mean))
+    tmp1 <- stats::ppois( terra::values( rasCount, na.rm=FALSE), terra::values( preds$mean.field$mu.mean, na.rm=FALSE))
+    tmp2 <- stats::ppois( pmax( terra::values( rasCount, na.rm=FALSE)-1, 0), terra::values( preds$mean.field$mu.mean, na.rm=FALSE))
     #make sure that lower isn't too low...
-    tmp2[raster::values( rasCount)==0] <- 0
+    tmp2[terra::values( rasCount, na.rm=FALSE)==0] <- 0
     #trim the NAs
     na.id <- is.na( tmp1) | is.na( tmp2)
     tmp1 <- tmp1[!na.id]
@@ -132,14 +132,14 @@ residuals.isdm <- function( object, ...){
     #make sure that there aren't any zeros or ones...
     tmp3 <- (1-1e-8) * (tmp3-0.5) + 0.5
     #return object
-    ressy <- rep( NA, length( raster::values( rasCount)))
+    ressy <- rep( NA, length( terra::values( rasCount, na.rm=FALSE)))
     ressy[!na.id] <- stats::qnorm( tmp3)
     #bundle the residuals
     POresids <- list()
-    POresids$ras <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount), ressy))
+    POresids$ras <- terra::rast( cbind( terra::crds( rasCount, na.rm=FALSE), ressy), type='xyz')
 #    #re-extend the residual field to match the original field
 #    POresids$ras <- raster::extend( POresids$ras, preds$mean.field$mu.mean)
-    POresids$POresids <- data.frame( fitted=raster::values( preds$mean.field$mu.mean), observed=values( rasCount), residual=ressy)
+    POresids$POresids <- data.frame( fitted=terra::values( preds$mean.field$mu.mean, na.rm=FALSE), observed=terra::values( rasCount, na.rm=FALSE), residual=ressy)
   }
   
   res <- list( DC=DCresids, AA=AAresids, PA=PAresids, PO=POresids)

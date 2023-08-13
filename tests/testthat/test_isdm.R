@@ -5,7 +5,7 @@ library( testthat)
 
 f <- system.file("ex/meuse.tif", package="terra")
 r <- terra::rast(f)
-terra::values( r)[ !is.na( raster::values( r))] <- 1
+terra::values( r)[ !is.na( terra::values( r))] <- 1
 rm( f)
 dat <- simulateData.isdm( expected.pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))
 terra::crs( dat$covarBrick) <- terra::crs( r)

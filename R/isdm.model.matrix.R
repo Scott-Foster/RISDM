@@ -14,7 +14,7 @@
 ###############################################################################################
 
 
-isdm.model.matrix <- function( formmy, obsy, na.action=na.omit,namy=NULL) {
+isdm.model.matrix <- function( formmy, obsy, na.action=stats::na.omit,namy=NULL) {
 
   #check NA patterns
   allNAs.id <- apply( obsy, 1, function(zz) all( is.na( zz)))
