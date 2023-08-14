@@ -133,7 +133,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
 
   #the return object, which contains some of the bits and pieces calcuated above.
   res <- list( mod=mod, distributionFormula=distributionFormula, biasFormula=biasFormula, artefactFormulas=artefactFormulas, mesh=FullMesh$mesh, control=control, responseNames=responseNames, 
-		data=list( covars=newInfo$covarBrick, obsList=newInfo$obsList))
+		data=list( covars=newInfo$covarBrick, obsList=newInfo$obsList, habitatArea=habitatArea))
   #include the stack if requested
   if( control$returnStack){
     res$stack <- stck

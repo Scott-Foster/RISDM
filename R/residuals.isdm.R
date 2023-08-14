@@ -94,12 +94,42 @@ residuals.isdm <- function( object, ...){
     #increase the plotting columns to 3 (default is 2)
     ncolly <- 3
     
-    POspP <- sp::SpatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=crs( object$data$covars))
+    POspP <- sp::SpatialPoints( object$observationList$PO[,attr( object, "coord.names")], proj4string=raster::crs( object$data$covars))
     #get the outcomes and arrange them appropriately
     rasCount <- raster::rasterize( POspP, object$data$covars, fun='count', background=0)
     rasCount <- raster::mask( rasCount, object$data$covars[[1]])
-    ###Something to go in here...
+    
+    # Follow MakePPPstack.R but instead of removing, put NA to the cells
+    #  * not within the study area 
+    #  * have zero habitat
+    habitatArea <- object$data$habitatArea
 
+    if( !is.null( habitatArea)){
+      rasCount <- raster::addLayer( rasCount, object$data$covars[[habitatArea]])
+      if( any( unique( raster::values( rasCount[[1]]>0 & !(rasCount[[2]] > 0))), na.rm=TRUE)){
+        xxz <- sum( unique( raster::values( rasCount[[1]]>0 & !(rasCount[[2]] > 0))), na.rm=TRUE)
+        warning( paste0( "Presences occur in cells with zero (or NA) habitat area. Please check POdat and habitatArea arguments.\n For now, these observations will be removed. There are ",xxz," of them."))
+        raster::values( rasCount[[1]])[raster::values( rasCount[[1]]>0 & !(rasCount[[2]] > 0))] <- 0
+      }
+    } else {
+      if( raster::isLonLat(rasCount)) {
+        rasCount <- raster::addLayer(rasCount, raster::area(rasCount))
+      } else {
+        rasCount1 <- prod( raster::res(rasCount))
+        rasCount2 <- rasCount[[1]]
+        raster::values(rasCount2) <- rasCount1
+        rasCount <- raster::addLayer(rasCount, rasCount2)
+
+        rm(rasCount1, rasCount2)
+      }
+    }
+    
+    #remove the cells that have zero habitat
+    raster::values( rasCount[[1]])[raster::values( !is.na(rasCount[[2]]) & !(rasCount[[2]] > 0))] <- NA
+    # keep the first layer (i.e., count) 
+    rasCount <-  rasCount[[1]]
+    invisible(gc())
+    
 #####  General solution, but use the quick one for now...
     #number of draws to use in the simulation
 #    if( !methods::hasArg( S))
@@ -139,7 +169,7 @@ residuals.isdm <- function( object, ...){
     POresids$ras <- raster::rasterFromXYZ( cbind( raster::coordinates( rasCount), ressy))
 #    #re-extend the residual field to match the original field
 #    POresids$ras <- raster::extend( POresids$ras, preds$mean.field$mu.mean)
-    POresids$POresids <- data.frame( fitted=raster::values( preds$mean.field$mu.mean), observed=values( rasCount), residual=ressy)
+    POresids$POresids <- data.frame( fitted=raster::values( preds$mean.field$mu.mean), observed=raster::values( rasCount), residual=ressy)
   }
   
   res <- list( DC=DCresids, AA=AAresids, PA=PAresids, PO=POresids)
