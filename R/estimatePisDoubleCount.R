@@ -14,7 +14,7 @@
 estimatePisDoubleCount <- function( dat){
   #dat is an nx3 matrix with colnames c("obs1","obs2","both")
   #data should already be ordered by the way that this function is called...
-  start.vals <- cbind( (dat[,1]+dat[,3]), dat[,2]+dat[,3]) / rowSums( dat, na.rm=TRUE)
+  start.vals <- cbind( (dat[,1]+dat[,3]), dat[,2]+dat[,3]) / pmax( rowSums( dat, na.rm=TRUE), 0.01)
   start.vals <- colMeans( start.vals, na.rm=TRUE)
   start.vals <- log( start.vals + 0.01)
   

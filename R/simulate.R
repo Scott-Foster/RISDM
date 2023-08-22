@@ -13,7 +13,7 @@
 
 simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA=150, n.AA=50, n.DC=50,
                            coefs=list(dist=c(-1.5,-0.25,0.75), bias=c(-2,-0.75)), 
-                           DC.pis=matrix( c(0.8,0.76, 0.7,0.73, 0.82,0.67), nrow=3, ncol=2, byrow=TRUE),
+                           DC.pis=matrix( c(0.8,0.76, 0.9,0.85, 0.82,0.87), nrow=3, ncol=2, byrow=TRUE),
                            transect.size = 0.125, #a proportion of cell size.
                            rasterBoundary=NULL,
                            control=list()){
@@ -49,9 +49,8 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
   
   #random effect for the log-gauss process
   if( control$addRandom){
-#   Mod3 <- RandomFields::RMmatern( nu=1, var=control$sd^2, scale= control$range / (2))
-#   REff <- RandomFields::RFsimulate( Mod3, x=xSeq, y=ySeq)
-   REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=3/2)  #may need to check the value of nu (previously was 1...)
+#   REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=3/2)  #3/2 is what is used to estimate (in RISDM) 14/8/23. Previously nu=1...?
+    REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=sqrt( 1.5 * 8) * control$range, nu=3/2)  
    REff <- as.numeric( t( REff))
   }
   else
