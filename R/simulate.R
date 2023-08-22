@@ -57,10 +57,12 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
     REff <- rep(0,nrow( X))
   
   #data brick for the covariates and random effect
-  dataBrick <- c( terra::rast( X[,c(1,2,3)], type='xyz', crs=terra::crs(rasterBoundary)), terra::rast( X[,c(1,2,4)], type='xyz', crs=terra::crs(rasterBoundary)), terra::rast( cbind( X[,1:2], REff), type='xyz', crs=terra::crs(rasterBoundary)))
+  dataBrick <- c( terra::rast( X[,c(1,2,3)], type='xyz'), terra::rast( X[,c(1,2,4)], type='xyz'), terra::rast( cbind( X[,1:2], REff), type='xyz'))
   #raster::brick( raster::rasterFromXYZ( X[,c(1,2,3)]), raster::rasterFromXYZ( X[,c(1,2,4)]), raster::rasterFromXYZ( cbind( X[,1:2], REff)))
-  if( !is.null( rasterBoundary))
+  if( !is.null( rasterBoundary)){
+    terra::crs( dataBrick) <- terra::crs( rasterBoundary)
     dataBrick <- terra::mask( dataBrick, rasterBoundary)
+  }
   dataBrick <- terra::scale( dataBrick, center=TRUE, scale=FALSE)
   #a data frame model.matrix( ok a df, but still)
   X <- terra::as.data.frame( dataBrick, xy=TRUE)
@@ -142,7 +144,7 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
   #distance to city, or a proxy (something quite like it)...
   tmptmptmp <- dataBrick[[1]]
   myCRDS <- terra::crds( tmptmptmp, na.rm=FALSE)
-  ref <- 4200
+  ref <- round( mean( 1:terra::ncell(dataBrick)), 0)#myCRDS[,1]), 0), round( mean( myCRDS[,2]), 0))
   myCRDS[,1] <- (myCRDS[,1] - myCRDS[ref,1])^2
   myCRDS[,2] <- (myCRDS[,2] - myCRDS[ref,2])^2
   myCRDS <- sqrt( rowSums( myCRDS))
