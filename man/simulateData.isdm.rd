@@ -3,11 +3,13 @@
 \title{Simulates data of different types from an underlying point process.}
 \description{This function simulates some data based on a number of fairly strict assumptions. }
 \usage{
- simulateData.isdm( expected.pop.size=400000, expected.n.PO=300, n.PA=150, n.AA=50, n.DC=50,
-                           coefs=list(dist=c(-1.5,-0.25,0.75), bias=c(-2,-0.75)), 
+ simulateData.isdm( expected.pop.size=10000, expected.n.PO=300, n.PA=150, n.AA=50, n.DC=50,
+                           coefs=list(dist=c(-1.5,0.5,-0.75), bias=c(-2,-0.75)), 
                            DC.pis=matrix( c(0.8,0.76, 0.9,0.85, 0.82,0.87), nrow=3, ncol=2, byrow=TRUE),
                            transect.size = 0.125, #a proportion of cell size.
                            rasterBoundary=NULL,
+			   rasterCovars=NULL,
+			   rasterBiasCovar=NULL,
                            control=list())
 }
 \arguments{
@@ -16,11 +18,13 @@
 \item{n.PA}{The number of presence-absence (PA) data.}
 \item{n.AA}{The number of abundance (AA) data.}
 \item{n.DC}{The number of double counted (DC) transects.}
-\item{coefs}{The coefficients for the distribution model: intercept and each of the two covariates.}
+\item{coefs}{The coefficients for the distribution model: intercept and each of the two covariates. Note that the intercept will be effecitvely ignored and will be scaled so that the expected population size is maintained.}
 \item{bias}{The coefficients for the bias model: intercept and the bias covariate.}
 \item{DC.pis}{The detection probability for each of the two DC observers.}
 \item{transect.size}{The area covered by each of the PA, AA, and DC transects.}
-\item{rasterBoundary}{Raster, whose NA pattern defines the boundary of the simulation area.}
+\item{rasterBoundary}{SpatRaster, whose NA pattern defines the boundary of the simulation area. Ignored if rasterCovars is supplied.}
+\item{rasterCovars}{SpatRaster with two layers, one for each of the covariates used in the distribution model.}
+\item{rasterBiasCovar}{SpatRaster with a single layer giving the data for the bias covariate. Can only be specified when rasterCovars is also specified (an error will occur otherwise). If NULL, and if rasterCovars is not NULL, then bias layer will be generated as distance from the central point.}
 \item{control}{A list of control arguments for the simulation. May be partially specified. See Details.}
 }
 \details{

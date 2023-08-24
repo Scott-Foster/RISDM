@@ -11,11 +11,13 @@
 ###############################################################################################
 ###############################################################################################
 
-simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA=150, n.AA=50, n.DC=50,
-                           coefs=list(dist=c(-1.5,-0.25,0.75), bias=c(-2,-0.75)), 
+simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=150, n.AA=50, n.DC=50,
+                           coefs=list(dist=c(-1.5,0.5,-0.75), bias=c(-2,-0.75)), 
                            DC.pis=matrix( c(0.8,0.76, 0.9,0.85, 0.82,0.87), nrow=3, ncol=2, byrow=TRUE),
                            transect.size = 0.125, #a proportion of cell size.
                            rasterBoundary=NULL,
+			   rasterCovars=NULL,
+			   rasterBiasCovar=NULL,
                            control=list()){
 			     
   #note that coefs$dist[1] will be largely ignored to match expected.n.PO  
@@ -25,52 +27,65 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
   if( control$set.random.seed)
     set.seed( control$random.seed)
   
-  #  Define survey area based on supplied raster
-  if( is.null( rasterBoundary)){
-    xSeq <- seq( from=0, to=10, length=control$raster.dim[1])
-    ySeq <- seq( from=0, to=10, length=control$raster.dim[2])
-    X <- expand.grid( x=xSeq, y=ySeq)
-    my.scale <- sqrt( 100+100) / 20 #1/10 of observed
+  if( is.null( rasterCovars)){
+    #  Define survey area based on supplied raster
+    if( is.null( rasterBoundary)){
+      xSeq <- seq( from=0, to=10, length=control$raster.dim[1])
+      ySeq <- seq( from=0, to=10, length=control$raster.dim[2])
+      X <- expand.grid( x=xSeq, y=ySeq)
+      my.scale <- sqrt( 100+100) / 20 #1/10 of observed
+    }
+    #or survey area based on unit square
+    else{
+      X <- as.data.frame( terra::crds( rasterBoundary, na.rm=FALSE))
+      xSeq <- sort( unique( X[,1]))
+      ySeq <- sort( unique( X[,2]))
+      my.scale <- sqrt( (utils::tail( xSeq,1) - utils::head( xSeq,1))^2 + (utils::tail( ySeq,1) - utils::head( ySeq,1))^2) / 20  #arbitrary
+    }
+    
+    simmy1 <- fftGPsim( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)  #5/2 as the a big value -- most gaussian...
+    simmy2 <- fftGPsim( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)  #5/2 as the a big value -- most gaussian...
+    
+    X <- cbind( X, as.numeric( t( simmy1)), as.numeric( t( simmy2)))
+    X[,-(1:2)] <- apply( X[,-(1:2)], 2, scale)
+    colnames( X) <- c("x","y","Altitude","Temperature")
+    
+    dataBrick <- c( terra::rast( X[,c(1,2,3)], type='xyz'), terra::rast( X[,c(1,2,4)], type='xyz'))
   }
-  #or survey area based on unit square
   else{
-    X <- as.data.frame( terra::crds( rasterBoundary, na.rm=FALSE))
-    xSeq <- sort( unique( X[,1]))
-    ySeq <- sort( unique( X[,2]))
-    my.scale <- sqrt( (utils::tail( xSeq,1) - utils::head( xSeq,1))^2 + (utils::tail( ySeq,1) - utils::head( ySeq,1))^2) / 20  #arbitrary
+#    simmy1 <- rasterCovars[[1]]
+#    simmy2 <- rasterCovars[[2]]
+    xSeq <- terra::xFromCol( rasterCovars, 1:terra::ncol(rasterCovars))
+    ySeq <- terra::yFromRow( rasterCovars, 1:terra::nrow(rasterCovars))
+    X <- as.data.frame( terra::crds( rasterCovars, na.rm=FALSE))
+    rasterBoundary <- !is.na( rasterCovars[[1]])
+    dataBrick <- c( rasterCovars[[1]], rasterCovars[[2]])
   }
-  
-  simmy1 <- fftGPsim( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)  #5/2 as the a big value -- most gaussian...
-  simmy2 <- fftGPsim( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)  #5/2 as the a big value -- most gaussian...
-  
-  X <- cbind( X, as.numeric( t( simmy1)), as.numeric( t( simmy2)))
-  X[,-(1:2)] <- apply( X[,-(1:2)], 2, scale)
-  colnames( X) <- c("x","y","Altitude","Temperature")
-  
   #random effect for the log-gauss process
   if( control$addRandom){
-#   REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=3/2)  #3/2 is what is used to estimate (in RISDM) 14/8/23. Previously nu=1...?
-    REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=sqrt( 1.5 * 8) * control$range, nu=3/2)  
+   REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=3/2)  #3/2 is what is used to estimate (in RISDM) 14/8/23. Previously nu=1...?
+#    REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=sqrt( 1.5 * 8) * control$range, nu=3/2)  
    REff <- as.numeric( t( REff))
   }
   else
     REff <- rep(0,nrow( X))
   
+  #scale covariates
+  dataBrick <- terra::scale( dataBrick, center=TRUE, scale=FALSE)
+
   #data brick for the covariates and random effect
-  dataBrick <- c( terra::rast( X[,c(1,2,3)], type='xyz'), terra::rast( X[,c(1,2,4)], type='xyz'), terra::rast( cbind( X[,1:2], REff), type='xyz'))
-  #raster::brick( raster::rasterFromXYZ( X[,c(1,2,3)]), raster::rasterFromXYZ( X[,c(1,2,4)]), raster::rasterFromXYZ( cbind( X[,1:2], REff)))
+  dataBrick <- c( dataBrick, terra::rast( cbind( X[,1:2], REff), type='xyz', crs=terra::crs( dataBrick)))
   if( !is.null( rasterBoundary)){
     terra::crs( dataBrick) <- terra::crs( rasterBoundary)
     dataBrick <- terra::mask( dataBrick, rasterBoundary)
   }
-  dataBrick <- terra::scale( dataBrick, center=TRUE, scale=FALSE)
   #a data frame model.matrix( ok a df, but still)
   X <- terra::as.data.frame( dataBrick, xy=TRUE)
   #linear predictor
   LinPred <- coefs$dist[1] + 
-              dataBrick$Altitude*coefs$dist[2] + 
-              dataBrick$Temperature*coefs$dist[3] + 
-              dataBrick$REff#with( X[,-5], model.matrix( ~1+Altitude+Temperature+REff)) %*% c( coefs$dist,1)
+              dataBrick[[1]]*coefs$dist[2] + 
+              dataBrick[[2]]*coefs$dist[3] + 
+              dataBrick$REff
   
   #Intensity for log-gauss process
   Intensity <- exp( LinPred)
@@ -81,14 +96,12 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
   
   #add to databrick
   dataBrick <- c(dataBrick,LinPred,Intensity)
-  #raster::addLayer( dataBrick, LinPred)
-  #dataBrick <- raster::addLayer( dataBrick, Intensity)
   
-  names( dataBrick) <- c("Altitude","Temperature","REff","logIntensity","Intensity") 
+  names( dataBrick)[-(1:3)] <- c("logIntensity","Intensity") 
 
   #get the boundary again, if needed
   if( is.null( rasterBoundary))
-    tmpBoundary <- !is.na( dataBrick$Altitude)
+    tmpBoundary <- !is.na( dataBrick[[1]])
   else
     tmpBoundary <- rasterBoundary
 
@@ -140,23 +153,27 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
   DCData$transectArea <- transect.size * prod( terra::res( dataBrick))
   
   ####  Now deal with the biassed observations
-  
-  #distance to city, or a proxy (something quite like it)...
-  tmptmptmp <- dataBrick[[1]]
-  myCRDS <- terra::crds( tmptmptmp, na.rm=FALSE)
-  ref <- round( mean( 1:terra::ncell(dataBrick)), 0)#myCRDS[,1]), 0), round( mean( myCRDS[,2]), 0))
-  myCRDS[,1] <- (myCRDS[,1] - myCRDS[ref,1])^2
-  myCRDS[,2] <- (myCRDS[,2] - myCRDS[ref,2])^2
-  myCRDS <- sqrt( rowSums( myCRDS))
-  terra::values( tmptmptmp) <- myCRDS
-#  terra::values( tmptmptmp) <- max( myCRDS, na.rm=TRUE) - myCRDS
-  tmptmptmp <- terra::mask( tmptmptmp, dataBrick[[1]])
-  terra::values( tmptmptmp) <- scale( terra::values( tmptmptmp, na.rm=FALSE))
-  dataBrick <- c( dataBrick, tmptmptmp)
-  names( dataBrick)[length( names( dataBrick))] <- "dist2City"
+  if( is.null( rasterBiasCovar)){
+    #distance to city, or a proxy (something quite like it)...
+    tmptmptmp <- dataBrick[[1]]
+    myCRDS <- terra::crds( tmptmptmp, na.rm=FALSE)
+    midPT <- c( mean( myCRDS[,1], na.rm=TRUE), mean( myCRDS[,2], na.rm=TRUE))
+    ref <- terra::cellFromXY( dataBrick, matrix( midPT, nrow=1))  
+    myCRDS[,1] <- (myCRDS[,1] - myCRDS[ref,1])^2
+    myCRDS[,2] <- (myCRDS[,2] - myCRDS[ref,2])^2
+    myCRDS <- sqrt( rowSums( myCRDS))
+    terra::values( tmptmptmp) <- myCRDS
+  #  terra::values( tmptmptmp) <- max( myCRDS, na.rm=TRUE) - myCRDS
+    tmptmptmp <- terra::mask( tmptmptmp, dataBrick[[1]])
+    terra::values( tmptmptmp) <- scale( terra::values( tmptmptmp, na.rm=FALSE))
+    dataBrick <- c( dataBrick, tmptmptmp)
+    names( dataBrick)[length( names( dataBrick))] <- "dist2City"
+  }
+  else
+    dataBrick <- c( dataBrick, terra::scale( rasterBiasCovar))
   
   #probability of being observed (thinning process) -- cloglog link for prob
-  dataBrick <- c( dataBrick, 1-exp(- exp( coefs$bias[1]+coefs$bias[2]*dataBrick$dist2City)))
+  dataBrick <- c( dataBrick, 1-exp(- exp( coefs$bias[1]+coefs$bias[2]*dataBrick[[terra::nlyr( dataBrick)]])))
   names( dataBrick)[length( names( dataBrick))] <- "obsProb"
   #The biassed intensity after accounting for observation bias.
   dataBrick <- c( dataBrick, biasIntensity=dataBrick$Intensity * dataBrick$obsProb)
@@ -164,7 +181,6 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
   
   if( !is.null( rasterBoundary))
     dataBrick <- terra::mask( dataBrick, rasterBoundary)
-#  dataBrick$dist2City <- terra::scale( dataBrick$dist2City, center=TRUE, scale=FALSE)
   
   ####  Take the sample of po data
   N <- stats::rpois( n=1, lambda=expected.n.PO)
@@ -182,19 +198,22 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
     graphics::par( mfrow=c(4,2))
     #PA
     terra::plot( dataBrick$Intensity, main="Intensity")
-    terra::plot( PAdata[,1:2], type='n', main="PA survey", xlim=range( xSeq), ylim=range( ySeq), asp=1)
+    terra::plot( !is.na( dataBrick[[1]]), col=grey(c(1,0.95)), legend=FALSE, main="PA survey")
+#    terra::plot( PAdata[,1:2], type='n', main="PA survey", xlim=range( xSeq), ylim=range( ySeq), asp=1, add=TRUE)
     points( jitter( PAdata[PAdata$PA==0,1]), jitter( PAdata[PAdata$PA==0,2]), cex=0.5, pch=20, col=grDevices::grey(0.7))
     points( jitter( PAdata[PAdata$PA==1,1]), jitter( PAdata[PAdata$PA==1,2]), col='red', pch=20, cex=0.5)
     legend( x="bottomleft", pch=c(20, 20), col=c(grDevices::grey(0.7),'red'), legend=c("Absence", "Presence"))
     #AA
     terra::plot( dataBrick$Intensity, main="Intensity")
-    terra::plot( AAData[,1:2], type='n', main="AA survey", xlim=range( xSeq), ylim=range( ySeq), asp=1)
+    terra::plot( !is.na( dataBrick[[1]]), col=grey(c(1,0.95)), legend=FALSE, main="AA survey")
+#    terra::plot( AAData[,1:2], type='n', main="AA survey", xlim=range( xSeq), ylim=range( ySeq), asp=1)
     for( ii in 0:max( AAData$AA))
       points( AAData[AAData$AA==ii,1:2], col=ii+1, pch=20, cex=1.5)
     legend( x="bottomleft", pch=20, col=1:(max( AAData$AA)+1), legend=0:max( AAData$AA))
     #DC
     terra::plot( dataBrick$Intensity, main="Intensity")
-    terra::plot( DCData[,1:2], type='n', main="DC survey", xlim=range( xSeq), ylim=range( ySeq), asp=1)
+    terra::plot( !is.na( dataBrick[[1]]), col=grey(c(1,0.95)), legend=FALSE, main="DC survey")
+#    terra::plot( DCData[,1:2], type='n', main="DC survey", xlim=range( xSeq), ylim=range( ySeq), asp=1)
     tmpCount <- rowSums( DCData[,c("Obs1","Obs2","Both")])
     for( ii in 0:max( tmpCount))
       points( DCData[tmpCount==ii,1:2], col=ii+1, pch=20, cex=1.5)
@@ -202,7 +221,8 @@ simulateData.isdm <- function( expected.pop.size=400000, expected.n.PO=300, n.PA
     
     #PO  
     terra::plot( dataBrick$biasIntensity, main="Biassed Intensity")
-    plot( jitter( presences), pch=20, cex=0.5, main="Presences", asp=1)
+    terra::plot( !is.na( dataBrick[[1]]), col=grey(c(1,0.95)), legend=FALSE, main="PO observations")
+    points( jitter( presences), pch=20, cex=0.5)
   }
   
 #  res <- list( PO=sf::st_as_sf( as.data.frame( cbind( 1:nrow( presences), presences)), coords=c("x","y")),#sp::SpatialPoints( presences), 
