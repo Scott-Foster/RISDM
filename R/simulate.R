@@ -59,6 +59,7 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
     ySeq <- terra::yFromRow( rasterCovars, 1:terra::nrow(rasterCovars))
     X <- as.data.frame( terra::crds( rasterCovars, na.rm=FALSE))
     rasterBoundary <- !is.na( rasterCovars[[1]])
+    terra::values( rasterBoundary) <- ifelse( terra::values( rasterBoundary)==1, 1, NA)
     dataBrick <- c( rasterCovars[[1]], rasterCovars[[2]])
   }
   #random effect for the log-gauss process
