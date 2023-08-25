@@ -2,27 +2,27 @@
   <PAMRasterBand band="1">
     <Description>logAccessibility</Description>
     <Metadata>
-      <MDI key="STATISTICS_MAXIMUM">1.6516238451004</MDI>
+      <MDI key="STATISTICS_MAXIMUM">1.6387374401093</MDI>
       <MDI key="STATISTICS_MEAN">-9999</MDI>
-      <MDI key="STATISTICS_MINIMUM">-2.0017926692963</MDI>
+      <MDI key="STATISTICS_MINIMUM">-2.014003276825</MDI>
       <MDI key="STATISTICS_STDDEV">-9999</MDI>
     </Metadata>
   </PAMRasterBand>
   <PAMRasterBand band="2">
     <Description>soilMoisture</Description>
     <Metadata>
-      <MDI key="STATISTICS_MAXIMUM">2.2864806652069</MDI>
+      <MDI key="STATISTICS_MAXIMUM">2.2276329994202</MDI>
       <MDI key="STATISTICS_MEAN">-9999</MDI>
-      <MDI key="STATISTICS_MINIMUM">-2.8407366275787</MDI>
+      <MDI key="STATISTICS_MINIMUM">-2.7052209377289</MDI>
       <MDI key="STATISTICS_STDDEV">-9999</MDI>
     </Metadata>
   </PAMRasterBand>
   <PAMRasterBand band="3">
     <Description>MeanMinTemp</Description>
     <Metadata>
-      <MDI key="STATISTICS_MAXIMUM">1.9377578496933</MDI>
+      <MDI key="STATISTICS_MAXIMUM">1.8991357088089</MDI>
       <MDI key="STATISTICS_MEAN">-9999</MDI>
-      <MDI key="STATISTICS_MINIMUM">-2.3380599021912</MDI>
+      <MDI key="STATISTICS_MINIMUM">-2.225371837616</MDI>
       <MDI key="STATISTICS_STDDEV">-9999</MDI>
     </Metadata>
   </PAMRasterBand>
