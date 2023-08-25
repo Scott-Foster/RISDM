@@ -187,3 +187,53 @@ fftGPsim <- function(x, y, sig2 = 1, rho = 0.5, nu = 1/2, nugget = NULL){
   return(sim)
 
 }
+
+
+GPMaternSim <- function(x, y, sig2 = 1, rho = 0.5, nu = 1/2, nugget = NULL){
+  # Input
+  #  x: an evenly-spaced vector of cell center locations on the x-axis (e.g. easting)
+  #  y: an evenly-spaced vector of cell center locations on the y-axis (e.g. northing)
+  #  sig2: spatial variance
+  #  rho: scale (i.e. range) parameter of Matérn correlation function
+  #  nu: smooth parameter of Matérn correlation function. 
+  #      Support nu=1/2, 3/2, and 5/2 only.
+  #  nugget: variance of Gaussian white noise 
+  #
+  # Output
+  #  A matrix of three columns representing x coordinate, y coordinate and 
+  #  simulated values.
+  #
+
+  locs <- as.matrix(expand.grid( x=x, y=y)) # Use matrix to reduce memory size
+
+  #dd <- dist(locs, method = "euclidean", diag = FALSE, upper = FALSE, p = 2)
+
+  # Create the covariacne matrix based on distance
+  Sigma <- as.matrix(covFun(stats::dist(locs, method = "euclidean"), sig2, rho, nu))
+  
+  # Add spatial variance and/or nugget to the diagnoal 
+  if (!is.null(nugget)) {
+    diag(Sigma) <- sig2 + nugget 
+  } else {
+    diag(Sigma) <- sig2
+  }
+
+  invisible(gc()) # clean memory
+  
+  # take the Cholesky decomposition on Sigma 
+  LL <- chol(Sigma, pivot = FALSE) # pivot = TRUE messes up the order.
+  rm(Sigma)
+  invisible(gc()) # clean memory
+  
+  # Generate a Gaussian random field
+  ZZ <- matrix(stats::rnorm(nrow(locs), mean=0, sd=1), nrow=nrow(locs))
+  sim <- crossprod(LL, ZZ) # Conduct t(LL) %*%  
+
+  #if (!is.null(nugget)) {
+  #  sim <- sim + matrix(stats::rnorm(nrow(locs),mean = 0,sd = sqrt(nugget)), 
+  #                 nrow=nrow(locs))
+  #}
+
+  return(cbind( locs, sim))
+ 
+}
