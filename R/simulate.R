@@ -43,8 +43,10 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
       my.scale <- sqrt( (utils::tail( xSeq,1) - utils::head( xSeq,1))^2 + (utils::tail( ySeq,1) - utils::head( ySeq,1))^2) / 20  #arbitrary
     }
     
-    simmy1 <- fftGPsim( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)  #5/2 as the a big value -- most gaussian...
-    simmy2 <- fftGPsim( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)  #5/2 as the a big value -- most gaussian...
+#    simmy1 <- fftGPsim( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)  #5/2 as the a big value -- most gaussian...
+    simmy1 <- GPMaternSim(x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)#5/2 as the a big value -- most gaussian...
+#    simmy2 <- fftGPsim( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)  #5/2 as the a big value -- most gaussian...
+    simmy2 <- GPMaternSim(x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)#5/2 as the a big value -- most gaussian...
     
     X <- cbind( X, as.numeric( t( simmy1)), as.numeric( t( simmy2)))
     X[,-(1:2)] <- apply( X[,-(1:2)], 2, scale)
@@ -64,8 +66,9 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
   }
   #random effect for the log-gauss process
   if( control$addRandom){
-   REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=3/2)  #3/2 is what is used to estimate (in RISDM) 14/8/23. Previously nu=1...?
+#   REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=3/2)  #3/2 is what is used to estimate (in RISDM) 14/8/23. Previously nu=1...?
 #    REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=sqrt( 1.5 * 8) * control$range, nu=3/2)  
+   REff <- GPMaternSim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=3/2)  #3/2 is what is used to estimate (in RISDM) 14/8/23. Previously nu=1...?
    REff <- as.numeric( t( REff))
   }
   else
