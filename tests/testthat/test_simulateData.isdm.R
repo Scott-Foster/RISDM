@@ -28,6 +28,7 @@ testthat::test_that(
     
     #a raster to test
     r <- terra::rast( system.file( "extdata/ACT_DemoData.grd", package="RISDM"))
+    r <- terra::aggregate( r, 3) #to make it finite time (if not using fft approach)
     n1 <- sum( !is.na( terra::values( r[[1]])))
     #giving raster boundary
     dat <- simulateData.isdm( rasterBoundary=r[[1]], control=list( doPlot=FALSE))

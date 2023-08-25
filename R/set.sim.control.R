@@ -34,7 +34,7 @@ set.sim.control <- function( contr){
     contr$sd <- 0.5
   #what is the re effective range?  This is completely dependent on the spatial region
   if( ! "range" %in% names( contr))
-    contr$range <- 150
+    contr$range <- NA
   
   #add to as we go along
   if( !all( names( contr) %in% c("set.random.seed","random.seed","raster.dim","doPlot","addRandom", "sd", "range")))
