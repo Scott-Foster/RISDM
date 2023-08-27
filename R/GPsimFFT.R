@@ -189,7 +189,8 @@ fftGPsim <- function(x, y, sig2 = 1, rho = 0.5, nu = 1/2, nugget = NULL){
 }
 
 
-GPMaternSim <- function(x, y, sig2 = 1, rho = 0.5, nu = 1/2, nugget = NULL){
+GPMaternSim <- function(x, y, sig2 = 1, rho = 0.5, nu = 1/2, 
+                        nugget = NULL, n=1){
   # Input
   #  x: an evenly-spaced vector of cell center locations on the x-axis (e.g. easting)
   #  y: an evenly-spaced vector of cell center locations on the y-axis (e.g. northing)
@@ -197,11 +198,12 @@ GPMaternSim <- function(x, y, sig2 = 1, rho = 0.5, nu = 1/2, nugget = NULL){
   #  rho: scale (i.e. range) parameter of Matérn correlation function
   #  nu: smooth parameter of Matérn correlation function. 
   #      Support nu=1/2, 3/2, and 5/2 only.
-  #  nugget: variance of Gaussian white noise 
+  #  nugget: variance of Gaussian white noise
+  #  n: number of samples 
   #
   # Output
-  #  A matrix of three columns representing x coordinate, y coordinate and 
-  #  simulated values.
+  #  A matrix of the first two columns representing x coordinate, y coordinate and 
+  #  the rest columns the simulated values.
   #
 
   locs <- as.matrix(expand.grid( x=x, y=y)) # Use matrix to reduce memory size
@@ -213,26 +215,25 @@ GPMaternSim <- function(x, y, sig2 = 1, rho = 0.5, nu = 1/2, nugget = NULL){
   
   # Add spatial variance and/or nugget to the diagnoal 
   if (!is.null(nugget)) {
-    diag(Sigma) <- sig2 + nugget 
+    diag(Sigma) <- sig2 + nugget
   } else {
     diag(Sigma) <- sig2
   }
 
   invisible(gc()) # clean memory
   
-  # take the Cholesky decomposition on Sigma 
-  LL <- chol(Sigma, pivot = FALSE) # pivot = TRUE messes up the order.
+  # Cholesky decomposition on Sigma (Output an upper triangular matrix)
+  #LL <- chol(Sigma, pivot = FALSE) # pivot = TRUE messes up the order.
+  LL <- Rfast::cholesky(Sigma, parallel = ifelse(nrow(Sigma)>1000,TRUE,FALSE))
+
   rm(Sigma)
   invisible(gc()) # clean memory
   
   # Generate a Gaussian random field
-  ZZ <- matrix(stats::rnorm(nrow(locs), mean=0, sd=1), nrow=nrow(locs))
-  sim <- crossprod(LL, ZZ) # Conduct t(LL) %*%  
+  ZZ <- matrix(stats::rnorm(nrow(locs)*n, mean=0, sd=1), 
+         nrow=nrow(locs), ncol=n)
 
-  #if (!is.null(nugget)) {
-  #  sim <- sim + matrix(stats::rnorm(nrow(locs),mean = 0,sd = sqrt(nugget)), 
-  #                 nrow=nrow(locs))
-  #}
+  sim <- crossprod(LL, ZZ) # Conduct t(LL) %*%  
 
   return(cbind( locs, sim))
  
