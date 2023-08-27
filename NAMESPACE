@@ -12,5 +12,6 @@ importFrom( "stats","terms","update","dist","median","quantile","model.matrix", 
 importFrom( "graphics", "abline", "hist", "legend", "lines", "points","par","plot.new", "matplot", "polygon")
 importFrom( "grDevices", "grey")
 importFrom( "utils", "tail","head")
-importFrom( colorRamps, "matlab.like2")
+importFrom( "colorRamps", "matlab.like2")
+importFrom( "Rfast", "cholesky")
 

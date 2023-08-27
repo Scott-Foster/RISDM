@@ -223,8 +223,11 @@ GPMaternSim <- function(x, y, sig2 = 1, rho = 0.5, nu = 1/2,
   invisible(gc()) # clean memory
   
   # Cholesky decomposition on Sigma (Output an upper triangular matrix)
-  #LL <- chol(Sigma, pivot = FALSE) # pivot = TRUE messes up the order.
-  LL <- Rfast::cholesky(Sigma, parallel = ifelse(nrow(Sigma)>1000,TRUE,FALSE))
+  if( nchar( system.file(package="Rfast")) == 0){
+    LL <- chol(Sigma, pivot = FALSE) # pivot = TRUE messes up the order.
+  }
+  else
+    LL <- Rfast::cholesky(Sigma, parallel = ifelse(nrow(Sigma)>1000,TRUE,FALSE))
 
   rm(Sigma)
   invisible(gc()) # clean memory
