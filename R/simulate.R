@@ -54,7 +54,8 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
 #    simmy1 <- fftGPsim( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)  #5/2 as the a big value -- most gaussian...
 #    simmy2 <- fftGPsim( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)  #5/2 as the a big value -- most gaussian...
        
-    commonSim <- GPMaternSim(x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01, n=2)  #5/2 as the a big value -- most gaussian...
+    #commonSim <- GPMaternSim(x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01, n=2)  #5/2 as the a big value -- most gaussian...
+    commonSim <- GPMaternSPDE(x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01, n=2)  
     simmy1 <- commonSim[,3]
     simmy2 <- commonSim[,4]
     
@@ -80,7 +81,8 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
   if( control$addRandom){
 #   REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=3/2)  #3/2 is what is used to estimate (in RISDM) 14/8/23. Previously nu=1...?
 #    REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=sqrt( 1.5 * 8) * control$range, nu=3/2)  
-   REff <- GPMaternSim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=3/2)[,3]  #3/2 is what is used to estimate (in RISDM) 14/8/23. Previously nu=1...?
+   #REff <- GPMaternSim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=3/2)[,3]  #3/2 is what is used to estimate (in RISDM) 14/8/23. Previously nu=1...?
+   REff <- GPMaternSPDE( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=1)[,3]  
    REff <- as.numeric( t( REff))
   }
   else
