@@ -241,3 +241,58 @@ GPMaternSim <- function(x, y, sig2 = 1, rho = 0.5, nu = 1/2,
   return(cbind( locs, sim))
  
 }
+
+GPMaternSPDE <- function(x, y, sig2 = 1, rho = 0.5, nu = 1, nugget = NULL, n=1){
+  # The Gaussian process is generated using oscillating SPDE covariance models.
+  # 
+  # Input
+  #  x: an evenly-spaced vector of cell center locations on the x-axis (e.g. easting)
+  #  y: an evenly-spaced vector of cell center locations on the y-axis (e.g. northing)
+  #  sig2: spatial variance
+  #  rho: effective range parameter of Matérn correlation function
+  #  nu: smooth parameter of Matérn correlation function.
+  #  nugget: variance of Gaussian white noise
+  #  n: number of samples 
+  #
+  # Output
+  #  A matrix of the first two columns representing x coordinate, y coordinate and 
+  #  the rest columns the simulated values.
+  #
+
+  # This expand.grid setting fits to the output of terra::crds() and raster::coordinates()
+  locs <- as.matrix(expand.grid( x=x, y=sort(y, decreasing = TRUE))) # Use matrix to reduce memory size
+
+  #dd <- dist(locs, method = "euclidean", diag = FALSE, upper = FALSE, p = 2)
+
+  # Create the covariacne matrix based on distance
+  kappaT <- sqrt(8*nu)/rho # This transformation is based on Lindgren et al. (2011)
+  Sigma <- sig2*INLA::inla.matern.cov(nu = nu,
+                             kappa = kappaT,
+                             x = as.matrix(stats::dist(locs, method = "euclidean")),
+                             d = 2, # d=2 represents the two dimentional domain 
+                             corr = TRUE)
+  
+  # Add spatial variance and/or nugget to the diagnoal 
+  if (!is.null(nugget)) diag(Sigma) <- sig2 + nugget
+  
+  invisible(gc()) # clean memory
+  
+  # Cholesky decomposition on Sigma (Output an upper triangular matrix)
+  if( nchar( system.file(package="Rfast")) == 0){
+    LL <- chol(Sigma, pivot = FALSE) # pivot = TRUE messes up the order.
+  }
+  else
+    LL <- Rfast::cholesky(Sigma, parallel = ifelse(nrow(Sigma)>1000,TRUE,FALSE))
+
+  rm(Sigma)
+  invisible(gc()) # clean memory
+  
+  # Generate a Gaussian random field
+  ZZ <- matrix(stats::rnorm(nrow(locs)*n, mean=0, sd=1), 
+         nrow=nrow(locs), ncol=n)
+
+  sim <- crossprod(LL, ZZ) # Conduct t(LL) %*%  
+
+  return(cbind( locs, sim))
+ 
+}
