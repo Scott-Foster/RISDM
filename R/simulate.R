@@ -32,7 +32,11 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
     if( is.null( rasterBoundary)){
       xSeq <- seq( from=0, to=10, length=control$raster.dim[1])
       ySeq <- seq( from=0, to=10, length=control$raster.dim[2])
-      X <- expand.grid( x=xSeq, y=ySeq)
+      
+      # This expand.grid setting fits to the output of terra::crds() 
+      #  and raster::coordinates()
+      X <- expand.grid( x=xSeq, y=sort(ySeq, decreasing = TRUE))
+      
       my.scale <- sqrt( 100+100) / 15 #1/10 of observed
       if( is.na( control$range))
 	control$range <- my.scale / 3 #to get quite variable random effects

@@ -195,7 +195,7 @@ GPMaternSim <- function(x, y, sig2 = 1, rho = 0.5, nu = 1/2,
   #  x: an evenly-spaced vector of cell center locations on the x-axis (e.g. easting)
   #  y: an evenly-spaced vector of cell center locations on the y-axis (e.g. northing)
   #  sig2: spatial variance
-  #  rho: scale (i.e. range) parameter of Matérn correlation function
+  #  rho: range parameter of Matérn correlation function
   #  nu: smooth parameter of Matérn correlation function. 
   #      Support nu=1/2, 3/2, and 5/2 only.
   #  nugget: variance of Gaussian white noise
@@ -206,7 +206,8 @@ GPMaternSim <- function(x, y, sig2 = 1, rho = 0.5, nu = 1/2,
   #  the rest columns the simulated values.
   #
 
-  locs <- as.matrix(expand.grid( x=x, y=y)) # Use matrix to reduce memory size
+  # This expand.grid setting fits to the output of terra::crds() and raster::coordinates()
+  locs <- as.matrix(expand.grid( x=x, y=sort(y, decreasing = TRUE))) # Use matrix to reduce memory size
 
   #dd <- dist(locs, method = "euclidean", diag = FALSE, upper = FALSE, p = 2)
 
