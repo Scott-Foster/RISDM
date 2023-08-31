@@ -82,7 +82,7 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
 #   REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=3/2)  #3/2 is what is used to estimate (in RISDM) 14/8/23. Previously nu=1...?
 #    REff <- fftGPsim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=sqrt( 1.5 * 8) * control$range, nu=3/2)  
    #REff <- GPMaternSim( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=3/2)[,3]  #3/2 is what is used to estimate (in RISDM) 14/8/23. Previously nu=1...?
-   REff <- GPMaternSPDE( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range / 2, nu=1)[,3]  
+   REff <- GPMaternSPDE( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range, nu=1)[,3]  
    REff <- as.numeric( t( REff))
   }
   else
