@@ -94,7 +94,7 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
   #a data frame model.matrix( ok a df, but still)
   X <- terra::as.data.frame( dataBrick, xy=TRUE)
   #linear predictor
-  LinPred <- coefs$dist[1] + 
+  LinPred <- #coefs$dist[1] + 
               dataBrick[[1]]*coefs$dist[2] + 
               dataBrick[[2]]*coefs$dist[3] + 
               dataBrick$REff

@@ -20,7 +20,7 @@ plot.isdm <- function( x, nFigRow=1, ask=TRUE, ...){
     oask <- grDevices::devAskNewPage(TRUE)
     on.exit( grDevices::devAskNewPage(FALSE))
   }
-  graphics::par( mfrow=c(nFigRow,3))
+  graphics::par( mfrow=c(nFigRow,3), oma=rep( 0,4), mar=c(2,2,2,4))
   
 #  oask <- grDevices::devAskNewPage(FALSE) #don't ask for the first page of plots
   if( "DC_Intercept" %in% x$mod$names.fixed){

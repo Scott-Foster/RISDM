@@ -19,7 +19,18 @@ The `RISDM` package can be installed using `devtools` R package.
 
 ``` r
 install.packages('devtools')
+library( devtools)
 devtools::install_github( repo="Scott-Foster/RISDM", build_vignettes=FALSE)
+```
+
+`RISDM` bases its inference on the `INLA` package. As such, an
+installation of `INLA` is required. This can be performed using the
+following code.
+
+``` r
+library( devtools)
+install.packages("INLA",repos=c(getOption("repos"),  
+                INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
 ```
 
 ## Funding
