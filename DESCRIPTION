@@ -18,7 +18,7 @@ Imports:
   stats,
   colorRamps
 Suggests:
-  MBHdesign,
+  MBHdesign (>= 2.3.13),
   knitr,
   rmarkdown,
   graphics,

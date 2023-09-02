@@ -16,10 +16,10 @@
 predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.terms=NULL, n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...){
   
   #check if there's anything to do.
-  if( !includeRandom & (includeFixed == FALSE) & !includeBias)
-    stop( "Neither fixed, random, nor bias included in model predictions. Please choose one or more, but probably fixed and random.")
   if( !is.logical(includeFixed) & !all( includeFixed %in% names( covars)))
     stop( "Fixed effect terms specified are not in covariate layers")
+  if( !includeRandom & any(includeFixed == FALSE) & !includeBias)
+    stop( "Neither fixed, random, nor bias included in model predictions. Please choose one or more, but probably fixed and random.")
   
   #determine the number of threads to use.  Default is to use the same as the fit
   if( is.null( n.threads))
@@ -112,7 +112,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
       eta <- sweep( eta, MARGIN=2, STATS=samples$fixedEffects[fix.names == jj,], FUN="+")
   
   #predictions due to only fixed effects
-  if( includeFixed!=FALSE){
+  if( any( includeFixed!=FALSE)){
     #the model matrix
     myForm <- newInfo$distForm#object$distributionFormula
   
@@ -140,7 +140,19 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     #projector matrix( linking prediction points to mesh)
     A.prd <- as.matrix( INLA::inla.spde.make.A( object$mesh, loc=predcoords))
     #the addition to the linear predictor
-    eta <- eta + A.prd %*% samples$fieldAtNodes
+#    Allow batch matrix multiplication for case where memory limits reached -- Dave's code
+#    eta <- eta + A.prd %*% samples$fieldAtNodes
+    if ((n.batches>1)&(!is.null( dim(eta))))
+    {
+      eta[,(batchStartEnd[1] + 1):batchStartEnd[2]] <- eta[,(batchStartEnd[1] + 1):batchStartEnd[2]] + as.matrix(A.prd %*% samples$fieldAtNodes[,(batchStartEnd[1] + 1):batchStartEnd[2]])
+      for (ii in 2:n.batches) {
+        eta[,(batchStartEnd[ii] + 1):batchStartEnd[ii + 1]] <- eta[,(batchStartEnd[ii] + 1):batchStartEnd[ii + 1]] + as.matrix(A.prd %*% samples$fieldAtNodes[,(batchStartEnd[ii] + 1):batchStartEnd[ii + 1]])         
+      }  
+    }
+    else
+    {
+      eta <- eta + A.prd %*% samples$fieldAtNodes
+    }
   }
   
   #adding in the bias terms, if wanted.
