@@ -32,7 +32,7 @@ MakePPPstack <- function( observs, covarBrick, habitatArea, Mesh, presname="pres
   }
   else{
     if( terra::is.lonlat( tmp))
-      tmp <- c( tmp, terra::area(tmp))
+      tmp <- c( tmp, terra::cellSize(tmp))
     else{
       tmp1 <- prod( terra::res( tmp))
       tmp2 <- tmp[[1]]

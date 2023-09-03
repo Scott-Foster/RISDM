@@ -71,7 +71,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   }
   else{
     if( terra::is.lonlat( covars))
-      covars <- c( covars, terra::area( covars))
+      covars <- c( covars, terra::cellSize( covars))
     else{
       tmp <- covars[[1]]
       names( tmp) <- "tmpName"
