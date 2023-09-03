@@ -125,8 +125,13 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
 
   ####  Create the PA data
   #first create the design -- an equal probability spat-bal design
-  PAdata <- MBHdesign::quasiSamp.raster( n=n.PA, tmpBoundary)
-  
+  if( control$useMBHdesign)#nchar( system.file( package="MBHdesign")) > 0)
+    PAdata <- MBHdesign::quasiSamp.raster( n=n.PA, tmpBoundary)
+  else{
+    tmp <- terra::as.data.frame( tmpBoundary, xy=TRUE, cells=TRUE)
+    tmp <- tmp[sample.int(n=nrow(tmp), size=n.PA, replace=FALSE),]
+    PAdata <- data.frame( x=tmp$x, y=tmp$y, inclusion.probabilities=NA, ID=tmp$cell)
+  }
   #now simulate the PA response at those sites (based on point process)
   PAdata$PA <- stats::rbinom( n=n.PA, size=1, prob=pmax( 0, pmin( 1-exp( -terra::values( dataBrick$Intensity)[PAdata$ID]*transect.size),1)))
   
@@ -134,7 +139,13 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
   PAdata$transectArea <- transect.size * prod( terra::res( dataBrick))
   
   ####  Create the count data (AA)
-  AAData <- MBHdesign::quasiSamp.raster( n=n.AA, tmpBoundary)
+  if( control$useMBHdesign)#nchar( system.file( package="MBHdesign")) > 0)
+    AAData <- MBHdesign::quasiSamp.raster( n=n.AA, tmpBoundary)
+  else{
+    tmp <- terra::as.data.frame( tmpBoundary, xy=TRUE, cells=TRUE)
+    tmp <- tmp[sample.int(n=nrow(tmp), size=n.AA, replace=FALSE),]
+    AAData <- data.frame( x=tmp$x, y=tmp$y, inclusion.probabilities=NA, ID=tmp$cell)
+  }
   
   #now simulate the AA response at those sites (based on point process)
   AAData$AA <- stats::rpois( n=n.AA, lambda=terra::values( dataBrick$Intensity)[AAData$ID]*transect.size)
@@ -143,8 +154,13 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
   AAData$transectArea <- transect.size * prod( terra::res( dataBrick))
 
   ####  Create the double count data (DC)
-  DCData <- MBHdesign::quasiSamp.raster( n=n.DC, tmpBoundary)
-  
+  if( control$useMBHdesign)#nchar( system.file( package="MBHdesign")) > 0)
+    DCData <- MBHdesign::quasiSamp.raster( n=n.DC, tmpBoundary)
+  else{
+    tmp <- terra::as.data.frame( tmpBoundary, xy=TRUE, cells=TRUE)
+    tmp <- tmp[sample.int(n=nrow(tmp), size=n.DC, replace=FALSE),]
+    DCData <- data.frame( x=tmp$x, y=tmp$y, inclusion.probabilities=NA, ID=tmp$cell)
+  }
   #now simulate the DC response at those sites (based on point process)
   #total number of animals available along a transect
   tmpTotCount <- stats::rpois( n=n.DC, lambda=terra::values( dataBrick$Intensity)[DCData$ID]*transect.size)

@@ -35,9 +35,11 @@ set.sim.control <- function( contr){
   #what is the re effective range?  This is completely dependent on the spatial region
   if( ! "range" %in% names( contr))
     contr$range <- NA
+  if( ! "useMBHdesign" %in% names( contr))
+    contr$useMBHdesign <- FALSE
   
   #add to as we go along
-  if( !all( names( contr) %in% c("set.random.seed","random.seed","raster.dim","doPlot","addRandom", "sd", "range")))
+  if( !all( names( contr) %in% c("set.random.seed","random.seed","raster.dim","doPlot","addRandom", "sd", "range", "useMBHdesign")))
     warning( "There are control parameters specified that are not used.")
   return( contr)
   
