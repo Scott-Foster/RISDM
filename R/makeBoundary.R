@@ -13,10 +13,9 @@
 ###############################################################################################
 ###############################################################################################
 
-makeBoundary <- function( r, doPlot=TRUE){
+makeBoundary <- function( r){
   #r is raster to base poly off.  If rasterStack or Brick, then only first dim used.
-  #doPlot is bool to indicate if plots of polygon should be produced.
-
+  
   myDims <- dim( r)
   #just use the first raster in a rasterLayer/brick to find dimensions
   if( myDims[3]>1)

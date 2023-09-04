@@ -32,7 +32,7 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
   }
   
   #boundary of the sampling area
-  boundary <- list( poly=makeBoundary( ras, doPlot=FALSE))
+  boundary <- list( poly=makeBoundary( ras))
   #as a raster
   boundary$ras <- list( lower.res=boundary$poly$lower.res.ras, specified.res=terra::rasterize( boundary$poly$lower.res, ras))
   #clean up poly list
@@ -87,7 +87,7 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
   
   #is the result going to be plotted?
   if( doPlot){
-    INLA:::plot.inla.mesh( meshy, asp=1)
+#    INLA:::plot.inla.mesh( meshy, asp=1)
     terra::plot( terra::buffer( boundary$poly$lower.res, width=1e-5), add=TRUE, border='green')
 #    sp::plot( boundary$poly$lower.res, add=TRUE, border='green')
     legend("topright", col=c("blue","green",'red'), legend=c("Nonconvex hull defining inner/outer domains","Boundary of raster values (low res)"), lty=c(1,1), lwd=c(2,2))

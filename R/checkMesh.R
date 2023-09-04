@@ -40,7 +40,7 @@ checkMesh <- function( mesh){
   areas <- triSumms[1,]
   angles <- as.vector( triSumms[-1,])
   
-  par( mfrow=c(1,3))
+  oldPar <- graphics::par( mfrow=c(1,3))
   
   #plotting mesh and inner/outer
   plot( mesh)
@@ -57,6 +57,8 @@ checkMesh <- function( mesh){
   hist( areas, main="Inner domain triangle AREAS")
   hist( angles, main="Inner domain triangle ANGLES")
   abline( v=60, col='red')
+  
+  graphics::par( oldPar)
   
   message( "If mesh is good then inner domain should consist of triangles that are: \n *Visually quite uniform (Left plot),\n *Be comprised of relatively homogeneously sized triangles (middle plot), and \n *Be comprised of triangles that are not weirdly shaped (most like equilateral triangles, right plot).")
   

@@ -229,7 +229,7 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
   presences <- terra::crds( dataBrick, na.rm=FALSE)[sampleID,]
 
   if( control$doPlot){
-    graphics::par( mfrow=c(4,2))
+    oldPar <- graphics::par( mfrow=c(4,2))
     #PA
     terra::plot( dataBrick$Intensity, main="Intensity")
     terra::plot( !is.na( dataBrick[[1]]), col=grey(c(1,0.95)), legend=FALSE, main="PA survey")
@@ -257,6 +257,9 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
     terra::plot( dataBrick$biasIntensity, main="Biassed Intensity")
     terra::plot( !is.na( dataBrick[[1]]), col=grey(c(1,0.95)), legend=FALSE, main="PO observations")
     points( jitter( presences), pch=20, cex=0.5)
+    
+    #reset graphics back to user's
+    graphics::par( oldPar)
   }
   
 #  res <- list( PO=sf::st_as_sf( as.data.frame( cbind( 1:nrow( presences), presences)), coords=c("x","y")),#sp::SpatialPoints( presences), 
