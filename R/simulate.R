@@ -28,7 +28,7 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
     set.seed( control$random.seed)
   
   if( is.null( rasterCovars)){
-    #  Define survey area based on supplied raster
+    #  Define survey area based on square
     if( is.null( rasterBoundary)){
       xSeq <- seq( from=0, to=10, length=control$raster.dim[1])
       ySeq <- seq( from=0, to=10, length=control$raster.dim[2])
@@ -41,14 +41,14 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
       if( is.na( control$range))
 	control$range <- my.scale / 3 #to get quite variable random effects
     }
-    #or survey area based on unit square
+    #or survey area based on supplied raster
     else{
       X <- as.data.frame( terra::crds( rasterBoundary, na.rm=FALSE))
       xSeq <- sort( unique( X[,1]))
       ySeq <- sort( unique( X[,2]))
       my.scale <- sqrt( (utils::tail( xSeq,1) - utils::head( xSeq,1))^2 + (utils::tail( ySeq,1) - utils::head( ySeq,1))^2) / 15  #arbitrary
       if( is.na( control$range))
-	control$range <- my.scale / 3
+	control$range <- 5*max( terra::res(rasterBoundary))#my.scale / 3
     }
     
 #    simmy1 <- fftGPsim( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 5/2, nugget = 0.01)  #5/2 as the a big value -- most gaussian...
@@ -75,7 +75,7 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
     terra::values( rasterBoundary) <- ifelse( terra::values( rasterBoundary)==1, 1, NA)
     dataBrick <- c( rasterCovars[[1]], rasterCovars[[2]])
     if( is.na( control$range))
-      control$range <- sqrt( (utils::tail( xSeq,1) - utils::head( xSeq,1))^2 + (utils::tail( ySeq,1) - utils::head( ySeq,1))^2) / (3*15)  #arbitrary
+      control$range <- 5*max( terra::res( rasterCovars))#sqrt( (utils::tail( xSeq,1) - utils::head( xSeq,1))^2 + (utils::tail( ySeq,1) - utils::head( ySeq,1))^2) / (3*15)  #arbitrary
   }
   #random effect for the log-gauss process
   if( control$addRandom){
