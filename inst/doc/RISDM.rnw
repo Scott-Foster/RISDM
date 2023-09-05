@@ -65,10 +65,10 @@ install.packages("INLA",repos=c(getOption("repos"),
 #vignette not built to save computation
 devtools::install_github( repo="Scott-Foster/RISDM", build_vignettes=FALSE)
 @
-The \texttt{RISDM} package will then need to be loaded. The raster package is also loaded to handle spatial data.
+The \texttt{RISDM} package will then need to be loaded. The terra package is also loaded to handle spatial data.
 <<setup2>>=
 library( RISDM)
-library( raster)
+library( terra)
 @
 
 \section*{Introduction to RISDM, via Example}
@@ -89,7 +89,7 @@ The \texttt{RISDM} package is introduced here using data on gamba grass in the N
 
 \subsubsection*{Covariate Data -- setting the environmental scene}\label{subsubsec:covs}
 
-The first piece of the data puzzle is the environmental data. These data are assumed to be defined on a raster (from the raster package) and must form a raster brick. Forming them into a raster stack ensures that the individual raster layers all have the same extent and the same resolution etc. It is not necessary, but it is highly recommended, that the analyst considers the pattern of missing values within the raster stack -- where some covariates are available but others are not. Missing values in covariates in any correlative model can substantially reduce the information content.
+The first piece of the data puzzle is the environmental data. These data are assumed to be defined on a single raster and stored in a \texttt{SpatRast} object (from the terra package). Forming them into this form ensures that the individual raster layers all have the same extent and the same resolution etc. It is not necessary, but it is highly recommended, that the analyst considers the pattern of missing values within the raster object -- where some covariates are available but others are not. Missing values in covariates in any correlative model can substantially reduce the information content.
 
 The covariate data for the gamba grass example is included as part of the \texttt{RISDM} package. There are three raster layers: 
 \begin{enumerate}
@@ -97,18 +97,18 @@ The covariate data for the gamba grass example is included as part of the \textt
   \item Elevation, measured through a digital elevation model \citep[DEM; from][]{gal15}, may delineate gamba grass distribution \citep{ada15}. Like accessibility, a square root transformation was used to endeavour to reduce leverage of unusual locations within the analysis.
   \item Soil moisture at the root zone \citep[SMRZ][]{fro18} may limit gamba grass distribution as it could require moist but not saturated soils \citep{flo05,pet12}.
 \end{enumerate}
-The gamba grass covariates can be read directly into R and compiled into a raster stack. The distribution of the covariate data has been inspected (elsewhere) and corrective steps have been employed. For the gamba data, the accessibility and the DEM were square-root transformed to reduce skewness of their distributions, which will also lead to reducing the influence in the analysis of very high values. This is to reduce the leverage of these observations and to try and obtain the most amount of reliable information from these data. 
+The gamba grass covariates can be read directly into R and compiled into a single raster object. The distribution of the covariate data has been inspected (elsewhere) and corrective steps have been employed. For the gamba data, the accessibility and the DEM were square-root transformed to reduce skewness of their distributions, which will also lead to reducing the influence in the analysis of very high values. This is to reduce the leverage of these observations and to try and obtain the most amount of reliable information from these data. 
 <<readCovars, eval=TRUE,fig.cap="Environmental covariate data for the gamba grass example. Accessibility (ACC) measuring effective distance for humans to travel. Digital elevation model (DEM) giving the altitude. Soil moisture at the root zone (SMRZ) measuring the wetness where it matters for plants. See text for details and references.">>=
 filenames <- paste0( system.file("extdata", package="RISDM"), 
                    c("/GambaExample_sqrtACC_23Mar28.tif", 
                      "/GambaExample_sqrtDEM_23Mar28.tif", 
                      "/GambaExample_SMRZ_23Mar28.tif"))
-covars <- stack( filenames)
+covars <- rast( filenames)
 names( covars) <- c("ACC","DEM","SMRZ")
-print( colnames( coordinates( covars)))  #to see how things are labelled.
+print( colnames( crds( covars)))  #to see how things are labelled.
 plot( covars)
 @
-It may be that the raster data that an analyst wants to use comes in different resolutions, different projections, different extents and so on. If the analyst is not familiar with conversion of these, then it is suggested that they should look into the \texttt{projectRaster}, \texttt{aggregate}, \texttt{disaggregate}, \texttt{mask}, \texttt{crop} and \texttt{stack} functions from the \texttt{raster} package \citep{hij22}.
+It may be that the raster data that an analyst wants to use comes in different resolutions, different projections, different extents and so on. If the analyst is not familiar with conversion of these, then it is suggested that they should look into the \texttt{project}, \texttt{aggregate}, \texttt{disagg}, \texttt{mask}, \texttt{crop} and (of course) \texttt{rast} functions from the \texttt{terra} package \citep{hij23}.
 
 For the environmental data in this example (see Figure \ref{fig:readCovars}), we have used an equal area project (UTM zone 52 south) with kilometre map units. We recommend the use of projected rasters, as this eases specification and interpretation of spatial processes. However, \texttt{RISDM} will still work with whatever coordinate reference system is chosen.
 
@@ -161,14 +161,14 @@ my.mesh <- makeMesh( covars$DEM, max.n=c(1000, 350), dep.range=3, doPlot=FALSE)
 A `good' mesh is one that covers the regions, particularly the inner region, with triangles that are approximately equally sized and are approximately equilateral \citep{kra19}. Further, the edge lengths should be relatively small compared to the (posterior) range of spatial dependence -- otherwise the model might erroneously report that there is no dependence in the data when there is. If the edge lengths are too small however, then excessive computation may be needed. The first two conditions can be checked visually using a plot of the mesh \citep[shown in][]{kra19} but also looking at the distribution of triangle areas and angles. The \texttt{RISDM} function \texttt{checkMesh} produces these plots.
   
 <<checkMesh1, eval=TRUE, fig.height=3>>=
-checkMesh( my.mesh, my.mesh$hull, ras=covars$DEM)
+checkMesh( my.mesh)
 @
     
 This mesh appears to be adequate -- there are not too many large or small triangles and not too many triangles with overly small or large angles. However, in \citet{fos24}, we chose (perhaps unnecessarily) to extend the outer boundary slightly to allow for a better distribution of nodes. This was achieved by adding the argument \texttt{offset=7.5}, which is measured in map units (kilometres in this case). As an example of a `bad' mesh, consider the same spatial region but with fewer nodes.
 
 <<makeBadMesh1, eval=TRUE, fig.height=3>>=
 my.mesh.bad <- makeMesh( covars$DEM, max.n=c(250, 30), dep.range=3, doPlot=FALSE)
-checkMesh( my.mesh.bad, my.mesh$hull, ras=covars$DEM)
+checkMesh( my.mesh.bad)
 @
 
 The resulting `bad' mesh has mostly good shaped trianlges, but those around the corners of the inner and outer areas are much smaller and more `bunched' than elsewhere. This is picked up in the distribution of the triangle areas, which is quite bimodal. However, the triangle shapes appear to be adequate. In general, the more regular the survey area (non-NA values in the raster layer), the easier it will be to produce an adequate mesh. The survey area for gamba grass is quite regular and hence even this `bad' mesh is not spectacularly bad.
@@ -363,7 +363,7 @@ plot( fm, covars=covars, nFigRow=2, ask=FALSE)
 One open research questions around residuals is trying to determine how large the departures need to be before the model needs altering. This will depend on many different aspects, including the type of inference sought. Hence, it is not clear if the residuals in Figure \ref{fig:residPlots} indicate an adequate model or not. However, it is possible (and easy) to demonstrate a model with \textit{a worse fit}. To do this, we revisit the model but exclude the spatial random effects. The resulting residual plots are in Figure \ref{fig:residPlots2}. The PA data still seem adequately represented but the patterns in the PO data are accentuated and are now obviously worrisome. There are strong spatial patterns and the residuals are obviously non-normal.
   
 <<residPlots2, eval=TRUE, fig.height=3.5, fig.cap="Residual plots for the gamba grass data, and the model containing quadratic effects \textit{but no spatial term}.">>=
-plot( fm.noRand, covars=covars, nFigRow=2, ask=FALSE)
+plot( fm.noRand)
 @
     
 One of the potential short-comings of RQR residuals is that they contain a random component. This component is largest for data types that have few categories dichotomous data, like PA data, are subject to the largest amount possible. This fact may contribute to the apparent adequate residual plots for the model without spatial random effects.
@@ -413,7 +413,7 @@ The covariate effects for gamba grass are presented in Figure \ref{fig:interp}. 
 <<interp, eval=TRUE, fig.height=3.5, fig.cap="Relationship with Soil Moisture (SMRZ). Black solid line is the median relationship and grey shaded area is the 95 percent CI.">>=
 #the data for interpretation
 #adding a temporary cell area layer
-covarsForInter <- addLayer( covars, covars[[1]])
+covarsForInter <- c( covars, covars[[1]])
 names( covarsForInter) <- c( names( covars), "tmp.habiArea")
 #area is now constant with log(1)=0 contribution
 values( covarsForInter$tmp.habiArea) <- 1 

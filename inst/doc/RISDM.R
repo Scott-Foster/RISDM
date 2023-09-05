@@ -11,16 +11,16 @@ opts_chunk$set(cache=FALSE, message = FALSE, comment = "", dev="pdf",
 
 ## ----setup2-------------------------------------------------------------------
 library( RISDM)
-library( raster)
+library( terra)
 
 ## ----readCovars, eval=TRUE,fig.cap="Environmental covariate data for the gamba grass example. Accessibility (ACC) measuring effective distance for humans to travel. Digital elevation model (DEM) giving the altitude. Soil moisture at the root zone (SMRZ) measuring the wetness where it matters for plants. See text for details and references."----
 filenames <- paste0( system.file("extdata", package="RISDM"), 
                    c("/GambaExample_sqrtACC_23Mar28.tif", 
                      "/GambaExample_sqrtDEM_23Mar28.tif", 
                      "/GambaExample_SMRZ_23Mar28.tif"))
-covars <- stack( filenames)
+covars <- rast( filenames)
 names( covars) <- c("ACC","DEM","SMRZ")
-print( colnames( coordinates( covars)))  #to see how things are labelled.
+print( colnames( crds( covars)))  #to see how things are labelled.
 plot( covars)
 
 ## ----readObs, eval=TRUE-------------------------------------------------------
@@ -36,11 +36,11 @@ str( gamba_PA)
 my.mesh <- makeMesh( covars$DEM, max.n=c(1000, 350), dep.range=3, doPlot=FALSE)
 
 ## ----checkMesh1, eval=TRUE, fig.height=3--------------------------------------
-checkMesh( my.mesh, my.mesh$hull, ras=covars$DEM)
+checkMesh( my.mesh)
 
 ## ----makeBadMesh1, eval=TRUE, fig.height=3------------------------------------
 my.mesh.bad <- makeMesh( covars$DEM, max.n=c(250, 30), dep.range=3, doPlot=FALSE)
-checkMesh( my.mesh.bad, my.mesh$hull, ras=covars$DEM)
+checkMesh( my.mesh.bad)
 
 ## ----specifyDist, eval=TRUE---------------------------------------------------
 #linear in SMRZ only
@@ -124,7 +124,7 @@ summary( fm)
 plot( fm, covars=covars, nFigRow=2, ask=FALSE)
 
 ## ----residPlots2, eval=TRUE, fig.height=3.5, fig.cap="Residual plots for the gamba grass data, and the model containing quadratic effects \textit{but no spatial term}."----
-plot( fm.noRand, covars=covars, nFigRow=2, ask=FALSE)
+plot( fm.noRand)
 
 ## ----pred,eval=TRUE,fig.cap="Predictions from the quadratic model including random effects. Upper two rows are for the intensity, and bottom two rows are predictions of the probability of presence (within a raster cell)", fig.height=3.5----
 #You should use a much(!) larger value of S.
@@ -142,7 +142,7 @@ plot( fm$preds.probs$field[[1:3]], nc=3)
 ## ----interp, eval=TRUE, fig.height=3.5, fig.cap="Relationship with Soil Moisture (SMRZ). Black solid line is the median relationship and grey shaded area is the 95 percent CI."----
 #the data for interpretation
 #adding a temporary cell area layer
-covarsForInter <- addLayer( covars, covars[[1]])
+covarsForInter <- c( covars, covars[[1]])
 names( covarsForInter) <- c( names( covars), "tmp.habiArea")
 #area is now constant with log(1)=0 contribution
 values( covarsForInter$tmp.habiArea) <- 1 
