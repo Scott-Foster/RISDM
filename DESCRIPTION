@@ -1,7 +1,7 @@
 Package: RISDM
 Type: Package
 Title: Integrated Species Distribution Modelling using INLA -- multiple data types
-Version: 1.2.12
+Version: 1.2.14
 Authors@R: c(person("Scott", "Foster", role = c("aut", "cre"),
                      email = "scott.foster@data61.csiro.au"),
               person("Wen-Hsi", "Yang", role = "ctb"),
@@ -13,7 +13,8 @@ Imports:
   terra,
   sf,
   parallel,
-  INLA (>= 22.05.07),
+  INLA (>= 23.09.09),
+  fmesher (>= 0.1.2),
   methods,
   stats,
   colorRamps
