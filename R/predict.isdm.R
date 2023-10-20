@@ -29,9 +29,10 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   if( !is.null( intercept.terms) & !all( intercept.terms %in% object$mod$names.fixed))
     stop( "One or more of the intercept.terms supplied is not in the model.  Please check.")
 
-  batchStartEnd <- seq( from=0, to=S, by=ceiling( S/n.batches))
-  if( tail( batchStartEnd,1) < S)
-    batchStartEnd <- c( batchStartEnd, S) #[length( batchStartEnd)] <- S  #last batch is smaller
+#  batchStartEnd <- seq( from=0, to=S, by=ceiling( S/n.batches))
+  batchStartEnd <- round( seq( from=0, to=S, by=S/n.batches),0)
+#  if( tail( batchStartEnd,1) < S)
+#    batchStartEnd <- c( batchStartEnd, S) #[length( batchStartEnd)] <- S  #last batch is smaller
   batchSize <- diff( batchStartEnd)
 
   #### function for drawing posterior sampls in parallel.
@@ -70,14 +71,14 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     covars <- covars[[names( covars) != habitatArea]]
   }
   else{
-    if( terra::is.lonlat( covars))
+#    if( terra::is.lonlat( covars))
       covars <- c( covars, terra::cellSize( covars))
-    else{
-      tmp <- covars[[1]]
-      names( tmp) <- "tmpName"
-      terra::values( tmp) <- prod( terra::res( tmp))
-      covars <- c( covars, tmp)
-    }
+#    else{
+#      tmp <- covars[[1]]
+#      names( tmp) <- "tmpName"
+#      terra::values( tmp) <- prod( terra::res( tmp))
+#      covars <- c( covars, tmp)
+#    }
   }
   names( covars)[terra::nlyr( covars)] <- "myCellAreas"
   covars[["myCellAreas"]] <- terra::mask( covars[["myCellAreas"]], covars[[1]])
