@@ -67,9 +67,10 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
   else{
 #    simmy1 <- rasterCovars[[1]]
 #    simmy2 <- rasterCovars[[2]]
-    xSeq <- terra::xFromCol( rasterCovars, 1:terra::ncol(rasterCovars))
-    ySeq <- terra::yFromRow( rasterCovars, 1:terra::nrow(rasterCovars))
     X <- as.data.frame( terra::crds( rasterCovars, na.rm=FALSE))
+    ySeq <- terra::xFromCol( rasterCovars, 1:terra::ncol(rasterCovars))
+    xSeq <- terra::yFromRow( rasterCovars, 1:terra::nrow(rasterCovars))
+
     rasterBoundary <- !is.na( rasterCovars[[1]])
     terra::values( rasterBoundary) <- ifelse( terra::values( rasterBoundary)==1, 1, NA)
     dataBrick <- c( rasterCovars[[1]], rasterCovars[[2]])
