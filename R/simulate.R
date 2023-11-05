@@ -71,9 +71,17 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
     ySeq <- terra::xFromCol( rasterCovars, 1:terra::ncol(rasterCovars))
     xSeq <- terra::yFromRow( rasterCovars, 1:terra::nrow(rasterCovars))
 
-    rasterBoundary <- !is.na( rasterCovars[[1]])
-    terra::values( rasterBoundary) <- ifelse( terra::values( rasterBoundary)==1, 1, NA)
+    rasterBoundary <- terra::rast( rasterCovars[[1]])
+    terra::values( rasterBoundary) <- 1
+    tmp <- apply( terra::values( rasterCovars, na.rm=FALSE), 1, function(xx) any( is.na( xx)))
+    tmp1 <- apply( terra::values( rasterCovars, na.rm=FALSE), 1, function(xx) all( is.na( xx)))
+    if( !( all( tmp-tmp1)==0))
+      warning( "Some, but not all, NAs in one raster layer are absent in the other. Altering data to maintain NA pattern.")
+    terra::values( rasterBoundary)[tmp,] <- NA
+#    terra::values( rasterBoundary) <- ifelse( terra::values( rasterBoundary)==1, 1, NA)
     dataBrick <- c( rasterCovars[[1]], rasterCovars[[2]])
+    terra::values( dataBrick)[tmp,] <- NA
+    
     if( is.na( control$range))
       control$range <- 5*max( terra::res( rasterCovars))#sqrt( (utils::tail( xSeq,1) - utils::head( xSeq,1))^2 + (utils::tail( ySeq,1) - utils::head( ySeq,1))^2) / (3*15)  #arbitrary
   }

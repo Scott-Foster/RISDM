@@ -52,6 +52,7 @@ Control arguments for mdoel estimation come from the argument "control", which i
 \item{returnStack}{Should the INLA data stack be returned as part of the model output. Default is TRUE -- it is returned (at the expense of memory). Note that this object is needed for use in \code{\link{plot.isdm}}.}
 \item{DCmethod}{Which method should be used to estimate the detectability of each observer. Default is "TaylorsLinApprox", which approximates the model. If this doesn't work well, then the other option is "plugin", which estimates the probabilities prior to estimation.}
 \item{na.action}{How should NAs be handled? Default is \code{na.omit}, where any record with an NA is completely removed. Other options are \code{na.exclude} (pretty much the same as 'na.omit') and \code{na.fail}. Note that \code{na.pass} is more than likely going to cause \code{isdm} to fail.}
+\item{inla.mode}{Which mode of INLA to use. See ?\code{\link{inla}} for more details. Unlike INLA the default in RISDM is "classic" not "compact".}
 }
 }
 \value{An object of class "isdm". This is just a list with elements that contain: 

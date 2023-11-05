@@ -186,20 +186,20 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   #putting together on prediction scale
   mu.all <- NULL
   if( type=='intensity')
-    lambda.all <- as.matrix( exp( eta))
+    mu.all <- as.matrix( exp( eta))
   if( type=='probability')
-    lambda.all <- as.matrix( 1-exp( -exp( eta)))
+    mu.all <- as.matrix( 1-exp( -exp( eta)))
   if( type=='link')
-    lambda.all <- as.matrix( eta)
+    mu.all <- as.matrix( eta)
   if( is.null( mu.all) & type != "link")
     stop( "unknown type.  Must be 'intensity', 'probability' or 'link'. Please check function call.")
 
   #summaries
-  lambda.median <- apply( lambda.all, 1, stats::quantile, probs=0.5, na.rm=TRUE)
-  lambda.lower <- apply( lambda.all, 1, stats::quantile, probs=0.025, na.rm=TRUE)
-  lambda.upper <- apply( lambda.all, 1, stats::quantile, probs=0.975, na.rm=TRUE)
-  lambda.mean <- rowMeans( lambda.all)
-  lambda.sd <- apply( lambda.all, 1, stats::sd)
+  lambda.median <- apply( mu.all, 1, stats::quantile, probs=0.5, na.rm=TRUE)
+  lambda.lower <- apply( mu.all, 1, stats::quantile, probs=0.025, na.rm=TRUE)
+  lambda.upper <- apply( mu.all, 1, stats::quantile, probs=0.975, na.rm=TRUE)
+  lambda.mean <- rowMeans( mu.all)
+  lambda.sd <- apply( mu.all, 1, stats::sd)
   
   #raster format
   lambdaRaster <- terra::rast( cbind( predcoords, lambda.median), crs=terra::crs( covars), type='xyz')
@@ -207,11 +207,12 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   lambdaRaster <- c(lambdaRaster, terra::rast( cbind( predcoords, lambda.upper), crs=terra::crs( covars), type='xyz'))
   lambdaRaster <- c(lambdaRaster, terra::rast( cbind( predcoords, lambda.mean), crs=terra::crs( covars), type='xyz'))
   lambdaRaster <- c(lambdaRaster, terra::rast( cbind( predcoords, lambda.sd), crs=terra::crs( covars), type='xyz'))
+  names( lambdaRaster) <- c("Median","Lower","Upper","Mean","SD")
 
   #sort out extent in case...
   lambdaRaster <- terra::extend( lambdaRaster, terra::ext( covars))  #just in case it is needed -- could be dropped throughout the creation of the raster.
 
-  res <- list( field=muRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords)
+  res <- list( field=lambdaRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords)
   
   return( res)
 }

@@ -132,7 +132,8 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
                offset = INLA::inla.stack.data(stck)$offy,
                num.threads = control$n.threads,
                control.compute = list(config=TRUE, waic = control$calcICs, dic = control$calcICs, return.marginals = FALSE, return.marginals.predictor = FALSE),
-	       safe=TRUE)
+	       safe=TRUE,
+	       inla.mode=control$inla.mode)
 
   #the return object, which contains some of the bits and pieces calcuated above.
   res <- list( mod=mod, distributionFormula=distributionFormula, biasFormula=biasFormula, artefactFormulas=artefactFormulas, mesh=FullMesh$mesh, control=control, responseNames=responseNames, 
