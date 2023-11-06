@@ -13,5 +13,4 @@ importFrom( "graphics", "abline", "hist", "legend", "lines", "points","par","plo
 importFrom( "grDevices", "grey")
 importFrom( "utils", "tail","head")
 importFrom( "colorRamps", "matlab.like2")
-importFrom( "Rfast", "cholesky")
 
