@@ -119,6 +119,6 @@ testthat::test_that(
     testthat::expect_s3_class(object=fm1[[3]], class="isdm")
     testthat::expect_s3_class(object=fm1[[4]], class="isdm")
     testthat::expect_s3_class(object=fm1[[5]], class="isdm")
-    testthat::expect_s3_class(object=fm1[[5]], class="isdm")
+    testthat::expect_s3_class(object=fm1[[6]], class="isdm")
   }
 )
