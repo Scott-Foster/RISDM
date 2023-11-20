@@ -84,7 +84,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
 #			   rasterVarNames[tf2] <- gsub("[)]","",rasterVarNames[tf2])}
 
   #create offset (for areas) if not already present
-  newInfo$offy <- createOffsets( sampleAreaNames, newInfo$obList)
+  newInfo$offy <- createOffsets( sampleAreaNames, newInfo$obsList)
 #  #in an accident of history observationList gets rewritten again.
 #  observationList <- tmp$dat
     

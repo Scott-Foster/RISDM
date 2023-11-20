@@ -69,7 +69,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   #### Artefact data (not standardised)
   #container for the altered observation lists (names to match newForm)
   #note using the unexpanded covarBrick rather than newCovarBrick
-  newObs <- lapply( obsList, function(xx) as.data.frame( cbind( xx, terra::extract( x=covarBrick, xx[,coord.names]))))
+  newObs <- lapply( obsList, function(xx) as.data.frame( cbind( xx, terra::extract( x=covarBrick, xx[,coord.names], ID=FALSE))))
   #indicator for if there is that type of data
   ind <- c( PO=0, PA=0, AA=0, DC=0) #for PO, PA, AA, DC
 
@@ -112,11 +112,11 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
     for( jj in setdiff( colnames( XX), "geometry")){
       if( jj %in% paste0(ii,"_",names( covarBrick))){
 	tmpID <- which( jj %in% paste0(ii,"_",names( covarBrick)))
-	XX[,jj] <- terra::extract( x=newCovarBrick[[tmpID]], coords=newObs[[dataname]][,coord.names])
+	XX[,jj] <- terra::extract( x=newCovarBrick[[tmpID]], coords=newObs[[dataname]][,coord.names], ID=FALSE)
       }
     }
     #add in the distribution variables -- data
-    XXdist <- terra::extract( newCovarBrick, XX)
+    XXdist <- terra::extract( newCovarBrick, XX, ID=FALSE)
     #remove the bias terms from the data -- they will have "PO_" as a prefix.
     XXdist <- XXdist[,!grepl( "PO_", colnames( XXdist))]
     #combine

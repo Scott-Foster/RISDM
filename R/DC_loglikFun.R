@@ -15,7 +15,7 @@ DC_loglikFun <- function( par, dat){
   #estimating log (pi), so that is what is passed in.
   par <- exp( par)
   #adjusting exact zeros and ones
-  par <- pmax( pmin( par, 1e-4), 1-1e-4)
+  par <- pmax( pmin( par, 1-1e-4), 1e-4)
   #the various combinations of obs1 (not obs2), obs2 (not obs1) and both
   lambda <- matrix( NA, nrow=nrow( dat), ncol=3)
   lambda[,1] <- par[1]*(1-par[2])
