@@ -235,7 +235,7 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
   tmpProbs[NAid] <- 0
   
   sampleID <- sample.int( n=length( tmpProbs), size=N, prob=tmpProbs, replace=TRUE)
-  presences <- terra::crds( dataBrick, na.rm=FALSE)[sampleID,]
+  presences <- as.data.frame( terra::crds( dataBrick, na.rm=FALSE)[sampleID,])
 
   if( control$doPlot){
     oldPar <- graphics::par( mfrow=c(4,2))

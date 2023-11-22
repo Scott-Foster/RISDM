@@ -69,7 +69,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   #### Artefact data (not standardised)
   #container for the altered observation lists (names to match newForm)
   #note using the unexpanded covarBrick rather than newCovarBrick
-  newObs <- lapply( obsList, function(xx) as.data.frame( cbind( xx, terra::extract( x=covarBrick, xx[,coord.names], ID=FALSE))))
+  newObs <- lapply( obsList, function(xx) as.data.frame( cbind( xx, terra::extract( x=covarBrick, as.matrix( xx[,coord.names]), method='simple'))))
   #indicator for if there is that type of data
   ind <- c( PO=0, PA=0, AA=0, DC=0) #for PO, PA, AA, DC
 
