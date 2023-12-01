@@ -12,7 +12,7 @@
 ###############################################################################################
 ###############################################################################################
 
-makeFamLink <- function( ind) {
+makeFamLink <- function( ind, nObs) {
 
   #the names (datatype) contained within the data
   nammy <- names( ind)
@@ -42,16 +42,18 @@ makeFamLink <- function( ind) {
   #remove the NA entries
   fammy <- fammy[!is.na( fammy)]
 
-  #the index of a log link, if PO AA data present.  Otherwise its gotta be cloglog.
-  linkID <- NA  
-  if( is.na( linkID) & ( "PO" %in% names( fammy)))
-    linkID <- which( names( fammy) == "PO")
-  if( is.na( linkID) & ( "AA" %in% names( fammy)))
-    linkID <- which( names( fammy) == "AA")
-  if( is.na( linkID) & ( "PA" %in% names( fammy)))
-    linkID <- which( names( fammy) == "PA")
-  if( is.na( linkID) & ( "DC" %in% names( fammy)))
-    linkID <- which( names( fammy) == "DC")
+#  #the index of a log link, if PO AA data present.  Otherwise its gotta be cloglog.
+#  linkID <- NA  
+#  if( is.na( linkID) & ( "PO" %in% names( fammy)))
+#    linkID <- which( names( fammy) == "PO")
+#  if( is.na( linkID) & ( "AA" %in% names( fammy)))
+#    linkID <- which( names( fammy) == "AA")
+#  if( is.na( linkID) & ( "PA" %in% names( fammy)))
+#    linkID <- which( names( fammy) == "PA")
+#  if( is.na( linkID) & ( "DC" %in% names( fammy)))
+#    linkID <- which( names( fammy) == "DC")
+
+  linkID <- rep( 1:length( nObs), times=nObs)
 
   #to satisfy one of inla's internal checks.  Sigh...
   names( linkky) <- NULL  

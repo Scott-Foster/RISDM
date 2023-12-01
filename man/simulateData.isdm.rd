@@ -24,7 +24,7 @@
 \item{transect.size}{The area covered by each of the PA, AA, and DC transects.}
 \item{rasterBoundary}{SpatRaster, whose NA pattern defines the boundary of the simulation area. Ignored if rasterCovars is supplied.}
 \item{rasterCovars}{SpatRaster with two layers, one for each of the covariates used in the distribution model.}
-\item{rasterBiasCovar}{SpatRaster with a single layer giving the data for the bias covariate. Can only be specified when rasterCovars is also specified (an error will occur otherwise). If NULL, and if rasterCovars is not NULL, then bias layer will be generated as distance from the central point.}
+\item{rasterBiasCovar}{SpatRaster with a single layer giving the data for the bias covariate. Must be specified when rasterCovars is also specified (an error will occur otherwise).}
 \item{control}{A list of control arguments for the simulation. May be partially specified. See Details.}
 }
 \details{

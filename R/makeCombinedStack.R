@@ -81,6 +81,10 @@ makeCombinedStack <- function( obsList, covarBrick, habitatArea, distForm, artFo
   #add another thing indicating which data is present.
   attr( stck, "ind") <- ind
   
+  #add another thing giving the number of each observation
+  tmp <- apply( stck$data$data[,1:nOutcomes,drop=FALSE], 2, function(xx) sum( !is.na( xx)))
+  attr( stck, "nObs") <- tmp
+  
 #  #add the updated artefact formulae
 #  attr( stck, "newArtForms") <- CombinedArtForms
   

@@ -104,7 +104,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
 #  loglWts <- makeLoglWts( stck)
   
   #make a family vector for the INLA call.  Also make the link list in the INLA call
-  famLink <- makeFamLink( attr( stck, "ind"))
+  famLink <- makeFamLink( attr( stck, "ind"), attr( stck, "nObs"))
 
   #priors etc for fixed effects
   tmp <- setPriors( control, stck)
@@ -124,7 +124,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
                data = INLA::inla.stack.data(stck),  #the data stack from all data types and the predictions
                verbose = control$verbose,  #don't print out much.
                #control.results = list(return.marginals.random = FALSE, return.marginals.predictor = FALSE),  #some control arguments
-               control.predictor = list(A = INLA::inla.stack.A(stck), link=famLink$linkID, compute = FALSE),  #how to predict.  Note the link is generated in makeFamLink()
+               control.predictor = list(A = INLA::inla.stack.A(stck), link=1, compute = FALSE),  #how to predict.  Note the link is generated in makeFamLink()
                control.fixed = my.control.fixed,  #priors etc for the fixed effects.
                Ntrials = INLA::inla.stack.data(stck)$Ntrials, 
                E = INLA::inla.stack.data(stck)$e,
