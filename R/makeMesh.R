@@ -39,7 +39,7 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
   boundary$poly <- boundary$poly[1]
   
   #if the region is going to be expanded, then expanded. This is often a good idea.
-  if( expandRegion){
+#  if( expandRegion){
     #a default ('cause something has to be right?
     if( is.null( expans.mult)){
       message( "No value for (convex) expansion multiplier given.  Assuming 1.5 (so that convex.expansion is 1.5 * spatial dependence.\n)")
@@ -50,9 +50,9 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
     #the hull surrounding the spatial domain.
     hully <- INLA::inla.nonconvex.hull( terra::crds( boundary$ras$lower.res, na.rm=TRUE), convex=convex.expansion, resolution=rep( hull.res,2))
 #    hully <- INLA::inla.nonconvex.hull( terra::crds( ras, na.rm=FALSE)[!is.na( terra::values( ras)),], convex = convex.expansion, resolution = rep(hull.res,2))
-  }
-  else
-    hully <- INLA::inla.sp2segment( as( boundary$poly$lower.res, "Spatial"))
+#  }
+#  else
+#    hully <- INLA::inla.sp2segment( as( boundary$poly$lower.res, "Spatial"))
 
   #more checks for defaults
   if( is.null( max.edge)){
@@ -69,21 +69,21 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
   }
   
   #defaults
-  if( expandRegion){
+#  if( expandRegion){
     if( is.null( offset)){
       message( "No offset given. Assuming that the outer domain is approximately an expansion of the inner domain by the amount of a spatial dependence range.\n")
       offset <- c( -0.0001, 1*dep.range)
     }
     else
       offset <- c(-0.0001,1*offset)
-  }
+#  }
 
   #make the mesh.  Note that sometimes the arguments seem to be treated as a 'guide' rather than gospel -- I guess
   #	that sometimes mesh solutions cannot be found for particular arguments.
-  if( expandRegion)
-    meshy <- INLA::inla.mesh.2d(boundary=hully, max.edge = max.edge, cutoff=cutoff, max.n=max.n, offset=offset)
-  else
-    meshy <- INLA::inla.mesh.2d( boundary=hully, max.edge=max.edge[1], max.n=max.n[1], cutoff=cutoff[1])
+#  if( expandRegion)
+#    meshy <- INLA::inla.mesh.2d(boundary=hully, max.edge = max.edge, cutoff=cutoff, max.n=max.n, offset=offset)
+#  else
+    meshy <- INLA::inla.mesh.2d( boundary=hully, max.edge=max.edge[1], max.n=max.n[1], cutoff=cutoff)
   
   #is the result going to be plotted?
   if( doPlot){

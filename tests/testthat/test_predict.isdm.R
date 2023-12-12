@@ -7,7 +7,8 @@ f <- system.file("ex/test.grd", package="terra")
 r <- terra::rast(f)
 terra::values( r)[ !is.na( terra::values( r, na.rm=FALSE))] <- 1
 rm( f)
-dat <- simulateData.isdm( expected.pop.size=5000, transect.size=0.4, rasterBoundary=r, control=list(doPlot=FALSE))
+set.seed( 747)
+dat <- simulateData.isdm( expected.pop.size=5000, transect.size=0.6, rasterBoundary=r, control=list(doPlot=FALSE))
 terra::crs( dat$covarBrick) <- terra::crs( r)
 meshy <- makeMesh( dat$covarBrick[[1]], max.n=c(500, 150), dep.range=25, expans.mult=20, offset=500, max.edge=5, doPlot=FALSE)
 fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO), 
@@ -19,7 +20,7 @@ fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO),
             sampleAreaNames=c( PO=NULL, DC="transectArea", AA="transectArea"),#, PA="transectArea"),
             DCobserverInfo=list( SurveyID="Survey", Obs1="Obs1", Obs2="Obs2", Both="Both"),
             distributionFormula=~0+Altitude+Temperature,
-            biasFormula=~1+dist2City,
+            biasFormula=~1+effortLayer,
             artefactFormulas=list( DC=~1+Survey, AA=~1),#, PA=~1),
             control=list( int.prec=0.01, other.prec=1,
                           calcICs=FALSE,

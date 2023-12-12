@@ -23,12 +23,12 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
   if( sum( is.null( rasterCovars), is.null( rasterBiasCovar)) == 1)  #one but not both layers specified
     stop( "You must specify either both rasterCovars and rasterBiasCovar, or neither.")
 
-  if( is.null( rasterCovars)){
-    thiscall <- match.call( expand.dots=TRUE)
-    thiscall[[1]] <- as.name("simulateData.isdm")
-    tmp <- eval.parent( thiscall)
-    return( tmp)
-  }
+#  if( is.null( rasterCovars)){
+#    thiscall <- match.call( expand.dots=TRUE)
+#    thiscall[[1]] <- as.name("simulateData.isdm")
+#    tmp <- eval.parent( thiscall)
+#    return( tmp)
+#  }
 
   #note that coefs$dist[1] will be ignored to match expected.n.PO  
   #set the control for the simulation
@@ -59,34 +59,36 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
     ySeq <- sort( unique( X[,2]))
     if( is.na( control$range))  #arbitrary!
       control$range <- 5*max( terra::res(rasterBoundary))
-    rm( X)
+#    rm( X)
   }
   else{
     #  Define survey area based on square
     if( is.null( rasterBoundary)){
       xSeq <- seq( from=0, to=10, length=control$raster.dim[1])
       ySeq <- seq( from=0, to=10, length=control$raster.dim[2])
+      X <- expand.grid( xSeq, ySeq)
       
-      my.scale <- sqrt( 100+100) / 15 #1/10 of observed
+      my.scale <- sqrt( 100+100) / 15 #1/15 of max observed
       if( is.na( control$range))
 	control$range <- my.scale / 3 #to get quite variable random effects
     }
     #or survey area based on supplied boundary raster
     else{
       X <- as.data.frame( terra::crds( rasterBoundary, na.rm=FALSE))
+      X <- X[order( X[,1],X[,2]),]
       xSeq <- sort( unique( X[,1]))
       ySeq <- sort( unique( X[,2]))
       if( is.na( control$range))  #arbitrary!
 	control$range <- 5*max( terra::res(rasterBoundary))
-      rm( X)
+#      rm( X)
     }
-    simmy1 <- fftGPsim2( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 1/2, nugget = 0.01)
-    simmy2 <- fftGPsim2( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 1/2, nugget = 0.01)
+    simmy1 <- fftGPsim2( x=xSeq, y=ySeq, sig2 = 1, rho = control$range, nu = 1/2, nugget = 0.01)
+    simmy2 <- fftGPsim2( x=xSeq, y=ySeq, sig2 = 1, rho = control$range, nu = 1/2, nugget = 0.01)
    
-    X <- cbind( X, as.numeric( t( simmy1)), as.numeric( t( simmy2)), as.numeric( t( simmy3)))
+    X <- cbind( X, as.numeric( t( simmy1)), as.numeric( t( simmy2)))#, as.numeric( t( simmy3)))
     X[,-(1:2)] <- apply( X[,-(1:2)], 2, scale, center=TRUE, scale=TRUE)
-    colnames( X) <- c("x","y","Altitude","Temperature","bias")
-    rasterCovars <- c( terra::rast( X[,c(1,2,3)], type='xyz'), terra::rast( X[,c(1,2,4)], type='xyz'))
+    colnames( X) <- c("x","y","Altitude","Temperature")#,"bias")
+    rasterCovars <- c( terra::rast( X[,c(1,2,3)], type='xyz', crs="epsg:3857"), terra::rast( X[,c(1,2,4)], type='xyz', crs="epsg:3857"))
     rm( X)   
     
     #  Now deal with the biassing layer
@@ -109,7 +111,7 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
   
   #spatial random effect
   if( is.na( control$range))
-     control$range <- 5*max( terra::res( dataBrck))
+     control$range <- 5*max( terra::res( dataBrick))
   
   #random effect for the log-gauss process
   if( control$addRandom){
@@ -130,12 +132,17 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
   }
   #a data frame model.matrix( ok a df, but still)
   X <- terra::as.data.frame( dataBrick, xy=TRUE)
+  #cellsizes
+#  if( terra::crs( dataBrick) != "")
+    myCellSize <- terra::cellSize( dataBrick)
+#  else
+#    myCellSize <- rep( prod( terra::res( dataBrick)), terra::ncell( dataBrick))
   #linear predictor
   LinPred <- #coefs$dist[1] + 
               dataBrick[[1]]*coefs$dist[2] + 
               dataBrick[[2]]*coefs$dist[3] + 
               dataBrick$REff +
-	      log(terra::cellSize( dataBrick))
+	      log(myCellSize)
   
   #Intensity for log-gauss process
   Intensity <- exp( LinPred)
@@ -168,7 +175,11 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
     PAdata <- data.frame( x=tmp$x, y=tmp$y, inclusion.probabilities=NA, ID=tmp$cell)
   }
   #add the transect area
-  PAdata$transectArea <- transect.size * terra::values( terra::cellSize( dataBrick))[PAdata$ID]#prod( terra::res( dataBrick))
+#  if( terra::crs( dataBrick)!="")
+      mySizes <- terra::values( terra::cellSize( dataBrick))[PAdata$ID]
+#  else
+#    mySizes <- rep( prod( terra::res( dataBrick)), length( PAdata$ID))
+  PAdata$transectArea <- transect.size * mySizes
 
   tmpIntensity <- ( terra::values( dataBrick$Intensity)[PAdata$ID,] / terra::values( terra::cellSize( dataBrick))[PAdata$ID,]) * PAdata$transectArea
   #now simulate the PA response at those sites (based on point process)

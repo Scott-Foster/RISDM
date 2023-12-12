@@ -20,13 +20,13 @@ estimatePisDoubleCount <- function( dat){
   
   #note that the next line will produce NaNs when neither observer sees any animals at a site
   start.vals <- cbind( (dat[,1]+dat[,3]), dat[,2]+dat[,3]) / rowSums( dat, na.rm=TRUE)
-#  #this line will not produce NaNs and will work for surveys where no koalas are seen (is that sensicle?)
+#  #this line will not produce NaNs and will work for surveys where no koalas are seen (is that sensible?)
 #  start.vals <- cbind( (dat[,1]+dat[,3]), dat[,2]+dat[,3]) / pmax( rowSums( dat, na.rm=TRUE), 1e-4)
   start.vals <- colMeans( start.vals, na.rm=TRUE)
   #if there are NaNs everywhere, define them
   start.vals <- ifelse( is.na( start.vals), 0, start.vals)
-  
-  start.vals <- log( start.vals + 0.01)
+  start.vals <- log( pmax( 0.001, pmin( 0.999, start.vals)))
+#  start.vals <- log( start.vals + 0.01)
   
   tmp <- stats::optim( par=start.vals, fn=DC_loglikFun, dat=dat)
   if( tmp$convergence != 0)

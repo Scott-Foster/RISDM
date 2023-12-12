@@ -4,7 +4,7 @@
 \description{This function simulates some data based on a number of fairly strict assumptions. }
 \usage{
  simulateData.isdm( expected.pop.size=10000, expected.n.PO=300, n.PA=150, n.AA=50, n.DC=50,
-                           coefs=list(dist=c(-1.5,0.5,-0.75), bias=c(-2,-0.75)), 
+                           coefs=list(dist=c(NA,0.5,-0.75), bias=c(-2,-0.75)), 
                            DC.pis=matrix( c(0.8,0.76, 0.9,0.85, 0.82,0.87), nrow=3, ncol=2, byrow=TRUE),
                            transect.size = 0.125, #a proportion of cell size.
                            rasterBoundary=NULL,

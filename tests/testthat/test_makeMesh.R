@@ -15,10 +15,6 @@ terra::crs( dat$covarBrick) <- terra::crs( r)
 testthat::test_that(
   "checking creation of the mesh",
   {
-    #this shouldn't be needed, but the INLA code seems to spark a warning from Matrix (only first run). 
-    #Let's get the first run out of the way...
-    meshy <- makeMesh( dat$covarBrick[[1]])
-    
     #using all defaults
     meshy <- makeMesh( dat$covarBrick[[1]])
     testthat::expect_s3_class(object=meshy, class="inla.mesh")  #make sure an object has been returned.
@@ -38,16 +34,33 @@ testthat::test_that(
     testthat::expect_type( object=meshy$n, "integer")
     
     #extensions / finer control
-    meshy <- makeMesh( dat$covarBrick[[1]], doPlot=TRUE, max.n=250, dep.range=500, expans.mult=pi/3, max.edge=c(1,0.5), cutoff=c(0.1,0.2), offset=0.91)
+    meshy <- makeMesh( dat$covarBrick[[1]], doPlot=TRUE, max.n=250, dep.range=500, expans.mult=pi/3)
+    testthat::expect_s3_class(object=meshy, class="inla.mesh")  #make sure an object has been returned.
+    testthat::expect_s4_class( object=meshy$risdmBoundary$ras$lower.res, class="SpatRaster")
+    testthat::expect_type( object=meshy$n, "integer")
+    meshy <- makeMesh( dat$covarBrick[[1]], doPlot=TRUE, max.n=250, dep.range=500, max.edge=c(1,0.5))
+    testthat::expect_s3_class(object=meshy, class="inla.mesh")  #make sure an object has been returned.
+    testthat::expect_s4_class( object=meshy$risdmBoundary$ras$lower.res, class="SpatRaster")
+    testthat::expect_type( object=meshy$n, "integer")
+    meshy <- makeMesh( dat$covarBrick[[1]], doPlot=TRUE, max.n=250, dep.range=500, cutoff=0.1)
+    testthat::expect_s3_class(object=meshy, class="inla.mesh")  #make sure an object has been returned.
+    testthat::expect_s4_class( object=meshy$risdmBoundary$ras$lower.res, class="SpatRaster")
+    testthat::expect_type( object=meshy$n, "integer")
+    meshy <- makeMesh( dat$covarBrick[[1]], doPlot=TRUE, max.n=250, dep.range=500, offset=0.91)
+    testthat::expect_s3_class(object=meshy, class="inla.mesh")  #make sure an object has been returned.
+    testthat::expect_s4_class( object=meshy$risdmBoundary$ras$lower.res, class="SpatRaster")
+    testthat::expect_type( object=meshy$n, "integer")
+    meshy <- makeMesh( dat$covarBrick[[1]], doPlot=TRUE, max.n=250, dep.range=500, expans.mult=pi/3, max.edge=c(1,0.5), cutoff=0.1, offset=0.91)
     testthat::expect_s3_class(object=meshy, class="inla.mesh")  #make sure an object has been returned.
     testthat::expect_s4_class( object=meshy$risdmBoundary$ras$lower.res, class="SpatRaster")
     testthat::expect_type( object=meshy$n, "integer")
     
-    #extensions / finer control
-    meshy <- makeMesh( dat$covarBrick[[1]], doPlot=TRUE, max.n=250, dep.range=500, expandRegion = FALSE)
-    testthat::expect_s3_class(object=meshy, class="inla.mesh")  #make sure an object has been returned.
-    testthat::expect_s4_class( object=meshy$risdmBoundary$ras$lower.res, class="SpatRaster")
-    testthat::expect_type( object=meshy$n, "integer")
+#    expandRegion is now legacy 12/12/23
+#    #extensions / finer control
+#    meshy <- makeMesh( dat$covarBrick[[1]], doPlot=TRUE, max.n=250, dep.range=500, expandRegion = FALSE)
+#    testthat::expect_s3_class(object=meshy, class="inla.mesh")  #make sure an object has been returned.
+#    testthat::expect_s4_class( object=meshy$risdmBoundary$ras$lower.res, class="SpatRaster")
+#    testthat::expect_type( object=meshy$n, "integer")
     
     #with some holes
     r <- dat$covarBrick[[1]]

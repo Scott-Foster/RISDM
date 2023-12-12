@@ -15,6 +15,11 @@ prepareSingleSurvey <- function( singleDataSet, datasetID, DCcols, survIDname, s
   
   n <- nrow( singleDataSet)
   
+  #check if estimation can be done (without penalties and boundary effects etc)
+  tmpDat <- singleDataSet[,DCcols]
+  if( ! all( colSums( tmpDat) > 0))
+    stop( "At least one of the DC data sets has an observer that hasn't seen a single individual. This is currently outside of RISDM's scope. Sorry. Consider adjusting model.")
+  
   #the bits and pieces for approximating log( 1-pi)
   expansPis <- estimatePisDoubleCount( singleDataSet[,DCcols])
   singleDataSet$Obs1_pi <- expansPis[1]
@@ -29,8 +34,8 @@ prepareSingleSurvey <- function( singleDataSet, datasetID, DCcols, survIDname, s
   #identifiers
   singleDataSet$observer <- rep( DCcols, each=n)
   
-  #removing unwanted cols
-  singleDataSet <- singleDataSet[,-(1:3)]
+#  #removing unwanted cols
+#  singleDataSet <- singleDataSet[,-(1:3)]
   
   #storing the original offset before it is altered.
   singleDataSet$originalSampleArea <- singleDataSet[,sampAreaDC]

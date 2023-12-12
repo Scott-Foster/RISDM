@@ -38,10 +38,6 @@ testthat::test_that(
     dat <- simulateData.isdm( rasterCovars=r[[2:3]], rasterBiasCovar = r[[1]], control=list( doPlot=FALSE))
     testthat::expect_s3_class(object=dat, class="simISDMdata")  #make sure an object has been returned.
     testthat::expect_equal(object=sum( !is.na( terra::values( dat$covarBrick$biasIntensity))), expected=n1)
-    #giving our own covariates (not bias)
-    dat <- simulateData.isdm( rasterCovars=r[[2:3]], control=list( doPlot=FALSE))
-    testthat::expect_s3_class(object=dat, class="simISDMdata")  #make sure an object has been returned.
-    testthat::expect_equal(object=sum( !is.na( terra::values( dat$covarBrick$biasIntensity))), expected=n1)
   }
 )
 
