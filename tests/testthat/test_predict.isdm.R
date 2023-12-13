@@ -30,6 +30,26 @@ fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO),
                           addRandom=TRUE, 
                           DCmethod="TaylorsLinApprox"))
 
+fm1 <- isdm( observationList=list( POdat=as.data.frame( dat$PO), 
+                                  DCdat=as.data.frame( dat$DC),
+                                  AAdat=as.data.frame( dat$AA)),
+            covars=dat$covarBrick, 
+            mesh=meshy,
+            responseNames=c( AA="AA"),#, PA="PA"),
+            sampleAreaNames=c( PO=NULL, DC="transectArea", AA="transectArea"),#, PA="transectArea"),
+            DCobserverInfo=list( SurveyID="Survey", Obs1="Obs1", Obs2="Obs2", Both="Both"),
+            distributionFormula=~0+Altitude+Temperature,
+            biasFormula=~1+effortLayer,
+            artefactFormulas=list( DC=~1+Survey, AA=~1),#, PA=~1),
+            control=list( int.prec=0.01, other.prec=1,
+                          calcICs=FALSE,
+                          prior.range=c( 25,0.1), prior.space.sigma=c( 2.5,0.1),
+                          coord.names=c("x","y"),
+                          n.threads=8,
+                          addRandom=FALSE, 
+                          DCmethod="TaylorsLinApprox"))
+
+
 testthat::test_that(
   "Checking the prediction from an isdm object.  Predicting to original raster only.",
   {
@@ -38,7 +58,13 @@ testthat::test_that(
     tmp <- c( terra::crop( dat$covarBrick$Intensity, fm$preds$field), fm$preds$field)
     terra::plot( tmp, nc=2)
 
+    fm1$preds <- predict( object=fm1, covars=dat$covarBrick, S=500)
+    testthat::expect_s4_class( fm$preds$field, class="SpatRaster")
+    
     fm$preds <- predict( object=fm, covars=dat$covarBrick, S=50, n.batches = 3)
+    testthat::expect_s4_class( fm$preds$field, class="SpatRaster")
+    
+    fm1$preds <- predict( object=fm1, covars=dat$covarBrick, S=500, n.batches = 3)
     testthat::expect_s4_class( fm$preds$field, class="SpatRaster")
     
     fm$preds <- predict( object=fm, covars=dat$covarBrick, S=5)  #checking another value of S

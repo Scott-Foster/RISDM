@@ -55,7 +55,8 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   if( n.batches > 1){
     for( ii in 2:n.batches){
       samp.element <- funny(ii)
-      samples$fieldAtNodes[,(batchStartEnd[ii]+1):batchStartEnd[ii+1]] <- samp.element$fieldAtNodes
+      if( object$control$addRandom)
+	samples$fieldAtNodes[,(batchStartEnd[ii]+1):batchStartEnd[ii+1]] <- samp.element$fieldAtNodes
       samples$fixedEffects[,(batchStartEnd[ii]+1):batchStartEnd[ii+1]] <- samp.element$fixedEffects
       rm( samp.element)
       gc()
