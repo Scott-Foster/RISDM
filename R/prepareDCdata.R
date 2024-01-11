@@ -41,6 +41,8 @@ prepareDCdata <- function( DCdat, DCobserverInfo, sampAreaDC, DCmethod, coord.na
 ##  ntimes <- nrow( DCdatExpand) / nrow( DCdat)
 ##  DCdatExpand <- cbind( kronecker( matrix(1,nrow=ntimes,ncol=1), as.matrix( DCdat[,coord.names])), DCdatExpand)
 ##  colnames( DCdatExpand)[1:2] <- coord.names
+
+  attr( DCdatExpand, "nsurvey") <- nsurvey
   
   return( DCdatExpand)
 }
