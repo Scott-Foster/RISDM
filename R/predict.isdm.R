@@ -147,7 +147,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   #adding in the random effects, if present and wanted
   if( object$control$addRandom & includeRandom==TRUE){
     #projector matrix( linking prediction points to mesh)
-    A.prd <- as.matrix( INLA::inla.spde.make.A( object$mesh, loc=predcoords))
+    A.prd <- INLA::inla.spde.make.A( object$mesh, loc=predcoords)
     #the addition to the linear predictor
 #    Allow batch matrix multiplication for case where memory limits reached -- Dave's code
 #    eta <- eta + A.prd %*% samples$fieldAtNodes
@@ -160,7 +160,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     }
     else
     {
-      eta <- eta + A.prd %*% samples$fieldAtNodes
+      eta <- eta + as.matrix( A.prd %*% samples$fieldAtNodes)
     }
   }
   
