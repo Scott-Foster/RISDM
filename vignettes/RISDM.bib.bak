@@ -200,6 +200,15 @@
   url = {https://www.R-project.org/},
 }
 
+@Article{fos24,
+  author = 	{Scott Foster and David Peel and Geoff Hosack and Andrew Hoskins and David Mitchell and Kirstin Proft and Jens Froese},
+	title={RISDM: Species Distribution Modelling from Multiple Data Sources in R},
+	year = {in review},
+	journal = {TBA},
+	volume={NA},
+	pages={NA--NA},
+}
+
 @Article{fle19,
   author   = {Fletcher Jr., Robert J. and Hefley, Trevor J. and Robertson, Ellen P. and Zuckerberg, Benjamin and McCleery, Robert A. and Dorazio, Robert M.},
   title    = {A practical guide for combining data to model species distributions},
@@ -276,21 +285,6 @@
   doi       = {10.5281/zenodo.3363936},
   url       = {https://doi.org/10.5281/zenodo.3363936},
   publisher = {Zenodo},
-}
-
-@Article{fos24,
-  author   = {Foster, Scott D. and Peel, David and Hosack, Geoffrey R. and Hoskins, Andrew and Mitchell, David J. and Proft, Kirstin and Yang, Wen-Hsi and Uribe-Rivera, David E and Froese, Jens G.},
-  title    = {‘RISDM‘: species distribution modelling from multiple data sources in R},
-  journal  = {Ecography},
-  volume   = {n/a},
-  number   = {n/a},
-  pages    = {e06964},
-  doi      = {https://doi.org/10.1111/ecog.06964},
-  eprint   = {https://nsojournals.onlinelibrary.wiley.com/doi/pdf/10.1111/ecog.06964},
-  url      = {https://nsojournals.onlinelibrary.wiley.com/doi/abs/10.1111/ecog.06964},
-  abstract = {Species distribution models (SDMs) are usually based on a single data type, such as presence-only (PO), presence-absence (PA) or abundance (AA). Results from SDMs using single sources of data will suffer from inherent biases and limitations to that data type. For example, PO data contain sampling-bias and PA/AA data are often less expansive and more sparse. Integrated SDMs (ISDMs) combine multiple data types and have recently emerged as a way to leverage strengths and minimise weaknesses of the different data types. They pose a common (distribution) model and separate observation models for each of the data types. The ‘RISDM' package for the R environment (www.r-project.org) provides access to this modelling framework using functions for preparation, fitting, interpreting and diagnosing models. The functionality of the package is demonstrated here using synthetic data sets.},
-  file     = {:/home/fos085/ScottsPublications/FosterPeelHosackHoskinsMitchellProftYangUribeRiveraFroese23.pdf.pdf:PDF},
-  keywords = {integrated species distribution model, ISDM, poisson point process, R, spatial random effects},
 }
 
 @Comment{jabref-meta: databaseType:biblatex;}

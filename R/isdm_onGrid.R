@@ -10,10 +10,17 @@
 ####			(a list whose main component is an object of class "INA")
 ####
 ####	Programmed by Scott in the first half of 2022
-####	Genesis of code started with Isaac's et al. (2020) R function in fitModel.R, however
-####		the code has expanded considerably from that to include more data types
-####		and more flexibility and some different methods. Code is completely
-####		reliant on INLA and spatial data pacakges
+####	The first versions of this function had a structure that was based on 
+####		Dambly et al (2019). https://doi.org/10.5281/zenodo.3363936 and their fucntion
+####		code fitModel.R
+####	The code of Damble et al (2019) also provided the pattern for dealing with INLA stacks 
+####		and combining them, see makeCombinedStack().
+####
+####	This current code has evolved substantially from those early days, 
+####		in terms of functionality and computational methods, user interface, 
+####		return objects, associated functions etc
+####
+####	This code is completely reliant on INLA and spatial data pacakges
 ####
 ####	Re-jigged in March 2023 to make explicit for INLA the particular pattern
 ####		of constraints for the factor level effects

@@ -9,7 +9,8 @@
 ####	Returns an INLA stack object for PPP data.with correctly set-up multiple responses etc...
 ####
 ####	Programmed by Scott in the first half of 2022
-####	Genesis of code started with Isaac's et al. (2020) R function but significiant modifactions
+####	Genesis of code started with Dambly et al (2019) https://doi.org/10.5281/zenodo.3363936
+####		but has subsequently had significiant modifactions
 ####
 ###############################################################################################
 ###############################################################################################

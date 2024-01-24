@@ -8,7 +8,7 @@
 ####	Returns a scalar double
 ####
 ####	Programmed by Scott in the first half of 2022.  
-####	Based originally on code from Isaacs et al. (2020), Kainski et al (2019) and Flag & Hoegh (2022)
+####	Based originally on code from Dambly et al. (2019), Kainski et al (2019) and Flag & Hoegh (2022)
 ####
 ###############################################################################################
 ###############################################################################################

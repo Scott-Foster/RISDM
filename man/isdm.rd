@@ -1,7 +1,7 @@
 \name{isdm}
 \alias{isdm}
 \title{Fits a spatial SDM to disparate data sources}
-\description{ This function fits a SDM to presence-only and/or presence-absence and/or abundance-absence data amd/or double-count transect data. It does so using INLA (Rue et al.; 2009), a Poisson process approximateion, and is wrapped up in the integrated methods described in Fltetcher et al. (2019) and Isaac et al. (2020). Currently, data in any of the previously mentioned three data types can be used. The model rests on the assumption that the underlying distribution of the species is a log-Guassian Cox process (a Poisson process with a spatial random effect). The code started as an altered version of that supplied with Isaac et al. (2020), but has undergone method development and extension since then.}
+\description{ This function fits a SDM to presence-only and/or presence-absence and/or abundance-absence data amd/or double-count transect data. It does so using INLA (Rue et al.; 2009), a Poisson process approximateion, and is wrapped up in the integrated methods described in Fltetcher et al. (2019) and Isaac et al. (2020). Currently, data in any of the previously mentioned three data types can be used. The model rests on the assumption that the underlying distribution of the species is a log-Guassian Cox process (a Poisson process with a spatial random effect). The code started as an altered version of that supplied with Dambly et al. (2019), but has undergone method development and extension since then.}
 \usage{
  isdm( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCdat=NULL),
 	covars=NULL,
@@ -28,7 +28,7 @@
 \item{DCobserverInfo}{ A named list containing column names of DCdat. These columns contain: 1) a survey indicator (a different detection probability will be assumed for each observer in each survey); 2) the number of animals that observer 1 ("Obs1") saw, but observer 2 did not; 3) the number of animals that observer 2 ("Obs2") saw, but observer 1 did not, and; 3) the number that both observers saw ("Both").}
 \item{control}{ A named list of arguments that control the estimation process. See Details below.}
 }
-\details{ This function is firmly based on the methods described in Isaac et al. (2020). It even started its learly ife as being based on their code-base. The code has grown substantially in terms of scope and methods, but the idea and intuition remains the same. One of the differences is that prediction is now performed using the INLA function \code{INLA::inla.posterior.samples}, as a separate analysis step. See \code{\link{predict.isdm}}.
+\details{ This function is firmly based on the methods described in Isaac et al. (2020). It even started its learly ife as being based on their code-base (Dambly et al.; 2019). The code has grown substantially in terms of scope and methods, but the idea and intuition remains the same. One of the differences is that prediction is now performed using the INLA function \code{INLA::inla.posterior.samples}, as a separate analysis step. See \code{\link{predict.isdm}}.
 
 All formulas may contain anything that a regular formula can parse (e.g. \code{\link{poly}} and \code{\link{bs}} and \code{\link{I}}) as well as interactions etc. However, please note that such terms may have unpredictable effects in the artefact formulae -- be careful (and probably do so by consturcting design matrices outside of this function). This warning should definitely be heeded when trying to include the same basis expansion for a common variable in both the distribution/bias and artefact formulae.
 
@@ -70,11 +70,13 @@ Control arguments for mdoel estimation come from the argument "control", which i
 
 \author{Scott D. Foster}
 \references{
-  Rue, H., Martino, S. and Chopin, N. (2009) Approximate Bayesian inference for latent Gaussian models by using integrated nested Laplace approximations. Journal of the Royal Statistical Society: Series B (Statistical Methodology) \emph{71}, 319--392.
+  Dambly, L., O'Hara, B. and Golding, N. (2019). oharar/IM_warbler: Integrated analysis of black-throated blue warbler data from PA, USA (1.0.1). Zenodo. https://doi.org/10.5281/zenodo.3363936
 
   Fletcher Jr., R. J., Hefley, T. J., Robertson, E. P., Zuckerberg, B., McCleery, R. A. and Dorazio, R. M. (2019) A practical guide for combining data to model species distributions Ecology, \emph{100}, e02710
 
   Isaac, N. J., Jarzyna, M. A., Keil, P., Dambly, L. I., Boersch-Supan, P. H., Browning, E., Freeman, S. N., Golding, N., Guillera-Arroita, G., Henrys, P. A., Jarvis, S., Lahoz-Monfort, J., Pagel, J., Pescott, O. L., Schmucki, R., Simmonds, E. G. and O’Hara, R. B. (2020) Data Integration for Large-Scale Models of Species Distributions Trends in Ecology & Evolution, \emph{35}, 56--67
+
+  Rue, H., Martino, S. and Chopin, N. (2009) Approximate Bayesian inference for latent Gaussian models by using integrated nested Laplace approximations. Journal of the Royal Statistical Society: Series B (Statistical Methodology) \emph{71}, 319--392.
 
   Simpson, D. P., Rue, H., Riebler, A., Martins, T. G. and Sørbye, S. H. (2017) Penalising model component complexity: A principled, practical approach to constructing priors Statistical Science, \emph{32}, 1--28
 }
