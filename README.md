@@ -1,5 +1,5 @@
 
-## RISDM is an R package that provides functionality for estimating, diagnosing, predicting and interpreting Integrated Species Distribution Models. These models take data from disparate sources and utilises their best attributes whilst minimising their worst.
+## RISDM is an R package that provides functionality for estimating, diagnosing, predicting and interpreting Integrated Species Distribution Models. These models take data from disparate sources and utilises their best attributes whilst minimising their worst. See Foster et al. (in press) for more details about the package.
 
 ## Summary
 
@@ -8,7 +8,9 @@ At its very base, the package implements the models described in
 models exploit multiple data types into a single species distribution
 model. Such models coherently capture uncertainty throughout the entire
 estimation and prediction process, unlike most approaches that consist
-of multiple analysis stages.
+of multiple analysis stages. The structure of code for the core function
+in `RISDM`, namely isdm(), evolved from that specified in Dambly et al.
+(2019).
 
 Worked examples are presented in the package’s vignette, as well as in
 (Foster et al. 2023).
@@ -81,33 +83,59 @@ email to <scott.foster@data61.csiro.au>.
 
 <div id="refs" class="references csl-bib-body hanging-indent">
 
+<div id="ref-dam19" class="csl-entry">
+
+Dambly, L., O’Hara, B. and Golding, N. 2019.
+[<span class="nocase">oharar/IM_warbler: Integrated analysis of black-
+throated blue warbler data from PA,
+USA</span>](https://doi.org/10.5281/zenodo.3363936).
+
+</div>
+
 <div id="ref-fle19" class="csl-entry">
 
-Fletcher Jr., R. J. et al. 2019. [A practical guide for combining data
-to model species distributions](https://doi.org/10.1002/ecy.2710). -
-Ecology 100: e02710.
+Fletcher Jr., R. J., Hefley, T. J., Robertson, E. P., Zuckerberg, B.,
+McCleery, R. A. and Dorazio, R. M. 2019. [A practical guide for
+combining data to model species
+distributions](https://doi.org/10.1002/ecy.2710). - Ecology 100: e02710.
 
 </div>
 
 <div id="ref-fos23" class="csl-entry">
 
-Foster, S. D. et al. 2023. RISDM: Species distribution modelling from
-multiple data sources in r. - Manuscript in preparation in press.
+Foster, S. D., Lawrence, E. and Hoskins, A. J. 2023. [Spatially
+clustered survey designs](https://doi.org/10.1007/s13253-023-00562-1). -
+Journal of Agricultural, Biological and Environmental Statistics in
+press.
+
+</div>
+
+<div id="ref-fos24" class="csl-entry">
+
+Foster, S. D., Peel, D., Hosack, G. R., Hoskins, A., Mitchell, D. J.,
+Proft, K., Yang, W.-H., Uribe-Rivera, D. E. and Froese, J. G. [‘RISDM‘:
+Species distribution modelling from multiple data sources in
+r](https://doi.org/10.1111/ecog.06964). - Ecography n/a: e06964.
 
 </div>
 
 <div id="ref-isa20" class="csl-entry">
 
-Isaac, N. J. B. et al. 2020. [Data integration for large-scale models of
-species distributions](https://doi.org/10.1016/j.tree.2019.08.006). -
-Trends in Ecology & Evolution 35: 56–67.
+Isaac, N. J. B., Jarzyna, M. A., Keil, P., Dambly, L. I., Boersch-Supan,
+P. H., Browning, E., Freeman, S. N., Golding, N., Guillera-Arroita, G.,
+Henrys, P. A., Jarvis, S., Lahoz-Monfort, J., Pagel, J., Pescott, O. L.,
+Schmucki, R., Simmonds, E. G. and O’Hara, R. B. 2020. [Data integration
+for large-scale models of species
+distributions](https://doi.org/10.1016/j.tree.2019.08.006). - Trends in
+Ecology & Evolution 35: 56–67.
 
 </div>
 
 <div id="ref-mil19" class="csl-entry">
 
-Miller, D. A. W. et al. 2019. [The recent past and promising future for
-data integration methods to estimate species’
+Miller, D. A. W., Pacifici, K., Sanderlin, J. S. and Reich, B. J. 2019.
+[The recent past and promising future for data integration methods to
+estimate species’
 distributions](https://doi.org/10.1111/2041-210X.13110). - Methods in
 Ecology and Evolution 10: 22–37.
 
