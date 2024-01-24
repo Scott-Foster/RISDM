@@ -10,7 +10,7 @@ csl: /home/fos085/ABARES/RISDM_MS//ecography.csl
 
 At its very base, the \texttt{RISDM} package implements the models described in [@mil19;@fle19;@isa20]. These models exploit multiple data types into a single species distribution model. Such models coherently capture uncertainty throughout the entire estimation and prediction process, unlike most approaches that consist of multiple analysis stages. The structure of code for the core function in `RISDM`, namely isdm(), evolved from that specified in @dam19.
 
-Worked examples are presented in the \texttt{RISDM} package's vignette, as well as in [@fos23].
+Worked examples are presented in the \texttt{RISDM} package's vignette, as well as in [@fos24].
 
 ### Installation
 

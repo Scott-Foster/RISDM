@@ -1,5 +1,5 @@
 
-## RISDM is an R package that provides functionality for estimating, diagnosing, predicting and interpreting Integrated Species Distribution Models. These models take data from disparate sources and utilises their best attributes whilst minimising their worst. See Foster et al. (in press) for more details about the package.
+## RISDM is an R package that provides functionality for estimating, diagnosing, predicting and interpreting Integrated Species Distribution Models. These models take data from disparate sources and utilises their best attributes whilst minimising their worst. See Foster et al. (2024) for more details about the package.
 
 ## Summary
 
@@ -13,7 +13,7 @@ in `RISDM`, namely isdm(), evolved from that specified in Dambly et al.
 (2019).
 
 Worked examples are presented in the package’s vignette, as well as in
-(Foster et al. 2023).
+(Foster et al. 2024).
 
 ### Installation
 
@@ -101,20 +101,11 @@ distributions](https://doi.org/10.1002/ecy.2710). - Ecology 100: e02710.
 
 </div>
 
-<div id="ref-fos23" class="csl-entry">
-
-Foster, S. D., Lawrence, E. and Hoskins, A. J. 2023. [Spatially
-clustered survey designs](https://doi.org/10.1007/s13253-023-00562-1). -
-Journal of Agricultural, Biological and Environmental Statistics in
-press.
-
-</div>
-
 <div id="ref-fos24" class="csl-entry">
 
 Foster, S. D., Peel, D., Hosack, G. R., Hoskins, A., Mitchell, D. J.,
-Proft, K., Yang, W.-H., Uribe-Rivera, D. E. and Froese, J. G. [‘RISDM‘:
-Species distribution modelling from multiple data sources in
+Proft, K., Yang, W.-H., Uribe-Rivera, D. E. and Froese, J. G. 2024.
+[‘RISDM‘: Species distribution modelling from multiple data sources in
 r](https://doi.org/10.1111/ecog.06964). - Ecography n/a: e06964.
 
 </div>
