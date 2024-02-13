@@ -1,8 +1,9 @@
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
-RISDM.Rproj
-/doc/
-/Meta/
-RISDMbuildInfo.txt
+**/.Rproj.user
+**/.Rhistory
+**/.RData
+**/.Ruserdata
+**/doc/
+**/Meta/
+**/RISDMbuildInfo.txt
+
+

@@ -61,9 +61,11 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
     #add terms to the formula for the Taylor series approach.  But not if method is 'plugin'
     if( control$DCmethod == "TaylorsLinApprox"){
       if( attr( observationList$DCdat, "nsurvey") > 1)
-	artefactFormulas$DC <- update( artefactFormulas$DC, paste0("~.+", DCobserverInfo$SurveyID,":(alpha1Coef+alpha2Coef)"))
+	artefactFormulas$DC <- update( artefactFormulas$DC, paste0("~.+", DCobserverInfo$SurveyID,":logDetectPi"))
+#	artefactFormulas$DC <- update( artefactFormulas$DC, paste0("~.+", DCobserverInfo$SurveyID,":(alpha1Coef+alpha2Coef)"))
       else
-	artefactFormulas$DC <- update( artefactFormulas$DC, "~.+alpha1Coef+alpha2Coef")
+	artefactFormulas$DC <- update( artefactFormulas$DC, "~.+logDetectPi")
+#	artefactFormulas$DC <- update( artefactFormulas$DC, "~.+alpha1Coef+alpha2Coef")
     }
   }
 

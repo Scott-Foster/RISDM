@@ -7,6 +7,9 @@
 ####	Returns a matrix full of good bits 'n' pieces for DC data estimation 
 ####
 ####	Programmed by Scott in the first half of 2022
+####	Re-factored by Scott Feb 2024
+#### 		to have only 1 prob, shared for both observers (sometimes the labels are
+####		swapped and observers change and...)
 ####
 ###############################################################################################
 ###############################################################################################

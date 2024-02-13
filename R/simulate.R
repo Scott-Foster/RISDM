@@ -13,7 +13,8 @@
 
 simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=150, n.AA=50, n.DC=50,
                            coefs=list(dist=c(NA,0.5,-0.75), bias=c(-2,-0.75)), 
-                           DC.pis=matrix( c(0.8,0.76, 0.9,0.85, 0.82,0.87), nrow=3, ncol=2, byrow=TRUE),
+#                           DC.pis=matrix( c(0.8,0.76, 0.9,0.85, 0.82,0.87), nrow=3, ncol=2, byrow=TRUE),
+                           DC.pis=c(0.8, 0.9, 0.75),
                            transect.size = 0.125, #a proportion of cell size.
                            rasterBoundary=NULL,
 			   rasterCovars=NULL,
@@ -221,12 +222,16 @@ simulateData.isdm <- function( expected.pop.size=10000, expected.n.PO=300, n.PA=
   tmptmptmp <- as.data.frame( matrix( NA, ncol=3, nrow=n.DC))
   colnames( tmptmptmp) <- c( "Obs1","Obs2","Both")
   #the survey ID
-  tmpID <- rep( 1:nrow( DC.pis), each=n.DC %/% nrow( DC.pis))
-  tmpID <- c( tmpID, rep( nrow( DC.pis), n.DC %% nrow( DC.pis))) #make the last survey biggest, if needed
+#  tmpID <- rep( 1:nrow( DC.pis), each=n.DC %/% nrow( DC.pis))
+  tmpID <- rep( 1:length( DC.pis), each=n.DC %/% length( DC.pis))
+#  tmpID <- c( tmpID, rep( nrow( DC.pis), n.DC %% nrow( DC.pis))) #make the last survey biggest, if needed
+  tmpID <- c( tmpID, rep( length( DC.pis), n.DC %% length( DC.pis))) #make the last survey biggest, if needed
   
   #thin into different categories for the observers
-  cat.pis <- cbind( Obs1=DC.pis[,1]*(1-DC.pis[,2]), Obs2=(1-DC.pis[,1])*DC.pis[,2], Both=DC.pis[,1]*DC.pis[,2], Neither=(1-DC.pis[,1])*(1-DC.pis[,2]))
-  observs <- matrix( NA, nrow=n.DC, ncol=nrow( DC.pis))
+#  cat.pis <- cbind( Obs1=DC.pis[,1]*(1-DC.pis[,2]), Obs2=(1-DC.pis[,1])*DC.pis[,2], Both=DC.pis[,1]*DC.pis[,2], Neither=(1-DC.pis[,1])*(1-DC.pis[,2]))
+  cat.pis <- cbind( Obs1=DC.pis*(1-DC.pis), Obs2=(1-DC.pis)*DC.pis, Both=DC.pis*DC.pis, Neither=(1-DC.pis)*(1-DC.pis))
+#  observs <- matrix( NA, nrow=n.DC, ncol=nrow( DC.pis))
+  observs <- matrix( NA, nrow=n.DC, ncol=length( DC.pis))
   colnames( observs) <- colnames( tmptmptmp)[1:3]
   for( ii in 1:n.DC)
     observs[ii,] <- stats::rmultinom( n=1, size=tmpTotCount[ii], prob=cat.pis[tmpID[ii],])[1:3]  #don't want the last one.
