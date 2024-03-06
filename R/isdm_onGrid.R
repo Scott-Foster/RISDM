@@ -38,7 +38,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
                                 biasFormula=NULL,
                                 artefactFormulas=list( PO=NULL, PA=~1, AA=~1, DC=~1),  #an intercept for each data type.
                                 DCobserverInfo=list( SurveyID="surveyID", Obs1="Obs1", Obs2="Obs2", Both="Both"), #info for observer stuff
-                                control=list()) {
+                                control=list(), ...) {
 
   #preliminary checks.  Aimed to catch obvious mis-specification only
   flag <- checkInput( responseNames, biasFormula, artefactFormulas, DCobserverInfo, observationList)
@@ -146,7 +146,8 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
                num.threads = control$n.threads,
                control.compute = list(config=TRUE, waic = control$calcICs, dic = control$calcICs, return.marginals = FALSE, return.marginals.predictor = FALSE),
 	       safe=TRUE,
-	       inla.mode=control$inla.mode)
+	       inla.mode=control$inla.mode,
+	       ...)
 
   #the return object, which contains some of the bits and pieces calcuated above.
   res <- list( mod=mod, distributionFormula=distributionFormula, biasFormula=biasFormula, artefactFormulas=artefactFormulas, mesh=FullMesh$mesh, control=control, responseNames=responseNames, 

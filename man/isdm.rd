@@ -13,7 +13,7 @@
         biasFormula=NULL,
         artefactFormulas=list( PO=NULL, PA=~1, AA=~1, DC=~1),
         DCobserverInfo=list( SurveyID="surveyID", Obs1="Obs1", Obs2="Obs2", Both="Both"), #info for observer stuff
-        control=list())
+        control=list(), ...)
 }
 \arguments{
 \item{ observationList}{A named list of data.frames containing the data from each type of data. For list element POdat (for presence-only data) this is a data.frame of occurance locations. For PAdat and AAdat (presence-absence and abundance data) these are data.frames containing the spatial location and any covariates associated with those particular observations (see artefactFormulas argument). For DCdat (double count data) the number observed from each observer and from both observers must be present (names in DCobserverInfo argument), and also relevant covariates.}
@@ -27,6 +27,7 @@
 \item{artefactFormulas}{A list of formulas describing variation that only occurs within its respective data type. As a concrete example, AA data may be gathered from multiple institutes/sources and may all have different detection probabilities. In this case an entry of AA=~1+dataSource may suffice. All terms included in these formulas must be present in their respective data set. While models that use basis expansion will run, its precise meaning is unknown -- for now it is *not recommended* that basis expansions are used for any of the artefact formulas.}
 \item{DCobserverInfo}{ A named list containing column names of DCdat. These columns contain: 1) a survey indicator (a different detection probability will be assumed for each observer in each survey); 2) the number of animals that observer 1 ("Obs1") saw, but observer 2 did not; 3) the number of animals that observer 2 ("Obs2") saw, but observer 1 did not, and; 3) the number that both observers saw ("Both").}
 \item{control}{ A named list of arguments that control the estimation process. See Details below.}
+\item{...}{ Other arguments passed directly to \code{\link{inla}}.}
 }
 \details{ This function is firmly based on the methods described in Isaac et al. (2020). It even started its learly ife as being based on their code-base (Dambly et al.; 2019). The code has grown substantially in terms of scope and methods, but the idea and intuition remains the same. One of the differences is that prediction is now performed using the INLA function \code{INLA::inla.posterior.samples}, as a separate analysis step. See \code{\link{predict.isdm}}.
 
