@@ -50,7 +50,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
     stop("No mesh provided. Please create one using the function makeMesh() and pass it in using the mesh argument")
 
   #set up FULL control list (priors, nthreads, indexes etc)
-  control <- makeControl( control)
+  control <- makeControl( control, covar.ext=terra::ext( covars))
 
   #set up relevant information for DC data, if required.
   if( !is.null( observationList$DCdat)){

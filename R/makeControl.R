@@ -11,7 +11,7 @@
 ###############################################################################################
 ###############################################################################################
 
-makeControl <- function( contr) {
+makeControl <- function( contr, covar.ext) {
 
   #number of cores to use.  Default is greedy but not super-super greedy
   if( ! "n.threads" %in% names( contr))  
@@ -29,31 +29,33 @@ makeControl <- function( contr) {
   if( !"int.sd" %in% names( contr)){
     if( !"int.prec" %in% names( contr)){
       contr$int.sd <- 1000
-      contr$int.prec <- 1 / contr$int.sd
+      contr$int.prec <- 1 / (contr$int.sd^2)
     }
     if( "int.prec" %in% names( contr))
-      contr$int.sd <- 1 / contr$int.prec
+      contr$int.sd <- sqrt( 1 / contr$int.prec)
   }
   else  #if sd is specified then it overrides prec.
-    contr$int.prec <- 1 / contr$int.sd
+    contr$int.prec <- 1 / ( contr$int.sd^2)
   #priors for the slopes -- stdec & precision
   if( !"other.sd" %in% names( contr)){
     if( !"other.prec" %in% names( contr)){
       contr$other.sd <- 10
-      contr$other.prec <- 1 / contr$other.prec
+      contr$other.prec <- 1 / ( contr$other.sd^2)
     }
     if( "other.prec" %in% names( contr))
-      contr$other.sd <- 1 / contr$other.prec
+      contr$other.sd <- sqrt( 1 / contr$other.prec)
   }
   else
-    contr$other.prec <- 1 / contr$other.sd
+    contr$other.prec <- 1 / ( contr$other.sd^2)
   #Should the info. crit be calculated.  Default is no.
   if( ! "calcICs" %in% names( contr))
     contr$calcICs <- FALSE
   #prior for the spatial range of the random effect
   #default is suitable for a unit square, possibly
-  if( !"prior.range" %in% names( contr))
-    contr$prior.range <- c(0.2, 0.1)
+  if( !"prior.range" %in% names( contr)){
+    maxDist <- sqrt( ( covar.ext[2] - covar.ext[1])^2 + ( covar.ext[4] - covar.ext[3])^2)
+    contr$prior.range <- c( maxDist/25, 0.1)
+  }
   #prior for the variance of the spatial rand effect
   if( !"prior.space.sigma" %in% names( contr))
     contr$prior.space.sigma <- c(1, 0.01)
