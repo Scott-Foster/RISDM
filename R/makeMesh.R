@@ -81,9 +81,9 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
   #make the mesh.  Note that sometimes the arguments seem to be treated as a 'guide' rather than gospel -- I guess
   #	that sometimes mesh solutions cannot be found for particular arguments.
 #  if( expandRegion)
-#    meshy <- INLA::inla.mesh.2d(boundary=hully, max.edge = max.edge, cutoff=cutoff, max.n=max.n, offset=offset)
+    meshy <- INLA::inla.mesh.2d(boundary=hully, max.edge = max.edge, cutoff=cutoff, max.n=max.n, offset=offset)
 #  else
-    meshy <- INLA::inla.mesh.2d( boundary=hully, max.edge=max.edge[1], max.n=max.n[1], cutoff=cutoff)
+#    meshy <- INLA::inla.mesh.2d( boundary=hully, max.edge=max.edge[1], max.n=max.n[1], cutoff=cutoff)
   
   #is the result going to be plotted?
   if( doPlot){
