@@ -22,31 +22,35 @@ makeControl <- function( contr, covar.ext) {
   #prior list
   if( ! "prior.list" %in% names( contr))
     contr$prior.list <- NULL
-  #priors for the intercepts -- location
-  if( ! "prior.mean" %in% names( contr))
-    contr$prior.mean <- 0
-  #priors for the intercepts -- stdev and precision
-  if( !"int.sd" %in% names( contr)){
-    if( !"int.prec" %in% names( contr)){
-      contr$int.sd <- 1000
-      contr$int.prec <- 1 / (contr$int.sd^2)
+  if( is.null( contr$prior.list)){
+    #priors for the intercepts -- location
+    if( ! "prior.mean" %in% names( contr))
+      contr$prior.mean <- 0
+    #priors for the intercepts -- stdev and precision
+    if( !"int.sd" %in% names( contr)){
+      if( !"int.prec" %in% names( contr)){
+	contr$int.sd <- 1000
+	contr$int.prec <- 1 / (contr$int.sd^2)
+      }
+      if( "int.prec" %in% names( contr))
+	contr$int.sd <- sqrt( 1 / contr$int.prec)
     }
-    if( "int.prec" %in% names( contr))
-      contr$int.sd <- sqrt( 1 / contr$int.prec)
-  }
-  else  #if sd is specified then it overrides prec.
-    contr$int.prec <- 1 / ( contr$int.sd^2)
-  #priors for the slopes -- stdec & precision
-  if( !"other.sd" %in% names( contr)){
-    if( !"other.prec" %in% names( contr)){
-      contr$other.sd <- 10
+    else  #if sd is specified then it overrides prec.
+      contr$int.prec <- 1 / ( contr$int.sd^2)
+    #priors for the slopes -- stdec & precision
+    if( !"other.sd" %in% names( contr)){
+      if( !"other.prec" %in% names( contr)){
+	contr$other.sd <- 10
+	contr$other.prec <- 1 / ( contr$other.sd^2)
+      }
+      if( "other.prec" %in% names( contr))
+	contr$other.sd <- sqrt( 1 / contr$other.prec)
+    }
+    else
       contr$other.prec <- 1 / ( contr$other.sd^2)
-    }
-    if( "other.prec" %in% names( contr))
-      contr$other.sd <- sqrt( 1 / contr$other.prec)
   }
   else
-    contr$other.prec <- 1 / ( contr$other.sd^2)
+    contr$other.prec <- contr$other.sd <- contr$int.prec <- contr$int.sd <- prior.mean <- NULL
   #Should the info. crit be calculated.  Default is no.
   if( ! "calcICs" %in% names( contr))
     contr$calcICs <- FALSE
