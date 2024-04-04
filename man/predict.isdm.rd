@@ -4,7 +4,8 @@
 \description{ This function predicts from an isdm object from the \code{\link{isdm}} function.  It does so by sampling from the approximate posterior of the model and produces a posterior raster.}
 \usage{
  \method{predict}{isdm}( object, covars, habitatArea=NULL, S=500, intercept.terms=NULL, 
-			n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...)
+			n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, 
+			type="intensity", confidence.level=0.95, ...)
 }
 
 \arguments{
@@ -19,6 +20,7 @@
 \item{includeFixed}{Should the fixed effects, and/or which ones, be invluded in the predictions? Default is TRUE indicating that the fixed effects (and intercepts from the intercept.terms argument) are included in the predictions. If FALSE, then no fixed effects nor intercepts are included. An alternative option is to specify the name of (a) variable(s) in the formula (and also a name of a layer in the covars rasterStack). Such specification allows for partial effects to be predicted.}
 \item{includeBias}{Should the sampling bias be included in the predictions? Default is FALSE, it is not included. This term is nearly always not-interesting in terms of figuring out what is where. However, it could be interesting to see where the search effort has been placed. Please be aware that includeBias=TRUE will force the intercept.PO to be added to the linear predictor. So, please do not include a non-NULL intercept.terms argument as that will make multiple intercepts to be included in the prediction.}
 \item{type}{The type (scale) of prediction. Choices are "intensity" for the parameter of the log-Guass Cox process, "probability" for the probability of having any 1 observation in the prediction cell, or "link" for the linear predictor.}
+\item{confidence.level}{The intended coverage for the confidence intervals. Default is 0.95 for 95 percent intervals (ranging from 0.025 percentile to 0.975 percentile).}
 \item{...}{Not implemented}
 }
 
@@ -32,6 +34,7 @@ The covariate data, within \code{covars}, is treated to the same preparation as 
 \item{fixedSamples}{All the S posterior draws of the fixed effects.}
 \item{fixed.names}{The names of the fixed effects in the samples, fixedSamples}
 \item{predLocats}{The locations where the predictions are made}
+\item{confidence.limits}{The percentiles for the bounds of the confidence limits.}
 }
 
 \seealso{ \code{\link{makeMesh}}, \code{\link{inla.mesh.2d}}, \code{\link{inla}}, \code{INLA::inla.posterior.samples}}

@@ -13,7 +13,7 @@
 ###############################################################################################
 
 #Function to get prediction from a fitted INLA model.
-predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.terms=NULL, n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", ...){
+predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.terms=NULL, n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", confidence.level=0.95, ...){
   
   #check if there's anything to do.
   if( !is.logical(includeFixed) & !all( includeFixed %in% names( covars)))
@@ -196,9 +196,10 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     stop( "unknown type.  Must be 'intensity', 'probability' or 'link'. Please check function call.")
 
   #summaries
+  limitty <- c( (1-confidence.level)/2, 1-(1-confidence.level)/2)
   lambda.median <- apply( mu.all, 1, stats::quantile, probs=0.5, na.rm=TRUE)
-  lambda.lower <- apply( mu.all, 1, stats::quantile, probs=0.025, na.rm=TRUE)
-  lambda.upper <- apply( mu.all, 1, stats::quantile, probs=0.975, na.rm=TRUE)
+  lambda.lower <- apply( mu.all, 1, stats::quantile, probs=limitty[1], na.rm=TRUE)
+  lambda.upper <- apply( mu.all, 1, stats::quantile, probs=limitty[2], na.rm=TRUE)
   lambda.mean <- rowMeans( mu.all)
   lambda.sd <- apply( mu.all, 1, stats::sd)
   
@@ -213,7 +214,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   #sort out extent in case...
   lambdaRaster <- terra::extend( lambdaRaster, terra::ext( covars))  #just in case it is needed -- could be dropped throughout the creation of the raster.
 
-  res <- list( field=lambdaRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords)
+  res <- list( field=lambdaRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords, confidence.limits=limitty)
   
   return( res)
 }
