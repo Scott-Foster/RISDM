@@ -120,8 +120,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   famLink <- makeFamLink( attr( stck, "ind"), attr( stck, "nObs"))
 
   #priors etc for fixed effects
-  tmp <- setPriors( control, stck)
-  my.control.fixed <- tmp
+  my.control.fixed <- setPriors( control, stck)
 
   #priors for the spatial model, and build the spatial effects
   my.spde <- INLA::inla.spde2.pcmatern(mesh = FullMesh$mesh,

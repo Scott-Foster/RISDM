@@ -58,6 +58,12 @@ testthat::test_that(
     tmp <- c( terra::crop( dat$covarBrick$Intensity, fm$preds$field), fm$preds$field)
     terra::plot( tmp, nc=2)
 
+    #checking the confidence levels
+    fm$preds <- predict( object=fm, covars=dat$covarBrick, S=500, confidence.level=0.8)
+    testthat::expect_s4_class( fm$preds$field, class="SpatRaster")
+    tmp <- c( terra::crop( dat$covarBrick$Intensity, fm$preds$field), fm$preds$field)
+    terra::plot( tmp, nc=2)
+    
     fm1$preds <- predict( object=fm1, covars=dat$covarBrick, S=500)
     testthat::expect_s4_class( fm$preds$field, class="SpatRaster")
     
