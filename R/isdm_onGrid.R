@@ -123,7 +123,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   my.control.fixed <- setPriors( control, stck)
 
   #priors for the spatial model, and build the spatial effects
-  my.spde <- INLA::inla.spde2.pcmatern(mesh = FullMesh$mesh,
+  my.spde <- INLA::inla.spde2.pcmatern(mesh = FullMesh$mesh, constr=control$re.constr,
                               # PC-prior on range: P(practic.range < 0.05) = 0.01
                               prior.range = control$prior.range,
                               # PC-prior on sigma: P(sigma > 1) = 0.01
@@ -144,6 +144,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
                offset = INLA::inla.stack.data(stck)$offy,
                num.threads = control$n.threads,
                control.compute = list(config=TRUE, waic = control$calcICs, dic = control$calcICs, return.marginals = FALSE, return.marginals.predictor = FALSE),
+	       control.inla = list( tolerance=control$coverg.tol),
 	       safe=TRUE,
 	       inla.mode=control$inla.mode,
 	       ...)

@@ -53,7 +53,9 @@ Control arguments for mdoel estimation come from the argument "control", which i
 \item{returnStack}{Should the INLA data stack be returned as part of the model output. Default is TRUE -- it is returned (at the expense of memory). Note that this object is needed for use in \code{\link{plot.isdm}}.}
 \item{DCmethod}{Which method should be used to estimate the detectability of each observer. Default is "TaylorsLinApprox", which approximates the model. If this doesn't work well, then the other option is "plugin", which estimates the probabilities prior to estimation.}
 \item{na.action}{How should NAs be handled? Default is \code{na.omit}, where any record with an NA is completely removed. Other options are \code{na.exclude} (pretty much the same as 'na.omit') and \code{na.fail}. Note that \code{na.pass} is more than likely going to cause \code{isdm} to fail.}
-\item{inla.mode}{Which mode of INLA to use. See ?\code{\link{inla}} for more details. Unlike INLA the default in RISDM is "classic" not "compact".}
+\item{inla.mode}{Which mode of INLA to use. See ?\code{\link{inla}} for more details. Like INLA, since 2024, the default in RISDM is "compact", not "classic".}
+\item{re.constr}{Should the random effects have a sum-to-zero constraint applied to them. The default is TRUE, which can have beneficial results -- see Goicoa et al (2018).}
+\item{converg.tol}{The convergence tolerance used within the INLA estimation algorithm. The RISDM default (1e-8) is tighter than the INLA default (0.005).}
 }
 }
 \value{An object of class "isdm". This is just a list with elements that contain: 
@@ -74,6 +76,8 @@ Control arguments for mdoel estimation come from the argument "control", which i
   Dambly, L., O'Hara, B. and Golding, N. (2019). oharar/IM_warbler: Integrated analysis of black-throated blue warbler data from PA, USA (1.0.1). Zenodo. https://doi.org/10.5281/zenodo.3363936
 
   Fletcher Jr., R. J., Hefley, T. J., Robertson, E. P., Zuckerberg, B., McCleery, R. A. and Dorazio, R. M. (2019) A practical guide for combining data to model species distributions Ecology, \emph{100}, e02710
+
+  Goicoa, T., Adin, A., Ugarte, M. D., and Hodges, J. S. In spatio-temporal disease mapping models, identifiability constraints affect PQL and INLA results Stochastic Environmental Research and Risk Assessment, 2018, \emph{32}, 749--770
 
   Isaac, N. J., Jarzyna, M. A., Keil, P., Dambly, L. I., Boersch-Supan, P. H., Browning, E., Freeman, S. N., Golding, N., Guillera-Arroita, G., Henrys, P. A., Jarvis, S., Lahoz-Monfort, J., Pagel, J., Pescott, O. L., Schmucki, R., Simmonds, E. G. and O’Hara, R. B. (2020) Data Integration for Large-Scale Models of Species Distributions Trends in Ecology & Evolution, \emph{35}, 56--67
 

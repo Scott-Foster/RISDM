@@ -81,14 +81,19 @@ makeControl <- function( contr, covar.ext) {
   if( !"na.action" %in% names( contr))
     contr$na.action <- na.omit
   if( !"inla.mode" %in% names( contr))
-    contr$inla.mode <- "classic"  #other option is "compact"
+    contr$inla.mode <- "compact"  #other option is "classic"
+  if( !"re.constr" %in% names( contr))
+    contr$re.constr <- TRUE
+  if( !"converg.tol" %in% names( contr))
+    contr$converg.tol <- 1e-8	#tighter than usual (advice from H. Rue)
   
   
   #add to as we go along
   #check remaining input -- user may have specified stuff that is not there accidentally.
   if( !all( names( contr) %in% c("n.threads","tag.pred","spat.index", "coord.names", "verbose",
                                  "prior.list", "prior.mean","int.prec","other.prec", "int.sd","other.sd","calcICs", "prior.range", 
-                                 "prior.space.sigma", "addRandom", "returnStack", "DCmethod", "standardiseCovariates", "na.action", "inla.mode")))
+                                 "prior.space.sigma", "addRandom", "returnStack", "DCmethod", "standardiseCovariates", "na.action", 
+				 "inla.mode", "re.constr", "converg.tol")))
     warning( "There are control parameters specified that are not used.")
   return( contr)
 }
