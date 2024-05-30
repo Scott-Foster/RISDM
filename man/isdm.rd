@@ -56,6 +56,7 @@ Control arguments for mdoel estimation come from the argument "control", which i
 \item{inla.mode}{Which mode of INLA to use. See ?\code{\link{inla}} for more details. Like INLA, since 2024, the default in RISDM is "compact", not "classic".}
 \item{re.constr}{Should the random effects have a sum-to-zero constraint applied to them. The default is TRUE, which can have beneficial results -- see Goicoa et al (2018).}
 \item{converg.tol}{The convergence tolerance used within the INLA estimation algorithm. The RISDM default (1e-8) is tighter than the INLA default (0.005).}
+\item{vb.correction}{Should INLA's variation bayes correction be applied. Default is FALSE (avoiding possible situation to those highlighted in https://groups.google.com/g/r-inla-discussion-group/c/X_ch6FfOgak). Note that INLA default is TRUE.}
 }
 }
 \value{An object of class "isdm". This is just a list with elements that contain: 

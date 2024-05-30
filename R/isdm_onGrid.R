@@ -144,7 +144,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
                offset = INLA::inla.stack.data(stck)$offy,
                num.threads = control$n.threads,
                control.compute = list(config=TRUE, waic = control$calcICs, dic = control$calcICs, return.marginals = FALSE, return.marginals.predictor = FALSE),
-	       control.inla = list( tolerance=control$coverg.tol),
+	       control.inla = list( tolerance=control$coverg.tol, control.vb=list(enable=control$vb.correction)),
 	       safe=TRUE,
 	       inla.mode=control$inla.mode,
 	       ...)
