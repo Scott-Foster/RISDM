@@ -81,11 +81,11 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
     ind[ii] <- 1
     dataname <- paste0( ii,'dat')
     #a design matrix for the survey data.  No scaling. No alteration of names
-    XX <- model.matrix( newForm[[ii]], newObs[[dataname]])
-    if( "(Intercept)" %in% colnames( XX))
-      colnames( XX)["(Intercept)" == colnames( XX)] <- paste0( ii,"_Intercept")
-    #make sure other variable names are also unique
-    colnames( XX)[ !grepl( "_Intercept", colnames( XX))] <- paste0(ii,"_",colnames( XX)[!grepl( "_Intercept",colnames( XX))])
+    XX <- isdm.model.matrix( newForm[[ii]], as.data.frame( newObs[[dataname]]), na.action=na.action, namy=ii)
+#    if( "(Intercept)" %in% colnames( XX))
+#      colnames( XX)["(Intercept)" == colnames( XX)] <- paste0( ii,"_Intercept")
+#    #make sure other variable names are also unique
+#    colnames( XX)[ !grepl( "_Intercept", colnames( XX))] <- paste0(ii,"_",colnames( XX)[!grepl( "_Intercept",colnames( XX))])
     #remove special characters for parsing in inla()
     colnames( XX) <- removeParsingChars( colnames( XX))
     #make new formula
