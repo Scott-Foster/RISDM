@@ -111,8 +111,8 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
     #if there are variable in both the survey data *and* the distribution+bias variables
     for( jj in setdiff( colnames( XX), "geometry")){
       if( jj %in% paste0(ii,"_",names( covarBrick))){
-	tmpID <- which( jj %in% paste0(ii,"_",names( covarBrick)))
-	XX[,jj] <- terra::extract( x=newCovarBrick[[tmpID]], coords=newObs[[dataname]][,coord.names], ID=FALSE)
+	tmpID <- which( jj == paste0(ii,"_",names( covarBrick)))
+	XX[,jj] <- terra::extract( x=covarBrick[[tmpID]], y=as.matrix( newObs[[dataname]][,coord.names]))[,1]
       }
     }
     #add in the distribution variables -- data
