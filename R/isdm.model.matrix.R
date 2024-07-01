@@ -26,7 +26,7 @@ isdm.model.matrix <- function( formmy, obsy, na.action=stats::na.omit,namy=NULL,
     if( length( tmptmp) > 0)
       tmpID[ii] <- tmptmp
   }
-  tmpID <- na.omit( tmpID)
+  tmpID <- which( !is.na( tmpID))#na.omit( tmpID)
   if( length( tmpID) > 0){  #only need to consider dropping if there are covars in model
     obsy <- obsy[,tmpID, drop=FALSE]
   
