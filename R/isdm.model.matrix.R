@@ -19,12 +19,12 @@ isdm.model.matrix <- function( formmy, obsy, na.action=stats::na.omit,namy=NULL,
 
   #remove all the variable that we are not directly interested in. Note the permissive na.action
   #find the model terms (e.g. "Acc" or "poly( SMRZ, 2)")
-  terry <- attr( stats::terms( formmy), "term.labels")
+  terry <- rownames( attr( terms( formmy), "factors"))  #attr( stats::terms( formmy), "term.labels")
   tmpID <- rep( NA, ncol( obsy))
   for(ii in 1:ncol( obsy)){
     tmptmp <- grep( colnames( obsy)[ii], terry)
     if( length( tmptmp) > 0)
-      tmpID[ii] <- tmptmp
+      tmpID[ii] <- ii
   }
   tmpID <- which( !is.na( tmpID))#na.omit( tmpID)
   if( length( tmpID) > 0){  #only need to consider dropping if there are covars in model
