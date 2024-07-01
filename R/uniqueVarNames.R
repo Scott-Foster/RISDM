@@ -21,7 +21,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   #get rid of intercept in distribution formula (and make sure of it)
   distForm <- stats::update.formula( distForm, ~.-1+0)
   #the model frame for the data
-  XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, na.action=na.action, namy=NULL)
+  XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, na.action=na.action, namy=NULL, reinsertNA=TRUE)
   #make new formula
   newDistForm <- stats::reformulate( colnames( XX))
   newDistForm <- stats::update.formula( newDistForm, ~.-1)
@@ -39,7 +39,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   ####	Bias formula, if present
   if( !is.null( biasForm)){
   #Design matrix/raster for distribution
-    XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( terra::values( covarBrick)), na.action=na.action, namy="PO")
+    XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( terra::values( covarBrick)), na.action=na.action, namy="PO", reinsertNA=TRUE)
     #make new formula
     newBiasForm <- stats::reformulate( colnames( XX))
     #put it in the 'correct' environment
@@ -51,18 +51,17 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
     if( stdCovs)
       terra::values( newBiasCovarBrick) <- standardiseThatDesMatrix( terra::values( newBiasCovarBrick))
   
-    ####	Combine distribution and bias
-    tmpNames <- c( names( newCovarBrick), names( newBiasCovarBrick))
+    ####  Combine distribution and bias	(there may be some duplicated data but it should have undergone the same standardisation in dist and in PO...
     newCovarBrick <- c( newCovarBrick, newBiasCovarBrick)
-#    terra::values( newCovarBrick) <- cbind( terra::values( newCovarBrick, na.rm=FALSE), terra::values( newBiasCovarBrick, na.rm=FALSE))
-    names( newCovarBrick) <- tmpNames
   }
   else
     newBiasForm <- NULL
   
   ####	HabitatArea variable too
-  if( !is.null( habitatArea))
+  if( !is.null( habitatArea)){
     newCovarBrick <- c( newCovarBrick, covarBrick[[habitatArea]]) #addLayer( newCovarBrick, covarBrick[[habitatArea]])
+    colnames( newCovarBrick)[ncol( newCovarBrick)] <- habitatArea
+  }
   #put it in the 'correct' environent
   environment( newCovarBrick) <- environment( covarBrick)
 
@@ -81,11 +80,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
     ind[ii] <- 1
     dataname <- paste0( ii,'dat')
     #a design matrix for the survey data.  No scaling. No alteration of names
-    XX <- isdm.model.matrix( newForm[[ii]], as.data.frame( newObs[[dataname]]), na.action=na.action, namy=ii)
-#    if( "(Intercept)" %in% colnames( XX))
-#      colnames( XX)["(Intercept)" == colnames( XX)] <- paste0( ii,"_Intercept")
-#    #make sure other variable names are also unique
-#    colnames( XX)[ !grepl( "_Intercept", colnames( XX))] <- paste0(ii,"_",colnames( XX)[!grepl( "_Intercept",colnames( XX))])
+    XX <- isdm.model.matrix( newForm[[ii]], as.data.frame( newObs[[dataname]]), na.action=na.action, namy=ii, reinsertNA=FALSE)
     #remove special characters for parsing in inla()
     colnames( XX) <- removeParsingChars( colnames( XX))
     #make new formula
