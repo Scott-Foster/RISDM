@@ -9,6 +9,7 @@
 ####
 ####	Programmed by Scott in the first half of 2022 
 ####	Touched up by Scott in March/April 2023 (significantly!)
+####	And again July 2024
 ####
 ###############################################################################################
 ###############################################################################################
@@ -21,7 +22,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   #get rid of intercept in distribution formula (and make sure of it)
   distForm <- stats::update.formula( distForm, ~.-1+0)
   #the model frame for the data
-  XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, na.action=na.action, namy=NULL, reinsertNA=TRUE)
+  XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, namy=NULL, includeNA=TRUE)
   #make new formula
   newDistForm <- stats::reformulate( colnames( XX))
   newDistForm <- stats::update.formula( newDistForm, ~.-1)
@@ -38,8 +39,8 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
 
   ####	Bias formula, if present
   if( !is.null( biasForm)){
-  #Design matrix/raster for distribution
-    XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( terra::values( covarBrick)), na.action=na.action, namy="PO", reinsertNA=TRUE)
+    #Design matrix/raster for bias
+    XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( terra::values( covarBrick)), namy="PO", includeNA=TRUE)
     #make new formula
     newBiasForm <- stats::reformulate( colnames( XX))
     #put it in the 'correct' environment
@@ -80,7 +81,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
     ind[ii] <- 1
     dataname <- paste0( ii,'dat')
     #a design matrix for the survey data.  No scaling. No alteration of names
-    XX <- isdm.model.matrix( newForm[[ii]], as.data.frame( newObs[[dataname]]), na.action=na.action, namy=ii, reinsertNA=TRUE)
+    XX <- isdm.model.matrix( formmy=newForm[[ii]], obsy=as.data.frame( newObs[[dataname]]), namy=ii, includeNA=TRUE)
     #remove special characters for parsing in inla()
     colnames( XX) <- removeParsingChars( colnames( XX))
     #make new formula
@@ -100,14 +101,13 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
     #convert to sf (used to be SpatialPoints*)
     XX <- cbind( XX, as.matrix( newObs[[dataname]][,coord.names]))
     XX <- sf::st_as_sf( as.data.frame( XX), coords=coord.names)
-#    XX <- sp::SpatialPointsDataFrame( coords=newObs[[dataname]][,coord.names], data=as.data.frame( XX))
     #rename variables to something that will parse
     names( XX) <- removeParsingChars( names( XX))
     #if there are variable in both the survey data *and* the distribution+bias variables
     for( jj in setdiff( colnames( XX), "geometry")){
       if( jj %in% paste0(ii,"_",names( covarBrick))){
 	tmpID <- which( jj == paste0(ii,"_",names( covarBrick)))
-	XX[,jj] <- terra::extract( x=covarBrick[[tmpID]], y=as.matrix( newObs[[dataname]][,coord.names]))[,1]
+	tmpCovarjj <- terra::extract( x=covarBrick[[tmpID]], y=as.matrix( newObs[[dataname]][,coord.names]))[,1]
       }
     }
     #add in the distribution variables -- data
@@ -133,7 +133,6 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
     ind['PO'] <- 1
     if( !inherits( newObs$POdat, "sf"))
       newObs$POdat <- sf::st_multipoint( as.matrix( newObs$POdat[,coord.names]))
-#      newObs$POdat <- sp::SpatialPoints( coords=newObs$POdat[,coord.names])
   }
    
   ###	the return object
