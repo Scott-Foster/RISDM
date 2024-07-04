@@ -13,7 +13,6 @@
 ####
 ###############################################################################################
 ###############################################################################################
-
 uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, habitatArea, DCsurvID, coord.names, responseNames, sampleAreaNames, stdCovs, na.action){
 
   ####	Distribution formula for entire region -- individual (artefact) datasets will be taken from this
@@ -21,15 +20,23 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   tmpXX <- as.data.frame( terra::values( covarBrick))
   #get rid of intercept in distribution formula (and make sure of it)
   distForm <- stats::update.formula( distForm, ~.-1+0)
-  #the model frame for the data
-  XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, namy=NULL, includeNA=TRUE)
-  #make new formula
+  #prune variables not needed in formulas. Both done to ensure NA pattern is consistent (hence basis expansion too)
+  myVars <- unique( c( all.vars( distForm), all.vars( biasForm)))
+  tmpXX <- tmpXX[,myVars,drop=FALSE]
+  #issue summary/warning if some covariates have a different NA pattern than others. Code stolen from isdm.model.matrix.
+  allNAs.id <- apply( tmpXX, 1, function(zz) all( is.na(zz)))
+  anyNAs.id <- apply( tmpXX, 1, function(zz) any( is.na(zz)))
+  if( !all( allNAs.id == anyNAs.id))
+    warning( paste0("Covariate rasters: Missing data (NA) present in a partial number of covariates for an observation (or cell). There are ",sum(anyNAs.id)-sum(allNAs.id)," such observations (cells). They are excluded from analysis."))
+  #the model frame for the distribution data
+  XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, namy=NULL, includeNA=TRUE) #includeNA to get raster pattern
+  #make new formula based on expanded names
   newDistForm <- stats::reformulate( colnames( XX))
   newDistForm <- stats::update.formula( newDistForm, ~.-1)
   #put it in the 'correct' environment
   environment( newDistForm) <- environment( distForm)
   #assign the design matrix spatially
-  newCovarBrick <- terra::rast( covarBrick[[1]], nlyrs=ncol( XX))#raster::brick( covarBrick[[rep(1,ncol( XX))]])
+  newCovarBrick <- terra::rast( covarBrick[[1]], nlyrs=ncol( XX))
   terra::values( newCovarBrick) <- XX
   names( newCovarBrick) <- colnames( XX)
   #put it in the 'correct' environent
@@ -40,13 +47,13 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   ####	Bias formula, if present
   if( !is.null( biasForm)){
     #Design matrix/raster for bias
-    XX <- isdm.model.matrix( formmy=biasForm, obsy=as.data.frame( terra::values( covarBrick)), namy="PO", includeNA=TRUE)
+    XX <- isdm.model.matrix( formmy=biasForm, obsy=tmpXX, namy="PO", includeNA=TRUE)
     #make new formula
     newBiasForm <- stats::reformulate( colnames( XX))
     #put it in the 'correct' environment
     environment( newBiasForm) <- environment( biasForm)
     #assign the design matrix
-    newBiasCovarBrick <- covarBrick[[rep(1,ncol( XX))]]
+    newBiasCovarBrick <- terra::rast( covarBrick[[1]], nlyrs=ncol(XX))
     terra::values( newBiasCovarBrick) <- XX
     names( newBiasCovarBrick) <- colnames( XX)  
     if( stdCovs)
@@ -57,7 +64,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   }
   else
     newBiasForm <- NULL
-  
+
   ####	HabitatArea variable too
   if( !is.null( habitatArea)){
     newCovarBrick <- c( newCovarBrick, covarBrick[[habitatArea]]) #addLayer( newCovarBrick, covarBrick[[habitatArea]])
@@ -77,13 +84,11 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   #container for the altered artefact formuals
   newForm <- arteForm
   #cycle through each of the formulas (artefact)
-  for( ii in names( newForm)){
+  for( ii in names( arteForm)){
     ind[ii] <- 1
     dataname <- paste0( ii,'dat')
     #a design matrix for the survey data.  No scaling. No alteration of names
     XX <- isdm.model.matrix( formmy=newForm[[ii]], obsy=as.data.frame( newObs[[dataname]]), namy=ii, includeNA=TRUE)
-    #remove special characters for parsing in inla()
-    colnames( XX) <- removeParsingChars( colnames( XX))
     #make new formula
     newForm[[ii]] <- stats::reformulate( colnames( XX))
     #put it in the 'correct' environment
@@ -98,7 +103,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
       XX <- cbind( newObs[[dataname]][,responseNames[ii]], XX)
       colnames( XX)[1] <- responseNames[ii]
     }
-    #convert to sf (used to be SpatialPoints*)
+    #convert to sf
     XX <- cbind( XX, as.matrix( newObs[[dataname]][,coord.names]))
     XX <- sf::st_as_sf( as.data.frame( XX), coords=coord.names)
     #rename variables to something that will parse

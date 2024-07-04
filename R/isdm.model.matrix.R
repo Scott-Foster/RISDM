@@ -15,36 +15,36 @@
 ###############################################################################################
 ###############################################################################################
 
-
 isdm.model.matrix <- function( formmy, obsy, namy=NULL, includeNA=FALSE) {
 
   #standardise row names internally
   rownames( obsy) <- 1:nrow( obsy)
 
-  #note that poly() and(?) bs() won't work with any NAs in the design matrix.  Need to prune first.
+  #determining the data set for printing
+  printnamy <- namy
+  if( is.null( printnamy))	#if it is from the covariate raster
+    printnamy <- "covariate brick"
 
-  #prune down the data to just those variables required.  This may appear to be tortured code,
-  #and it is, but I couldn't see a neater solution (redone 5 times now).
-  
   if( as.character( formmy)[2] == "1")
     XX <- stats::model.matrix( formmy, obsy)
   else{
+    #prune down the data to just those variables required.
     varnames <- all.vars( formmy)
-    obsy.pruned <- obsy[,varnames,drop=FALSE]
-    #find the pattern of NAs in the model matrix
-    allNAs.id <- apply( obsy.pruned, 1, function(zz) all( is.na( zz)))
-    anyNAs.id <- apply( obsy.pruned, 1, function(zz) any( is.na( zz)))
-    #no NA version of observations
-    obsy.pruned.noNA <- obsy.pruned[!anyNAs.id,,drop=FALSE]
-    #print warning about patterns
-    if( !all( allNAs.id == anyNAs.id)){
-      printnamy <- namy
-      if( is.null( printnamy))	#if it is from the covariate raster
-	printnamy <- "covariate brick"
-      warning( paste0(printnamy,": Missing data (NA) present in a partial number of covariates for an observation (or cell). There are ",sum(anyNAs.id)-sum(allNAs.id)," such observations (cells). Will be dealt with using control parameter na.action. See ?isdm."))
+    obsy.pruned <- obsy[,varnames,drop=FALSE]  
+  
+    #remove any row with NAs -- basis expansion won't work with them
+    allNAs.id <- apply( obsy.pruned, 1, function(zz) all( is.na(zz)))
+    anyNAs.id <- apply( obsy.pruned, 1, function(zz) any( is.na(zz)))
+    if( !printnamy %in% c("covariate brick","PO")){
+      if( !all( allNAs.id == anyNAs.id))
+	warning( paste0(printnamy,": Missing data (NA) present in a partial number of covariates for an observation (or cell). There are ",sum(anyNAs.id)-sum(allNAs.id)," such observations (cells). They are excluded from analysis."))
     }
+    obsy.pruned.noNA <- obsy.pruned[!anyNAs.id,,drop=FALSE]
+  
+    #create the design matrix (no NAs in data
     XX <- stats::model.matrix( formmy, obsy.pruned.noNA)
   
+    #put NAs back in, if requested
     if( includeNA){
       XXexpand <- matrix( NA, nrow=nrow( obsy.pruned), ncol=ncol( XX))
       rownames( XXexpand) <- 1:nrow( obsy.pruned)
@@ -61,103 +61,16 @@ isdm.model.matrix <- function( formmy, obsy, namy=NULL, includeNA=FALSE) {
     #make sure other variable names are also unique
     colnames( XX)[ !grepl( "_Intercept", colnames( XX))] <- paste0(namy,"_",colnames( XX)[ !grepl( "_Intercept",colnames( XX))])
   }
+
   #remove special characters for parsing in inla()
   colnames( XX) <- removeParsingChars( colnames( XX))
-  
+
+
   return( XX)
 }
 
 
 
-####Version for 1.2.27
-#  #remove all the variable that we are not directly interested in. Note the permissive na.action
-#  #find the model terms (e.g. "Acc" or "poly( SMRZ, 2)")
-#  terry <- rownames( attr( terms( formmy), "factors"))  #attr( stats::terms( formmy), "term.labels")
-#  tmpID <- rep( NA, ncol( obsy))
-#  for(ii in 1:ncol( obsy)){
-#    tmptmp <- grep( colnames( obsy)[ii], terry)
-#    if( length( tmptmp) > 0)
-#      tmpID[ii] <- ii
-#  }
-#  tmpID <- which( !is.na( tmpID))#na.omit( tmpID)
-#  if( length( tmpID) > 0){  #only need to consider dropping if there are covars in model
-#    obsy <- obsy[,tmpID, drop=FALSE]
-#  
-#    #check NA patterns
-#    allNAs.id <- apply( obsy, 1, function(zz) all( is.na( zz)))
-#    anyNAs.id <- apply( obsy, 1, function(zz) any( is.na( zz)))
-#    if( !all( allNAs.id == anyNAs.id)){
-#      printnamy <- namy
-#      if( is.null( printnamy))
-#	printnamy <- "covariate brick"
-#      warning( paste0("In data: ",printnamy,". Missing data (NA) present in some but not all covariates (",sum(anyNAs.id)-sum(allNAs.id)," in total). Will be dealt with using control parameter na.action. See ?isdm."))
-#    }
-#    obsy <- obsy[!anyNAs.id,,drop=FALSE]
-#  }
-#  else{
-#    allNAs.id <- anyNAs.id <- rep( FALSE, nrow( obsy))
-#  }
-#  #make the model frame
-#  modFrame <- stats::model.frame( formmy, data=obsy, na.action=na.action)
-#  
-#  #The model matrix
-#  XX_noNA <- stats::model.matrix( formmy, modFrame)  #should work fine with poly etc, NAs have already been dropped (depending on na.action).
-#  
-#  if( reinsertNA==FALSE)
-#    XX <- as.matrix( XX_noNA)
-#  else{
-#    #paste back together
-#    XX <- matrix( NA, nrow=length(allNAs.id), ncol=ncol( XX_noNA))
-#    XX[!anyNAs.id,] <- XX_noNA
-#  }
-#  colnames( XX) <- colnames( XX_noNA)
-#  
-#  if( !is.null( namy)){
-#    #rename the intercept (unique between data types)
-#    if( "(Intercept)" %in% colnames( XX))
-#      colnames( XX)["(Intercept)" == colnames( XX)] <- paste0( namy,"_Intercept")
-#    #make sure other variable names are also unique
-#    colnames( XX)[ !grepl( "_Intercept", colnames( XX))] <- paste0(namy,"_",colnames( XX)[ !grepl( "_Intercept",colnames( XX))])
-#  }
-#
-#  #remove special characters for parsing in inla()
-#  colnames( XX) <- removeParsingChars( colnames( XX))
-#  
-#  return( XX)
-#}
 
-####Version for 1.2.24
-#isdm.model.matrix <- function( formmy, obsy, na.action=stats::na.omit,namy=NULL) {
-#
-#  #check NA patterns
-#  allNAs.id <- apply( obsy, 1, function(zz) all( is.na( zz)))
-#  anyNAs.id <- apply( obsy, 1, function(zz) any( is.na( zz)))
-#  if( !all( allNAs.id == anyNAs.id))
-#    warning( paste0("NA present in some, but not all, covariates. From data: ",namy," (if blank then in the raster covariate brick). Will be dealt with using control parameter na.action. See ?isdm."))
-##  obsy.noNA <- obsy[!allNAs.id,,drop=FALSE]
-#
-#  #make the model frame
-##  modFrame <- stats::model.frame( formmy, obsy.noNA, na.action=na.action)
-#  modFrame <- stats::model.frame( formmy, na.action( obsy))
-#  
-#  #The model matrix
-#  XX_noNA <- stats::model.matrix( formmy, modFrame)  #should work fine with poly etc, NAs have already been dropped (depending on na.action).
-#  
-#  #paste back together
-#  XX <- matrix( NA, nrow=length(allNAs.id), ncol=ncol( XX_noNA))
-#  XX[!anyNAs.id,] <- XX_noNA
-#  colnames( XX) <- colnames( XX_noNA)
-#  
-#  if( !is.null( namy)){
-#    #rename the intercept (unique between data types)
-#    if( "(Intercept)" %in% colnames( XX))
-#      colnames( XX)["(Intercept)" == colnames( XX)] <- paste0( namy,"_Intercept")
-#    #make sure other variable names are also unique
-#    colnames( XX)[ !grepl( "_Intercept", colnames( XX))] <- paste0(namy,"_",colnames( XX)[ !grepl( "_Intercept",colnames( XX))])
-#  }
-#
-#  #remove special characters for parsing in inla()
-#  colnames( XX) <- removeParsingChars( colnames( XX))
-#  
-#  return( XX)
-#}
+
+
