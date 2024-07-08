@@ -22,12 +22,16 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   distForm <- stats::update.formula( distForm, ~.-1+0)
   #prune variables not needed in formulas. Both done to ensure NA pattern is consistent (hence basis expansion too)
   myVars <- unique( c( all.vars( distForm), all.vars( biasForm)))
+  if( !is.null( habitatArea))
+    myVars <- unique( c( myVars, habitatArea))
   tmpXX <- tmpXX[,myVars,drop=FALSE]
   #issue summary/warning if some covariates have a different NA pattern than others. Code stolen from isdm.model.matrix.
   allNAs.id <- apply( tmpXX, 1, function(zz) all( is.na(zz)))
   anyNAs.id <- apply( tmpXX, 1, function(zz) any( is.na(zz)))
   if( !all( allNAs.id == anyNAs.id))
     warning( paste0("Covariate rasters: Missing data (NA) present in a partial number of covariates for an observation (or cell). There are ",sum(anyNAs.id)-sum(allNAs.id)," such observations (cells). They are excluded from analysis."))
+  #actually unifying the NAs
+  tmpXX[anyNAs.id,] <- NA
   #the model frame for the distribution data
   XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, namy=NULL, includeNA=TRUE) #includeNA to get raster pattern
   #make new formula based on expanded names
@@ -69,6 +73,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   if( !is.null( habitatArea)){
     newCovarBrick <- c( newCovarBrick, covarBrick[[habitatArea]]) #addLayer( newCovarBrick, covarBrick[[habitatArea]])
     names( newCovarBrick)[terra::nlyr( newCovarBrick)] <- habitatArea
+    values( newCovarBrick[[habitatArea]])[anyNAs.id] <- NA  #to match other variables.
   }
   #put it in the 'correct' environent
   environment( newCovarBrick) <- environment( covarBrick)
