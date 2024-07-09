@@ -20,8 +20,17 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   tmpXX <- as.data.frame( terra::values( covarBrick))
   #get rid of intercept in distribution formula (and make sure of it)
   distForm <- stats::update.formula( distForm, ~.-1+0)
+  #make sure that all variables in dist form are available
+  if( !all( all.vars( distForm) %in% colnames( tmpXX)))
+    stop( "There is a variable in the distribution formula that is not present in the covariate raster brick.")
   #prune variables not needed in formulas. Both done to ensure NA pattern is consistent (hence basis expansion too)
-  myVars <- unique( c( all.vars( distForm), all.vars( biasForm)))
+  #make sure that biasForm is available and has the variables
+  if( !all( all.vars( biasForm) %in% colnames( tmpXX))){
+    warning( "Bias variables missing from covariates. Continuting without these variables. For calls to isdm(), this will(?!) cause a later error. For calls to predict.isdm(), this may cause an error but most likely it will mean that the basis for the distribution formula will be slightly different than the basis for the estimation -- be wary.")
+    myVars <- all.vars( distForm)
+  }
+  else
+    myVars <- unique( c( all.vars( distForm), all.vars( biasForm)))
   if( !is.null( habitatArea))
     myVars <- unique( c( myVars, habitatArea))
   tmpXX <- tmpXX[,myVars,drop=FALSE]

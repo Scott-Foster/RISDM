@@ -8,6 +8,7 @@
 ####	Returns a list of predictions
 ####
 ####	Programmed by Scott in Nov/Dec 2022
+####	Refactored by Scott July 2024
 ####
 ###############################################################################################
 ###############################################################################################
@@ -29,10 +30,8 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   if( !is.null( intercept.terms) & !all( intercept.terms %in% object$mod$names.fixed))
     stop( "One or more of the intercept.terms supplied is not in the model.  Please check.")
 
-#  batchStartEnd <- seq( from=0, to=S, by=ceiling( S/n.batches))
+  #set up the batch details
   batchStartEnd <- round( seq( from=0, to=S, by=S/n.batches),0)
-#  if( tail( batchStartEnd,1) < S)
-#    batchStartEnd <- c( batchStartEnd, S) #[length( batchStartEnd)] <- S  #last batch is smaller
   batchSize <- diff( batchStartEnd)
 
   #### function for drawing posterior sampls in parallel.
@@ -41,17 +40,21 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     return( tmp.samples)
   }
 
+  #initiate (get dimensions etc)
   samp.element <- funny(1)
 
+  #container for the posterior samples
   samples <- list()
+  # first batch: the random field
   if( object$control$addRandom){
     samples$fieldAtNodes <- matrix( NA, nrow=nrow( samp.element$fieldAtNodes), ncol=S)
     samples$fieldAtNodes[,(batchStartEnd[1]+1):batchStartEnd[2]] <- samp.element$fieldAtNodes    
   }
+  # first batch: the posterior fixed effects
   samples$fixedEffects <- matrix( NA, nrow=nrow( samp.element$fixedEffects), ncol=S)
-
   samples$fixedEffects[,(batchStartEnd[1]+1):batchStartEnd[2]] <- samp.element$fixedEffects
   
+  #if there are multiple batches  (don't want too many batches given for loop)
   if( n.batches > 1){
     for( ii in 2:n.batches){
       samp.element <- funny(ii)
@@ -62,31 +65,12 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
       gc()
     }
   }
-  
-  #a data.frame containing prediciton points (no NAs).
-  #add cell areas first
-#  if( !is.null( habitatArea)){
-#    tmp <- covars[[habitatArea]]
-#    names( tmp) <- "blah"  #will be changed in a bit anyway
-#    covars <- c( covars, tmp)#raster::addLayer( covars, tmp)  #this wastes memory a bit, temporarily (only really doing to rename things easily)
-#    covars <- covars[[names( covars) != habitatArea]]
-#  }
-#  else{
-##    if( terra::is.lonlat( covars))
-#      covars <- c( covars, terra::cellSize( covars))
-##    else{
-##      tmp <- covars[[1]]
-##      names( tmp) <- "tmpName"
-##      terra::values( tmp) <- prod( terra::res( tmp))
-##      covars <- c( covars, tmp)
-##    }
-#  }
-#  names( covars)[terra::nlyr( covars)] <- "myCellAreas"
-#  covars[["myCellAreas"]] <- terra::mask( covars[["myCellAreas"]], covars[[1]])
 
+  # move from parameter samples to predictions
+  #
   if( is.null( habitatArea)){
     covars <- c( covars, terra::cellSize( covars))  #could possibly use units, somehow...
-    habitatArea <- "blahblah"
+    habitatArea <- "habArea"
     names( covars)[terra::nlyr( covars)] <- habitatArea
     covars[[habitatArea]] <- terra::mask( covars[[habitatArea]], covars[[1]])
   }
@@ -98,19 +82,19 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   #Get expanded data (model matrix) and corresponding formulae
   newInfo <- uniqueVarNames( obsList=list(), covarBrick=covars, distForm=object$distributionFormula, biasForm=object$biasFormula, arteForm=list(), habitatArea=habitatArea, DCsurvID=attr( object, "DCobserverInfo"), coord.names=attr( res, "coord.names"), responseNames=object$responseNames, sampleAreaNames=NULL, stdCovs=object$control$standardiseCovariates, na.action=object$control$na.action)
   #putting it into a data frame
-  covarData <- as.data.frame( terra::extract( newInfo$covarBrick, predcoords[,1:2]))#[,names( newInfo$covarBrick), drop=FALSE])
-  myCellAreas <- as.matrix( terra::extract( covars[[habitatArea]], predcoords[,1:2]))#[,"myCellAreas", drop=FALSE])
+  covarData <- as.data.frame( terra::extract( newInfo$covarBrick, predcoords[,1:2]))
+#  myCellAreas <- as.matrix( terra::extract( covars[[habitatArea]], predcoords[,1:2]))
     
   #cut down to just those areas without NAs.
   noNAid <- apply( covarData, 1, function(x) !any( is.na( x)))
   predcoords <- predcoords[noNAid,]
   covarData <- covarData[noNAid,, drop=FALSE]
-  myCellAreas <- myCellAreas[noNAid,,drop=FALSE]
+#  myCellAreas <- myCellAreas[noNAid,,drop=FALSE]
 
   #predictions start with cell area
   #always included no matter what components are included.
-  eta <- matrix( NA, nrow=length( myCellAreas), ncol=S)
-  eta[,] <- rep( log( as.numeric( myCellAreas)), times=S)
+  eta <- matrix( NA, nrow=length( covarData[,habitatArea]), ncol=S)
+  eta[,] <- rep( log( as.numeric( covarData[,habitatArea])), times=S)
   
   #container for names of fixed effects
   fix.names <- object$mod$names.fixed
@@ -123,9 +107,9 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   #predictions due to only fixed effects
   if( any( includeFixed!=FALSE)){
     #the model matrix
-    myForm <- newInfo$distForm#object$distributionFormula
+    myForm <- newInfo$distForm
   
-    X <- stats::model.matrix( myForm, data=covarData)
+    X <- covarData[,attr( terms( myForm), "term.labels")]#stats::model.matrix( myForm, data=covarData)
   
     #sorting the design matrix and the effects so that they match
 
@@ -135,13 +119,13 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     #ordering
     fixedSamps <- samples$fixedEffects[fix.subset[fix.names.ord],]
     X <- X[,order( colnames( X)),drop=FALSE]
-    #zero-ing out effects other than requested.
+    #zero-ing out effects other than requested. Generally all will be requested
     if( !is.logical( includeFixed)){
       colID <- unlist( lapply( includeFixed, function(xx) grep( xx, colnames( X))))
       X[,-colID] <- 0
     }
     #the addition to the linear predictor
-    eta <- eta + X %*% fixedSamps
+    eta <- eta + as.matrix( X) %*% fixedSamps
   }
   
   #adding in the random effects, if present and wanted
@@ -170,18 +154,17 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     bform <- newInfo$biasForm
     bform <- update( bform, "~.-1")  #belt and braces
     #sampling bias model.matrix
-    bX <- stats::model.matrix( bform, data=covarData)
-#    #fixing up intercept name
-#    tmpID <- grepl( "(Intercept)", colnames( bX))
-#    colnames( bX)[tmpID] <- "Intercept.PO"
-#    colnames( bX)[!tmpID] <- paste0( "Intercept.PO:",colnames( bX)[!tmpID])
+    #bX <- stats::model.matrix( bform, data=covarData)
+    bX <- covarData[,attr( terms( bform), "term.labels")]
+    #ordering shouldn't be needed, but it won't hurt!?
     bX <- bX[,order( colnames( bX))]
     #sorting samples and design matrix
     tmpID1 <- grep( "PO_", object$mod$names.fixed)
     bfixedNames <- object$mod$names.fixed[tmpID1]
+    #ordering shouldn't be needed, but it won't hurt!?
     newSampsFixedBias <- samples$fixedEffects[tmpID1,][order( bfixedNames),]
     #the addition to the linear predictor
-    eta <- eta + bX %*% newSampsFixedBias
+    eta <- eta + as.matrix( bX) %*% newSampsFixedBias
   }
 
   #putting together on prediction scale
