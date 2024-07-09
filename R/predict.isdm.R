@@ -162,7 +162,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     tmpID1 <- grep( "PO_", object$mod$names.fixed)
     bfixedNames <- object$mod$names.fixed[tmpID1]
     #ordering shouldn't be needed, but it won't hurt!?
-    newSampsFixedBias <- samples$fixedEffects[tmpID1,][order( bfixedNames),,drop=FALSE]
+    newSampsFixedBias <- samples$fixedEffects[tmpID1,,drop=FALSE][order( bfixedNames),,drop=FALSE]
     #the addition to the linear predictor
     eta <- eta + as.matrix( bX) %*% newSampsFixedBias
   }

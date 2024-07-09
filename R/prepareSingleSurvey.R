@@ -22,7 +22,7 @@ prepareSingleSurvey <- function( singleDataSet, datasetID, DCcols, survIDname, s
   tmpDat <- singleDataSet[,DCcols]
   tmpSums <- colSums( tmpDat)
   if( ( tmpSums[1]==0 & tmpSums[3]==0) | ( tmpSums[2]==0 & tmpSums[3]==0))
-    stop( "One (or more) of the DC data sets has not seen a single individual. This is currently outside of RISDM's scope. Sorry.")
+    stop( "One (or more) of the observers in one (or more) of the DC data sets has not seen a single individual. This is currently outside of RISDM's scope. Sorry.")
 #  if( ! all( colSums( tmpDat) > 0))
 #    stop( "At least one of the DC data sets has an observer that hasn't seen a single individual. This is currently outside of RISDM's scope. Sorry. Consider adjusting model.")
   
