@@ -23,26 +23,8 @@ makeCombinedStack <- function( obsList, covarBrick, habitatArea, distForm, artFo
   
   #convert each of the observationList elements into a spatial points data.frame.  Can be easier to deal with.
   if( !is.null( obsList$POdat)){
-#    ind["PO"] <- 1
     responseNames <- c( responseNames, PO="anybloodything")  #temporary
-#    tmp <- as.data.frame( cbind( obsList$POdat, raster::extract( x=covarBrick, obsList$POdat[,contr$coord.names])))
-#    obsList$POdat <- sp::SpatialPointsDataFrame( coords=tmp[,contr$coord.names], data=tmp)
   }
-#  if( !is.null( obsList$PAdat)){
-#    ind["PA"] <- 1
-#    tmp <- as.data.frame( cbind( obsList$PAdat, raster::extract( x=covarBrick, obsList$PAdat[,contr$coord.names])))
-#    obsList$PAdat <- sp::SpatialPointsDataFrame( coords=tmp[,contr$coord.names], data=tmp)
-#  }
-#  if( !is.null( obsList$AAdat)){
-#    ind["AA"] <- 1
-#    tmp <- as.data.frame( cbind( obsList$AAdat, raster::extract( x=covarBrick, obsList$AAdat[,contr$coord.names])))
-#    obsList$AAdat <- sp::SpatialPointsDataFrame( coords=tmp[,contr$coord.names], data=tmp)
-#  }
-#  if( !is.null( obsList$DCdat)){
-#    ind["DC"] <- 1
-#    tmp <- as.data.frame( cbind( obsList$DCdat, raster::extract( x=covarBrick, obsList$DCdat[,contr$coord.names])))
-#    obsList$DCdat <- sp::SpatialPointsDataFrame( coords=tmp[,contr$coord.names], data=tmp)
-#  }
 
   #elementrary check to see if there are necessary components
   if( ! all( names( ind)[ind==1] %in% names( responseNames)))
@@ -73,10 +55,6 @@ makeCombinedStack <- function( obsList, covarBrick, habitatArea, distForm, artFo
       stck <- tmp
     else
       stck <- INLA::inla.stack( stck, tmp)
-    
-#    #building pieces for the formula
-#    if( names( ind)[ss] != "PO")
-#      CombinedArtForms[[names( ind)[ss]]] <- attr( tmp, "newArtForm")
   }
   
   #add another thing indicating which data is present.
@@ -85,9 +63,6 @@ makeCombinedStack <- function( obsList, covarBrick, habitatArea, distForm, artFo
   #add another thing giving the number of each observation
   tmp <- apply( stck$data$data[,1:nOutcomes,drop=FALSE], 2, function(xx) sum( !is.na( xx)))
   attr( stck, "nObs") <- tmp
-  
-#  #add the updated artefact formulae
-#  attr( stck, "newArtForms") <- CombinedArtForms
   
   return( stck)
 }

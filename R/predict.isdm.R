@@ -87,8 +87,8 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     
   #cut down to just those areas without NAs.
   noNAid <- apply( covarData, 1, function(x) !any( is.na( x)))
-  predcoords <- predcoords[noNAid,]
-  covarData <- covarData[noNAid,, drop=FALSE]
+  predcoords <- predcoords[noNAid,,drop=FALSE]
+  covarData <- covarData[noNAid,,drop=FALSE]
 #  myCellAreas <- myCellAreas[noNAid,,drop=FALSE]
 
   #predictions start with cell area
@@ -102,14 +102,14 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   #adding the intercepts, if any
   if( !is.null( intercept.terms))
     for( jj in intercept.terms)
-      eta <- sweep( eta, MARGIN=2, STATS=samples$fixedEffects[fix.names == jj,], FUN="+")
+      eta <- sweep( eta, MARGIN=2, STATS=samples$fixedEffects[fix.names == jj,,drop=FALSE], FUN="+")
   
   #predictions due to only fixed effects
   if( any( includeFixed!=FALSE)){
     #the model matrix
     myForm <- newInfo$distForm
   
-    X <- covarData[,attr( terms( myForm), "term.labels")]#stats::model.matrix( myForm, data=covarData)
+    X <- covarData[,attr( terms( myForm), "term.labels"),drop=FALSE]#stats::model.matrix( myForm, data=covarData)
   
     #sorting the design matrix and the effects so that they match
 
@@ -117,7 +117,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     fix.subset <- which( fix.names %in% colnames( X))
     fix.names.ord <- order( fix.names[fix.subset])
     #ordering
-    fixedSamps <- samples$fixedEffects[fix.subset[fix.names.ord],]
+    fixedSamps <- samples$fixedEffects[fix.subset[fix.names.ord],,drop=FALSE]
     X <- X[,order( colnames( X)),drop=FALSE]
     #zero-ing out effects other than requested. Generally all will be requested
     if( !is.logical( includeFixed)){
@@ -155,14 +155,14 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     bform <- update( bform, "~.-1")  #belt and braces
     #sampling bias model.matrix
     #bX <- stats::model.matrix( bform, data=covarData)
-    bX <- covarData[,attr( terms( bform), "term.labels")]
+    bX <- covarData[,attr( terms( bform), "term.labels"), drop=FALSE]
     #ordering shouldn't be needed, but it won't hurt!?
-    bX <- bX[,order( colnames( bX))]
+    bX <- bX[,order( colnames( bX)),drop=FALSE]
     #sorting samples and design matrix
     tmpID1 <- grep( "PO_", object$mod$names.fixed)
     bfixedNames <- object$mod$names.fixed[tmpID1]
     #ordering shouldn't be needed, but it won't hurt!?
-    newSampsFixedBias <- samples$fixedEffects[tmpID1,][order( bfixedNames),]
+    newSampsFixedBias <- samples$fixedEffects[tmpID1,][order( bfixedNames),,drop=FALSE]
     #the addition to the linear predictor
     eta <- eta + as.matrix( bX) %*% newSampsFixedBias
   }
