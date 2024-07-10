@@ -62,44 +62,19 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
     if( control$DCmethod == "TaylorsLinApprox"){
       if( attr( observationList$DCdat, "nsurvey") > 1)
 	artefactFormulas$DC <- update( artefactFormulas$DC, paste0("~.+", DCobserverInfo$SurveyID,":logDetectPi"))
-#	artefactFormulas$DC <- update( artefactFormulas$DC, paste0("~.+", DCobserverInfo$SurveyID,":(alpha1Coef+alpha2Coef)"))
       else
 	artefactFormulas$DC <- update( artefactFormulas$DC, "~.+logDetectPi")
-#	artefactFormulas$DC <- update( artefactFormulas$DC, "~.+alpha1Coef+alpha2Coef")
     }
   }
 
   #make variable names in artefact models unique -- so that factor levels etc are not shared between data types
   newInfo <- uniqueVarNames( obsList=observationList, covarBrick=covars, distForm=distributionFormula, biasForm=biasFormula, arteForm=artefactFormulas, habitatArea=habitatArea, DCsurvID=DCobserverInfo$SurveyID, coord.names=control$coord.names, responseNames=responseNames, sampleAreaNames=sampleAreaNames, stdCovs=control$standardiseCovariates, na.action=control$na.action)
 
-#  artefactFormulas <- tmp$arteForm
-#  #same for observation list (the species data)
-#  observationList <- tmp$obsList
   #same for double count information
   DCobserverInfo$SurveyID <- newInfo$DCsurvID
 
-##  #make the complete formula for the INLA call.  With all the right interactions etc.
-##  fullForm <- makeFormula( distributionFormula, biasFormula, artefactFormulas, control$addRandom, interactArtefact=TRUE)
-##  #this is an annoying scoping thing.  Took me ages to figure this out, and I still don't quite believe it.
-##  #assign( "fullForm", fullForm, envir=environment())
-##  environment( fullForm) <- environment()
-  
-  #Get variable names in formulas
-  #update from Andrew to handle as.factor() stuff.  4/11/22.
-#  varNames <- getVarNames( distributionFormula, biasFormula, artefactFormulas)
-#  tf1 <- grepl("as.factor",varNames)
-#  if(any(tf1)){varNames[tf1] <- gsub("as.factor[(]","",varNames[tf1])
-#			   varNames[tf1] <- gsub("[)]","",varNames[tf1])}
-#  #and those that relate to rasters.
-#  rasterVarNames <- getVarNames( distributionFormula, biasFormula, list(PA=NULL, AA=NULL, DC=NULL))
-#  tf2 <- grepl("as.factor",rasterVarNames)
-#  if(any(tf2)){rasterVarNames[tf2] <- gsub("as.factor[(]","",rasterVarNames[tf2])
-#			   rasterVarNames[tf2] <- gsub("[)]","",rasterVarNames[tf2])}
-
   #create offset (for areas) if not already present
   newInfo$offy <- createOffsets( sampleAreaNames, newInfo$obsList)
-#  #in an accident of history observationList gets rewritten again.
-#  observationList <- tmp$dat
     
   #make the mesh for approximating random effect over.
   FullMesh <- MakeSpatialRegion( mesh=mesh, dataBrick=newInfo$covarBrick, varNames=names( newInfo$covarBrick))

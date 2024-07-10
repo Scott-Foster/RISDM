@@ -53,34 +53,26 @@ prepareSingleSurvey <- function( singleDataSet, datasetID, DCcols, survIDname, s
     offy[1:(2*n)] <- expansPis*(1-expansPis)
     offy[2*n+1:n] <- expansPis^2
     singleDataSet$observerOffy <- offy
-    singleDataSet[,sampAreaDC] <- singleDataSet[,sampAreaDC] * offy
+    singleDataSet[,sampAreaDC] <- singleDataSet[,sampAreaDC] / offy  #was multiplication prior to 1.2.30
     
     return( singleDataSet)
   }
 
   #the offset for TaylorLinApprox of log( 1-pi) around log( pi)  
-#  singleDataSet$expansOffset <- singleDataSet$alpha1Coef <- singleDataSet$alpha2Coef <- NA
   singleDataSet$expansOffset <- singleDataSet$logDetectPi <- NA
-  #Obs1 (not Obs2)
-#  singleDataSet$expansOffset[1:n] <- log( 1-expansPis[2]) - (expansPis[2] / (expansPis[2]-1)) * log( expansPis[2])
-#  singleDataSet$alpha1Coef[1:n] <- 1
-#  singleDataSet$alpha2Coef[1:n] <- expansPis[2] / (expansPis[2]-1)
-  singleDataSet$expansOffset[1:n] <- log( 1-expansPis) + expansPis * log( expansPis) / (1-expansPis)
-  singleDataSet$logDetectPi[1:n] <- -expansPis / (1-expansPis)
-  #Obs2 (not Obs1)
-#  singleDataSet$expansOffset[n+1:n] <- log( 1-expansPis[1]) - (expansPis[1] / (expansPis[1]-1)) * log( expansPis[1])
-#  singleDataSet$alpha1Coef[n+1:n] <- expansPis[1] / (expansPis[1]-1)
-#  singleDataSet$alpha2Coef[n+1:n] <- 1
-  singleDataSet$expansOffset[n+1:n] <- log( 1-expansPis) + expansPis * log( expansPis) / (1-expansPis)
-  singleDataSet$logDetectPi[n+1:n] <- -expansPis / (1-expansPis)
+  #One observer (not the other)
+  singleDataSet$expansOffset[1:(2*n)] <- log( 1-expansPis) + expansPis * log( expansPis) / (1-expansPis)
+  singleDataSet$logDetectPi[1:(2*n)] <- -expansPis / (1-expansPis)
   #Both
-#  singleDataSet$expansOffset[2*n+1:n] <- 0
-#  singleDataSet$alpha1Coef[2*n+1:n] <- 1
-#  singleDataSet$alpha2Coef[2*n+1:n] <- 1
   singleDataSet$expansOffset[2*n+1:n] <- 0
   singleDataSet$logDetectPi[2*n+1:n] <- 2
 
-
+  #added 1.2.30
+  #the above is for dlog(1-pi) / dlog(pi) only.  Offset and coef are negative of these.
+  singleDataSet$expansOffset <- -singleDataSet$expansOffset
+  singleDataSet$logDetectPi <- -singleDataSet$logDetectPi
+  
+  #expansOffset already negative. Create the combined offset
   singleDataSet[,sampAreaDC] <- exp( log( singleDataSet[,sampAreaDC]) + singleDataSet$expansOffset)
     
   return( singleDataSet)
