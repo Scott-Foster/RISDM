@@ -88,14 +88,15 @@ makeControl <- function( contr, covar.ext) {
     contr$converg.tol <- 1e-8	#tighter than usual (advice from H. Rue)
   if( !"vb.correction" %in% names( contr))
     contr$vb.correction <- FALSE
-  
+  if( !"posterior.corr.matrix" %in% names( contr))
+    contr$posterior.corr.matrix <- FALSE
   
   #add to as we go along
   #check remaining input -- user may have specified stuff that is not there accidentally.
   if( !all( names( contr) %in% c("n.threads","tag.pred","spat.index", "coord.names", "verbose",
                                  "prior.list", "prior.mean","int.prec","other.prec", "int.sd","other.sd","calcICs", "prior.range", 
                                  "prior.space.sigma", "addRandom", "returnStack", "DCmethod", "standardiseCovariates", "na.action", 
-				 "inla.mode", "re.constr", "converg.tol", "vb.correction")))
+				 "inla.mode", "re.constr", "converg.tol", "vb.correction", "posterior.corr.matrix")))
     warning( "There are control parameters specified that are not used.")
   return( contr)
 }

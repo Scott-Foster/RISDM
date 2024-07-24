@@ -42,6 +42,8 @@ setPriors <- function( control, stck){
     tmp$prec$AA_Intercept <- control$int.prec
   if( ("DC_Intercept" %in% stck$effects$names) & (!"DC_Intercept" %in% names( tmp$prec)))
     tmp$prec$DC_Intercept <- control$int.prec
+
+  tmp$correlation.matrix <- control$posterior.corr.matrix
     
   return( tmp)
 }
