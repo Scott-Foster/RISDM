@@ -24,6 +24,10 @@ checkDesignMatrix <- function( covarBrick, distForm=NULL, biasForm=NULL, habitat
                                      arteForm=list(), 
                                      habitatArea=habitatArea, stdCovs=TRUE, DCsurvID=NA)$covarBrick
   designMat <- as.data.frame( designMat)
+  #Intercepts will cause trouble, remove them
+  message( "Removing all intercepts")
+  designMat <- designMat[,!grepl( "_Intercept", colnames( designMat))]
+  
   corrplot::corrplot(
       stats::cor( designMat, method="pearson", use="complete.obs"),
       method = 'number',
@@ -32,10 +36,10 @@ checkDesignMatrix <- function( covarBrick, distForm=NULL, biasForm=NULL, habitat
       diag = FALSE)
   
   tmp <- eigen( cov(designMat))
-  cat( paste0( "Largest e-value: ", round( tmp$values[1], 4)," Smallest e-value: ", round( tmp$values[ncol(designMat)], 4),". Condition number: ", round( tmp$values[1]/tmp$values[ncol(designMat)],4)))
+  cat( paste0( "Largest e-value: ", round( tmp$values[1], 4)," Smallest e-value: ", round( tmp$values[ncol(designMat)], 4),". Condition number: ", round( tmp$values[1]/tmp$values[ncol(designMat)],4),"\n"))
 
   if( do.pairs)
-    pairs( designMat[sample.int(nrow( designMat), min( 10000, nrow( designMat))),], pch='.')
+    pairs( designMat[sample.int(nrow( designMat), min( 5000, nrow( designMat))),], pch='.', lower.panel=function(x,y,...){points(x,y,...)}, upper.panel=NULL)
   
   return( invisible( TRUE))
 }
