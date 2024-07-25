@@ -37,11 +37,9 @@ set.sim.control <- function( contr){
     contr$range <- NA
   if( ! "useMBHdesign" %in% names( contr))
     contr$useMBHdesign <- FALSE
-  if( ! "exact.n.PO" %in% names( contr))
-    contr$exact.n.PO <- FALSE
-  
+
   #add to as we go along
-  if( !all( names( contr) %in% c("set.random.seed","random.seed","raster.dim","doPlot","addRandom", "sd", "range", "useMBHdesign","exact.n.PO")))
+  if( !all( names( contr) %in% c("set.random.seed","random.seed","raster.dim","doPlot","addRandom", "sd", "range", "useMBHdesign")))
     warning( "There are control parameters specified that are not used.")
   return( contr)
   

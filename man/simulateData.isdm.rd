@@ -3,32 +3,33 @@
 \title{Simulates data of different types from an underlying point process.}
 \description{This function simulates some data based on a number of fairly strict assumptions. }
 \usage{
- simulateData.isdm( expected.pop.size=10000, expected.n.PO=300, n.PA=150, n.AA=50, n.DC=50,
-                           coefs=list(dist=c(NA,0.5,-0.75), bias=c(-2,-0.75)), 
-                           DC.pis=matrix( c(0.8,0.76, 0.9,0.85, 0.82,0.87), nrow=3, ncol=2, byrow=TRUE),
-                           transect.size = 0.125, #a proportion of cell size.
-                           rasterBoundary=NULL,
-			   rasterCovars=NULL,
-			   rasterBiasCovar=NULL,
-                           control=list())
+  simulateData.isdm( pop.size=10000,
+			distForm=~-1+var1, biasForm=~1,
+			Intercept=NULL, distCoefs=NULL, biasCoefs=NULL, DC.pi=NULL,
+			n.PO=300, n.PA=150, n.AA=50, n.DC=50,
+			rasterBoundary=NULL, covarBrick=NULL,
+			transect.size=0.125,
+			control=list())
 }
+
 \arguments{
-\item{expected.pop.size}{The number of individuals expected throughout the sampling area.}
-\item{expected.n.PO}{The number of observed Presence-only (PO) observations in the sampling area.}
+\item{pop.size}{The number of individuals expected throughout the sampling area. Ignored if Intercept is given (arguments play the same role).}
+\item{distForm}{The formula used to describe the distribution model. It is important to not include an intercept here.}
+\item{biasForm}{The formula used to describe the bias model.}
+\item{Intercept}{The intercept to use in the distribution model. Default is NULL, which indicates that (by default) intercept is specified by the number of individuals.}
+\item{distCoefs}{The coefficients to use in the model for the distribution. Note that this does not include an intercept.}
+\item{biasCoefs}{The coefficients used to define the model for the bias.}
+\item{DC.pi}{The detection probability for double count data. The same detection probability is assumed for each observer.}
 \item{n.PA}{The number of presence-absence (PA) data.}
 \item{n.AA}{The number of abundance (AA) data.}
 \item{n.DC}{The number of double counted (DC) transects.}
-\item{coefs}{The coefficients for the distribution model: intercept and each of the two covariates. Note that the intercept will be effecitvely ignored and will be scaled so that the expected population size is maintained.}
-\item{bias}{The coefficients for the bias model: intercept and the bias covariate.}
-\item{DC.pis}{The detection probability for each of the two DC observers.}
-\item{transect.size}{The area covered by each of the PA, AA, and DC transects.}
 \item{rasterBoundary}{SpatRaster, whose NA pattern defines the boundary of the simulation area. Ignored if rasterCovars is supplied.}
-\item{rasterCovars}{SpatRaster with two layers, one for each of the covariates used in the distribution model.}
-\item{rasterBiasCovar}{SpatRaster with a single layer giving the data for the bias covariate. Must be specified when rasterCovars is also specified (an error will occur otherwise).}
+\item{covarBrick}{SpatRaster containing data described in distForm and biasForm.}
+\item{transect.size}{The area covered by each of the PA, AA, and DC transects.}
 \item{control}{A list of control arguments for the simulation. May be partially specified. See Details.}
 }
 \details{
- This function generates some fake data. It was written largely for internal testing purposes, but is made available just in case others find it useful (or useful to hack). It is pretty rudimentary. The simulation of the random fields is facilitate by Skip Woolley's fftGPsim() function, which is copied (with permission) into the RISM package -- thanks Skip.
+ This function generates some fake data. It was written largely for internal testing purposes, but is made available just in case others find it useful (or useful to hack). The simulation of the random fields is facilitate by Skip Woolley's fftGPsim() function, which is copied (with permission) into the RISM package and then slightly refactored by Wen-Hsi Yang -- thanks Skip and Wen-Hsi!.
  
   The algorithm proceeds by first defining a grid, then calculating distances, Matern covariances, then decomposing covariances and simulating using decomposition. By far and away, the slowest piece is the decomposition -- a Cholesky is used.  Dense grids, greater than about 50x50, could be annoyingly slow.
  
@@ -44,7 +45,7 @@
 }
 }
 \value{
- An object of class `simISDMdata', which is just a list with elements for each of the different data types, covariates and the expected population size.
+ An object of class `simISDMdata', which is just a list with elements for each of the different data types, covariates, coefficients and so on. Names should be pretty self-explaining.
 }
 
 \seealso{\code{\link{isdm}}, \code{\link{predict.isdm}}}
