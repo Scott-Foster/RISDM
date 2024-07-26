@@ -17,8 +17,8 @@ simulateData.isdm <- function( pop.size=10000,
 				      Intercept=NULL, distCoefs=NULL, biasCoefs=NULL, DC.pi=NULL,
 				      n.PO=300, n.PA=150, n.AA=50, n.DC=50,
 				      rasterBoundary=NULL, covarBrick=NULL,
-
 				      transect.size=0.125,
+				      Intensity=NULL,
 				      control=list()){
 
   #set the control for the simulation
@@ -26,6 +26,15 @@ simulateData.isdm <- function( pop.size=10000,
   #set the seed, if requested
   if( control$set.random.seed)
     set.seed( control$random.seed)
+    
+  if( !is.null( Intensity)){
+    if( is.null( covarBrick))
+      covarBrick <- Intensity
+    else
+      covarBrick <- c( covarBrick, Intensity)
+    distForm <- stats::reformulate( termlabels=names( Intensity))
+    Intercept <- NULL
+  }
 				      
   #variable names
   my.allVars <- unique( c( all.vars( distForm), all.vars( biasForm)))
@@ -85,39 +94,47 @@ simulateData.isdm <- function( pop.size=10000,
   }
   
   #random effect for the log-gauss process
-  if( control$addRandom){
-    if( is.na( control$range))
-      control$range <- 5*max( terra::res( covarBrick))
-   REff <- fftGPsim2( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range, nu=1/2)
-   REff <- as.numeric( REff)
+  if( is.null( Intensity)){
+    if( control$addRandom){
+      if( is.na( control$range))
+	control$range <- 5*max( terra::res( covarBrick))
+    REff <- fftGPsim2( x=xSeq, y=ySeq, sig2=control$sd^2, rho=control$range, nu=1/2)
+    REff <- as.numeric( REff)
+    }
+    else
+      REff <- rep(0, terra::ncell( covarBrick))
+   
+    #data brick for the covariates and random effect
+    tmp <- terra::rast( newInfo$covarBrick, nlyrs=1, names="REff")
+    values( tmp) <- REff
+    
+    tmp <- terra::mask( tmp, rasterBoundary)
+    names( tmp) <- "REff"
+    newInfo$covarBrick <- c( newInfo$covarBrick, tmp)
   }
-  else
-    REff <- rep(0, terra::ncell( covarBrick))
-
-  #data brick for the covariates and random effect
-  tmp <- terra::rast( newInfo$covarBrick, nlyrs=1, names="REff")
-  values( tmp) <- REff
-  tmp <- c( tmp, terra::cellSize( newInfo$covarBrick))
+  tmp <- terra::cellSize( newInfo$covarBrick)
   tmp <- terra::mask( tmp, rasterBoundary)
-  names( tmp) <- c("REff","myCellSize")
+  names( tmp) <- "myCellSize"
   newInfo$covarBrick <- c( newInfo$covarBrick, tmp)
-
+  
   newInfo$Xall <- as.data.frame( newInfo$covarBrick)
 #  if( is.null( habitatArea))
 #    newInfo$Xall[[habitatArea]] <- terra::values( terra::cellSize( newInfo$covarBrick))
 #  else
 #    newInfo$Xall[[habitatArea]] <- terra::values( newInfor$covarBrick[[habitatArea]])
-  Xdist <- stats::model.matrix( newInfo$distForm, newInfo$Xall)
+  if( is.null( Intensity)){
+    Xdist <- stats::model.matrix( newInfo$distForm, newInfo$Xall)
+  
+    #set up coefficients (if not specified)
+    if( is.null( distCoefs)){
+      distCoefs <- stats::rnorm( ncol( Xdist), mean=0, sd=1)
+      names( distCoefs) <- colnames( Xdist)
+    }
+    if( ncol( Xdist) != length( distCoefs))
+      stop( "There are a different number of distribution coefficients specified for the formula provided. Please check.")
+  }
   newInfo$biasForm <- stats::update.formula( newInfo$biasForm, ~.-1)
   Xbias <- stats::model.matrix( newInfo$biasForm, newInfo$Xall)
-
-  #set up coefficients (if not specified)
-  if( is.null( distCoefs)){
-    distCoefs <- stats::rnorm( ncol( Xdist), mean=0, sd=1)
-    names( distCoefs) <- colnames( Xdist)
-  }
-  if( ncol( Xdist) != length( distCoefs))
-    stop( "There are a different number of distribution coefficients specified for the formula provided. Please check.")
   if( is.null( biasCoefs)){
     biasCoefs <- stats::rnorm( ncol( Xbias), mean=0, sd=1)
     names( biasCoefs) <- colnames( Xbias)
@@ -125,16 +142,23 @@ simulateData.isdm <- function( pop.size=10000,
   if( ncol( Xbias) != length( biasCoefs))
     stop( "There are a different number of bias coefficients specified for the formula provided. Please check.")
 
-  #linear predictor
-  LinPred <- Xdist %*% distCoefs +
-              newInfo$Xall$REff +
-	      log( newInfo$Xall$myCellSize)
-
-  if( !is.null( Intercept))
-    LinPred <- LinPred + Intercept
-    
-  #Intensity for log-gauss process
-  Intensity <- exp( LinPred)
+  if( is.null( Intensity)){
+    #linear predictor
+    LinPred <- Xdist %*% distCoefs +
+		newInfo$Xall$REff +
+		log( newInfo$Xall$myCellSize)
+  
+    if( !is.null( Intercept))
+      LinPred <- LinPred + Intercept
+      
+    #Intensity for log-gauss process
+    Intensity <- exp( LinPred)
+  }
+  else{  #just to make format consistent
+    Intensity <- terra::mask( Intensity, rasterBoundary)
+    Intensity <- terra::values( Intensity, na.rm=TRUE)
+  }
+  
   if( is.null( Intercept)){
     #the total expectation and observed number from unbiassed (actual distribution)
     tmp.Lambda <- sum( Intensity, na.rm=TRUE)
@@ -150,10 +174,9 @@ simulateData.isdm <- function( pop.size=10000,
   LinPred <- log( Intensity)
   
   #add to databrick
-  tmpR <- terra::rast( newInfo$covarBrick, nlyrs=2, names=c("LinPred","Intensity"), val=0)
-  terra::values( tmpR)[as.numeric( rownames( LinPred)),] <- cbind( LinPred, Intensity)
+  tmpR <- terra::rast( newInfo$covarBrick, nlyrs=2, names=c("LinPred","Intensity"), val=NA)
+  terra::values( tmpR)[as.numeric( rownames( newInfo$Xall)),] <- cbind( LinPred, Intensity)
   newInfo$covarBrick <- c( newInfo$covarBrick, tmpR)
-  
   
   ####################################
   ####	Create observations
@@ -244,9 +267,9 @@ simulateData.isdm <- function( pop.size=10000,
   
   #add to databrick
   tmpR <- terra::rast( newInfo$covarBrick, nlyrs=2, names=c("biasLinPred","biasIntensity"), val=NA)
-  terra::values( tmpR)[as.numeric( rownames( LinPred_PO)),] <- cbind( LinPred_PO, Intensity_PO)
+  terra::values( tmpR)[as.numeric( rownames( newInfo$Xall)),] <- cbind( LinPred_PO, Intensity_PO)
   newInfo$covarBrick <- c( newInfo$covarBrick, tmpR)
-
+  
   if( !is.null( rasterBoundary))
     newInfo$covarBrick <- terra::mask( newInfo$covarBrick, rasterBoundary)
   

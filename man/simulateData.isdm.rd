@@ -9,6 +9,7 @@
 			n.PO=300, n.PA=150, n.AA=50, n.DC=50,
 			rasterBoundary=NULL, covarBrick=NULL,
 			transect.size=0.125,
+			Intensity=NULL,
 			control=list())
 }
 
@@ -26,6 +27,7 @@
 \item{rasterBoundary}{SpatRaster, whose NA pattern defines the boundary of the simulation area. Ignored if rasterCovars is supplied.}
 \item{covarBrick}{SpatRaster containing data described in distForm and biasForm.}
 \item{transect.size}{The area covered by each of the PA, AA, and DC transects.}
+\item{Intensity}{A user-supplied intensity surface to use instead of a model. If NULL (default) then the argument is ignored. If a raster (only other option) then it is used and distForm and distCoefs are ignored. Note however, that bias is still added to the PO sampling.}
 \item{control}{A list of control arguments for the simulation. May be partially specified. See Details.}
 }
 \details{

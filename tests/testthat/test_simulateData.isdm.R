@@ -25,14 +25,19 @@ testthat::test_that(
     r <- terra::rast( system.file( "extdata/ACT_DemoData.grd", package="RISDM"))
     r <- terra::aggregate( r, 3) #to make it finite time (if not using fft approach)
     n1 <- sum( !is.na( terra::values( r[[1]])))
+    
     #giving raster boundary
     dat <- simulateData.isdm( rasterBoundary=r[[1]], control=list( doPlot=FALSE))
     testthat::expect_s3_class(object=dat, class="simISDMdata")  #make sure an object has been returned.
     testthat::expect_equal(object=sum( !is.na( terra::values( dat$covarBrick$biasIntensity))), expected=n1)
+    
     #giving our own covariates and bias covariates
     dat <- simulateData.isdm( pop.size=10000, distForm= ~soilMoisture+MeanMinTemp, biasForm= ~1+logAccessibility, covarBrick=r, control=list( doPlot=FALSE))
     testthat::expect_s3_class(object=dat, class="simISDMdata")  #make sure an object has been returned.
     testthat::expect_equal(object=sum( !is.na( terra::values( dat$covarBrick$biasIntensity))), expected=n1)
+    
+    #giving an intensity
+    dat <- simulateData.isdm( pop.size=10000, biasForm=~1+logAccessibility, covarBrick=r, Intensity=exp( r$soilMoisture), control=list(doPlot=FALSE))
   }
 )
 
