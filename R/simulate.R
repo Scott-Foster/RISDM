@@ -16,6 +16,7 @@ simulateData.isdm <- function( pop.size=10000,
 				      distForm=~-1+var1, biasForm=~1,
 				      Intercept=NULL, distCoefs=NULL, biasCoefs=NULL, DC.pi=NULL,
 				      n.PO=300, n.PA=150, n.AA=50, n.DC=50,
+				      PA.locats=NULL, AA.locats=NULL, DC.locats=NULL,
 				      rasterBoundary=NULL, covarBrick=NULL,
 				      transect.size=0.125,
 				      Intensity=NULL,
@@ -183,12 +184,18 @@ simulateData.isdm <- function( pop.size=10000,
   ####################################
 
   ####	PA data
-  if( control$useMBHdesign)#nchar( system.file( package="MBHdesign")) > 0)
-    PAdata <- MBHdesign::quasiSamp.raster( n=n.PA, rasterBoundary)
+  if( is.null( PA.locats)){
+    if( control$useMBHdesign)#nchar( system.file( package="MBHdesign")) > 0)
+      PAdata <- MBHdesign::quasiSamp.raster( n=n.PA, rasterBoundary)
+    else{
+      tmp <- terra::as.data.frame( rasterBoundary, xy=TRUE, cells=TRUE)
+      tmp <- tmp[sample.int(n=nrow(tmp), size=n.PA, replace=FALSE),]
+      PAdata <- data.frame( x=tmp$x, y=tmp$y, inclusion.probabilities=NA, ID=tmp$cell)
+    }
+  }
   else{
-    tmp <- terra::as.data.frame( rasterBoundary, xy=TRUE, cells=TRUE)
-    tmp <- tmp[sample.int(n=nrow(tmp), size=n.PA, replace=FALSE),]
-    PAdata <- data.frame( x=tmp$x, y=tmp$y, inclusion.probabilities=NA, ID=tmp$cell)
+    PAdata <- data.frame( x=PA.locats[,1], y=PA.locats[,2], inclusion.probabilities=NA, ID=terra::extract( rasterBoundary, PA.locats, cells=TRUE)$cell)
+    n.PA <- nrow( PA.locats)
   }
   #add the transect area
   mySizes <- terra::values( newInfo$covarBrick$myCellSize)[PAdata$ID]
@@ -200,12 +207,18 @@ simulateData.isdm <- function( pop.size=10000,
   PAdata$PA <- stats::rbinom( n=n.PA, size=1, prob=pmax( 0, pmin( 1-exp( -tmpIntensity),1)))
   
   ####  Create the count data (AA)
-  if( control$useMBHdesign)#nchar( system.file( package="MBHdesign")) > 0)
-    AAdata <- MBHdesign::quasiSamp.raster( n=n.AA, rasterBoundary)
+  if( is.null( AA.locats)){
+    if( control$useMBHdesign)#nchar( system.file( package="MBHdesign")) > 0)
+      AAdata <- MBHdesign::quasiSamp.raster( n=n.AA, rasterBoundary)
+    else{
+      tmp <- terra::as.data.frame( rasterBoundary, xy=TRUE, cells=TRUE)
+      tmp <- tmp[sample.int(n=nrow(tmp), size=n.AA, replace=FALSE),]
+      AAdata <- data.frame( x=tmp$x, y=tmp$y, inclusion.probabilities=NA, ID=tmp$cell)
+    }
+  }
   else{
-    tmp <- terra::as.data.frame( rasterBoundary, xy=TRUE, cells=TRUE)
-    tmp <- tmp[sample.int(n=nrow(tmp), size=n.AA, replace=FALSE),]
-    AAdata <- data.frame( x=tmp$x, y=tmp$y, inclusion.probabilities=NA, ID=tmp$cell)
+    AAdata <- data.frame( x=AA.locats[,1], y=AA.locats[,2], inclusion.probabilities=NA, ID=terra::extract( rasterBoundary, AA.locats, cells=TRUE)$cell)
+    n.AA <- nrow( AA.locats)
   }
   #add the transect area
   mySizes <- terra::values( newInfo$covarBrick$myCellSize)[AAdata$ID]
@@ -221,13 +234,18 @@ simulateData.isdm <- function( pop.size=10000,
   #number of DC surveys is 1
   if( is.null( DC.pi))
     DC.pi <- stats::runif( 1, min=0.6, max=0.99)
-    
-  if( control$useMBHdesign)#nchar( system.file( package="MBHdesign")) > 0)
-    DCdata <- MBHdesign::quasiSamp.raster( n=n.DC, rasterBoundary)
+  if( is.null( DC.locats)){
+    if( control$useMBHdesign)#nchar( system.file( package="MBHdesign")) > 0)
+      DCdata <- MBHdesign::quasiSamp.raster( n=n.DC, rasterBoundary)
+    else{
+      tmp <- terra::as.data.frame( rasterBoundary, xy=TRUE, cells=TRUE)
+      tmp <- tmp[sample.int(n=nrow(tmp), size=n.DC, replace=FALSE),]
+      DCdata <- data.frame( x=tmp$x, y=tmp$y, inclusion.probabilities=NA, ID=tmp$cell)
+    }
+  }
   else{
-    tmp <- terra::as.data.frame( rasterBoundary, xy=TRUE, cells=TRUE)
-    tmp <- tmp[sample.int(n=nrow(tmp), size=n.DC, replace=FALSE),]
-    DCdata <- data.frame( x=tmp$x, y=tmp$y, inclusion.probabilities=NA, ID=tmp$cell)
+    DCdata <- data.frame( x=DC.locats[,1], y=DC.locats[,2], inclusion.probabilities=NA, ID=terra::extract( rasterBoundary, DC.locats, cells=TRUE)$cell)
+    n.DC <- nrow( DC.locats)
   }
   #add the transect area
   mySizes <- terra::values( newInfo$covarBrick$myCellSize)[DCdata$ID]
@@ -296,16 +314,16 @@ simulateData.isdm <- function( pop.size=10000,
     #AA
     terra::plot( newInfo$covarBrick$Intensity, main="Intensity")
     terra::plot( !is.na( newInfo$covarBrick[[1]]), col=grey(c(1,0.95)), legend=FALSE, main="AA survey")
-    for( ii in 0:max( AAdata$AA))
+    for( ii in 0:max( AAdata$AA, na.rm=TRUE))
       points( AAdata[AAdata$AA==ii,1:2], col=ii+1, pch=20, cex=1.5)
-    legend( x="bottomleft", pch=20, col=1:(max( AAdata$AA)+1), legend=0:max( AAdata$AA))
+    legend( x="bottomleft", pch=20, col=1:(max( AAdata$AA, na.rm=TRUE)+1), legend=0:max( AAdata$AA, na.rm=TRUE))
     #DC
     terra::plot( newInfo$covarBrick$Intensity, main="Intensity")
     terra::plot( !is.na( newInfo$covarBrick[[1]]), col=grey(c(1,0.95)), legend=FALSE, main="DC survey")
     tmpCount <- rowSums( DCdata[,c("Obs1","Obs2","Both")])
-    for( ii in 0:max( tmpCount))
+    for( ii in 0:max( tmpCount, na.rm=TRUE))
       points( DCdata[tmpCount==ii,1:2], col=ii+1, pch=20, cex=1.5)
-    legend( x="bottomleft", pch=20, col=1:(max( tmpCount)+1), legend=0:max( tmpCount))
+    legend( x="bottomleft", pch=20, col=1:(max( tmpCount, na.rm=TRUE)+1), legend=0:max( tmpCount, na.rm=TRUE))
     
     #PO  
     terra::plot( newInfo$covarBrick$biasIntensity, main="Biassed Intensity")

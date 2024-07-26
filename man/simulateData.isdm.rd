@@ -7,6 +7,7 @@
 			distForm=~-1+var1, biasForm=~1,
 			Intercept=NULL, distCoefs=NULL, biasCoefs=NULL, DC.pi=NULL,
 			n.PO=300, n.PA=150, n.AA=50, n.DC=50,
+			PA.locats=NULL, AA.locats=NULL, DC.locats=NULL,
 			rasterBoundary=NULL, covarBrick=NULL,
 			transect.size=0.125,
 			Intensity=NULL,
@@ -24,6 +25,9 @@
 \item{n.PA}{The number of presence-absence (PA) data.}
 \item{n.AA}{The number of abundance (AA) data.}
 \item{n.DC}{The number of double counted (DC) transects.}
+\item{PA.locats}{NULL (default) or a 2 column matrix giving the locations where the PA data should be sourced. Default (NULL) implies that the locations will be randomly placed throughout the rasterBoundary.}
+\item{AA.locats}{as per PA.locats}
+\item{DC.locats}{as per PA.locats}
 \item{rasterBoundary}{SpatRaster, whose NA pattern defines the boundary of the simulation area. Ignored if rasterCovars is supplied.}
 \item{covarBrick}{SpatRaster containing data described in distForm and biasForm.}
 \item{transect.size}{The area covered by each of the PA, AA, and DC transects.}
