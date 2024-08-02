@@ -80,7 +80,7 @@ simulateData.isdm <- function( pop.size=10000,
     }
     newVars <- matrix( NA, nrow=length(xSeq)*length(ySeq), ncol=length( my.allVars))
     for( ii in 1:length( my.allVars))
-      newVars[,ii] <- as.numeric( t( fftGPsim2( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 1/2, nugget = 0.01)))
+      newVars[,ii] <- as.numeric( fftGPsim2( x=xSeq, y=ySeq, sig2 = 1, rho = my.scale, nu = 1/2, nugget = 0.01))  #used to have a t() around the fftGPsim2 call.
     colnames( newVars) <- my.allVars
     if( !is.null( rasterBoundary)){
       covarBrick <- terra::rast( rasterBoundary, nlyrs=ncol( newVars), names=colnames( newVars), vals=newVars)
@@ -93,6 +93,13 @@ simulateData.isdm <- function( pop.size=10000,
     }
     newInfo <- uniqueVarNames( obsList=NULL, covarBrick=covarBrick, distForm=distForm, biasForm=biasForm, arteForm=list(), habitatArea=NULL, DCsurvID=list(), coord.names=NULL, responseNames=NULL, sampleAreaNames=NULL, stdCovs=TRUE, na.action=na.omit)
   }
+  
+  #uniqueVarNames puts "PO_" in the layer names.  Remove them
+  tmp <- names( newInfo$covarBrick)
+  POid <- grep( "PO_", tmp)
+  tmp[POid] <- substring(tmp[POid], first=4)
+  names( newInfo$covarBrick) <- tmp
+  newInfo$biasForm <- reformulate( tmp[POid])
   
   #random effect for the log-gauss process
   if( is.null( Intensity)){
