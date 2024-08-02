@@ -14,7 +14,7 @@
 ###############################################################################################
 
 #Function to get prediction from a fitted INLA model.
-predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.terms=NULL, n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", confidence.level=0.95, ...){
+predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.terms=NULL, n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, type="intensity", confidence.level=0.95, quick=FALSE,...){
   
   #check if there's anything to do.
   if( !is.logical(includeFixed) & !all( includeFixed %in% names( covars)))
@@ -30,42 +30,52 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   if( !is.null( intercept.terms) & !all( intercept.terms %in% object$mod$names.fixed))
     stop( "One or more of the intercept.terms supplied is not in the model.  Please check.")
 
-  #set up the batch details
-  batchStartEnd <- round( seq( from=0, to=S, by=S/n.batches),0)
-  batchSize <- diff( batchStartEnd)
-
-  #### function for drawing posterior sampls in parallel.
-  funny <- function( ii){
-    tmp.samples <- draw.posterior.samps(object$mod, B=batchSize[ii], what="effects", field="isdm.spat.XXX", n.threads=n.threads)
-    return( tmp.samples)
+  if( quick==TRUE){	#just use the inla posterior summaries
+    n.threads <- 1
+    n.batches <- 1
+    S <- 1    
+    samples <- list()
+    samples$fieldAtNodes <- matrix( object$mod$summary.random[[1]][,"mean"], ncol=1) #the mean SRE at the nodes
+    samples$fixedEffects <- matrix( object$mod$summary.fixed[,"mean"], ncol=1) #the fixed effects
   }
-
-  #initiate (get dimensions etc)
-  samp.element <- funny(1)
-
-  #container for the posterior samples
-  samples <- list()
-  # first batch: the random field
-  if( object$control$addRandom){
-    samples$fieldAtNodes <- matrix( NA, nrow=nrow( samp.element$fieldAtNodes), ncol=S)
-    samples$fieldAtNodes[,(batchStartEnd[1]+1):batchStartEnd[2]] <- samp.element$fieldAtNodes    
-  }
-  # first batch: the posterior fixed effects
-  samples$fixedEffects <- matrix( NA, nrow=nrow( samp.element$fixedEffects), ncol=S)
-  samples$fixedEffects[,(batchStartEnd[1]+1):batchStartEnd[2]] <- samp.element$fixedEffects
+  else{
   
-  #if there are multiple batches  (don't want too many batches given for loop)
-  if( n.batches > 1){
-    for( ii in 2:n.batches){
-      samp.element <- funny(ii)
-      if( object$control$addRandom)
-	samples$fieldAtNodes[,(batchStartEnd[ii]+1):batchStartEnd[ii+1]] <- samp.element$fieldAtNodes
-      samples$fixedEffects[,(batchStartEnd[ii]+1):batchStartEnd[ii+1]] <- samp.element$fixedEffects
-      rm( samp.element)
-      gc()
+    #set up the batch details
+    batchStartEnd <- round( seq( from=0, to=S, by=S/n.batches),0)
+    batchSize <- diff( batchStartEnd)
+  
+    #### function for drawing posterior sampls in parallel.
+    funny <- function( ii){
+      tmp.samples <- draw.posterior.samps(object$mod, B=batchSize[ii], what="effects", field="isdm.spat.XXX", n.threads=n.threads)
+      return( tmp.samples)
+    }
+  
+    #initiate (get dimensions etc)
+    samp.element <- funny(1)
+  
+    #container for the posterior samples
+    samples <- list()
+    # first batch: the random field
+    if( object$control$addRandom){
+      samples$fieldAtNodes <- matrix( NA, nrow=nrow( samp.element$fieldAtNodes), ncol=S)
+      samples$fieldAtNodes[,(batchStartEnd[1]+1):batchStartEnd[2]] <- samp.element$fieldAtNodes    
+    }
+    # first batch: the posterior fixed effects
+    samples$fixedEffects <- matrix( NA, nrow=nrow( samp.element$fixedEffects), ncol=S)
+    samples$fixedEffects[,(batchStartEnd[1]+1):batchStartEnd[2]] <- samp.element$fixedEffects
+    
+    #if there are multiple batches  (don't want too many batches given for loop)
+    if( n.batches > 1){
+      for( ii in 2:n.batches){
+	samp.element <- funny(ii)
+	if( object$control$addRandom)
+	  samples$fieldAtNodes[,(batchStartEnd[ii]+1):batchStartEnd[ii+1]] <- samp.element$fieldAtNodes
+	samples$fixedEffects[,(batchStartEnd[ii]+1):batchStartEnd[ii+1]] <- samp.element$fixedEffects
+	rm( samp.element)
+	gc()
+      }
     }
   }
-
   # move from parameter samples to predictions
   #
   if( is.null( habitatArea)){
@@ -178,26 +188,35 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   if( is.null( mu.all) & type != "link")
     stop( "unknown type.  Must be 'intensity', 'probability' or 'link'. Please check function call.")
 
-  #summaries
-  limitty <- c( (1-confidence.level)/2, 1-(1-confidence.level)/2)
-  lambda.median <- apply( mu.all, 1, stats::quantile, probs=0.5, na.rm=TRUE)
-  lambda.lower <- apply( mu.all, 1, stats::quantile, probs=limitty[1], na.rm=TRUE)
-  lambda.upper <- apply( mu.all, 1, stats::quantile, probs=limitty[2], na.rm=TRUE)
-  lambda.mean <- rowMeans( mu.all)
-  lambda.sd <- apply( mu.all, 1, stats::sd)
+  if( quick == FALSE){
+    #summaries
+    limitty <- c( (1-confidence.level)/2, 1-(1-confidence.level)/2)
+    lambda.median <- apply( mu.all, 1, stats::quantile, probs=0.5, na.rm=TRUE)
+    lambda.lower <- apply( mu.all, 1, stats::quantile, probs=limitty[1], na.rm=TRUE)
+    lambda.upper <- apply( mu.all, 1, stats::quantile, probs=limitty[2], na.rm=TRUE)
+    lambda.mean <- rowMeans( mu.all)
+    lambda.sd <- apply( mu.all, 1, stats::sd)
   
-  #raster format
-  lambdaRaster <- terra::rast( cbind( predcoords, lambda.median), crs=terra::crs( covars), type='xyz')
-  lambdaRaster <- c(lambdaRaster, terra::rast( cbind( predcoords, lambda.lower), crs=terra::crs( covars), type='xyz'))
-  lambdaRaster <- c(lambdaRaster, terra::rast( cbind( predcoords, lambda.upper), crs=terra::crs( covars), type='xyz'))
-  lambdaRaster <- c(lambdaRaster, terra::rast( cbind( predcoords, lambda.mean), crs=terra::crs( covars), type='xyz'))
-  lambdaRaster <- c(lambdaRaster, terra::rast( cbind( predcoords, lambda.sd), crs=terra::crs( covars), type='xyz'))
-  names( lambdaRaster) <- c("Median","Lower","Upper","Mean","SD")
-
+    #raster format
+    lambdaRaster <- terra::rast( cbind( predcoords, lambda.median), crs=terra::crs( covars), type='xyz')
+    lambdaRaster <- c(lambdaRaster, terra::rast( cbind( predcoords, lambda.lower), crs=terra::crs( covars), type='xyz'))
+    lambdaRaster <- c(lambdaRaster, terra::rast( cbind( predcoords, lambda.upper), crs=terra::crs( covars), type='xyz'))
+    lambdaRaster <- c(lambdaRaster, terra::rast( cbind( predcoords, lambda.mean), crs=terra::crs( covars), type='xyz'))
+    lambdaRaster <- c(lambdaRaster, terra::rast( cbind( predcoords, lambda.sd), crs=terra::crs( covars), type='xyz'))
+    names( lambdaRaster) <- c("Median","Lower","Upper","Mean","SD")
+  }
+  else{
+    lambda.mean <- mu.all
+    lambdaRaster <- terra::rast( cbind( predcoords, lambda.mean), crs=terra::crs( covars), type='xyz')
+    tmpRast <- terra::rast( lambdaRaster, nlyrs=5, names=c("Median","Lower","Upper","Mean","SD"), vals=-9999)
+    tmpRast$Mean <- lambdaRaster
+    lambdaRaster <- tmpRast
+    mu.all <- samples <- limitty <- NULL
+  }
   #sort out extent in case...
   lambdaRaster <- terra::extend( lambdaRaster, terra::ext( covars))  #just in case it is needed -- could be dropped throughout the creation of the raster.
 
-  res <- list( field=lambdaRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords, confidence.limits=limitty)
+  res <- list( field=lambdaRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords, confidence.limits=limitty, quick=quick)
   
   return( res)
 }

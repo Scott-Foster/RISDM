@@ -5,7 +5,7 @@
 \usage{
  \method{predict}{isdm}( object, covars, habitatArea=NULL, S=500, intercept.terms=NULL, 
 			n.threads=NULL, n.batches=1, includeRandom=TRUE, includeFixed=TRUE, includeBias=FALSE, 
-			type="intensity", confidence.level=0.95, ...)
+			type="intensity", confidence.level=0.95, quick=FALSE, ...)
 }
 
 \arguments{
@@ -21,12 +21,15 @@
 \item{includeBias}{Should the sampling bias be included in the predictions? Default is FALSE, it is not included. This term is nearly always not-interesting in terms of figuring out what is where. However, it could be interesting to see where the search effort has been placed. Please be aware that includeBias=TRUE will force the intercept.PO to be added to the linear predictor. So, please do not include a non-NULL intercept.terms argument as that will make multiple intercepts to be included in the prediction.}
 \item{type}{The type (scale) of prediction. Choices are "intensity" for the parameter of the log-Guass Cox process, "probability" for the probability of having any 1 observation in the prediction cell, or "link" for the linear predictor.}
 \item{confidence.level}{The intended coverage for the confidence intervals. Default is 0.95 for 95 percent intervals (ranging from 0.025 percentile to 0.975 percentile).}
+\item{quick}{Should the predictions be performed using MC sampling of the posterior (quick=FALSE and the default) or should a quick and dirty value be obtained using the mean of each parameters' posterior. See details for more.}
 \item{...}{Not implemented}
 }
 
 \details{ This function is a isdm specific interface to \code{INLA::inla.posterior.samples}. The function generates samples, selects which ones should be included for predicting and then performs the necessary machinations to do the predictions. All predictions are for the grid of covarRaster, including the area of each cell. That is the prediction is for the number of individuals (from the point process) within a cell.
 
 The covariate data, within \code{covars}, is treated to the same preparation as the covariate data for the model fit using \code{\link{isdm}}. In particular, the internal standardisation in \code{\link{isdm}} is used in \code{predict.isdm} too -- by subtracting the grid's mean and dividing by it's standard deviation. This means that the use of the *same* rasters in both sets will have the desired results. However, if a different raster is provided for prediction than at estimation, then results may be unpredictable. This includes prediction into new geographical areas and/or prediction at a different resolution. If these kinds of predictions are required, then it is recommended that the user supplies their own raster layers for estimation and predictions which have been carefully constructed to avoid potential numerical under or overflow. Briefly, this means that the values of the cells shouldn't be overly large or small. These supplied raster layers should have the same scaling and the user should set control$standardiseCovariates=FALSE in the \code{\link{isdm}} estimation process. The standardisation in the prediction process will follow that used in the estimation process.}
+
+Whilst the \code{quick} argument allows for some visualisation of the model, it is not complete nor is it likely to be hugely accurate. For accuracy that you'll need quick=FALSE. This feature is included only to enable model development for large models.
 
 \value{A list containing the following elements:
 \item{field}{The predictions and summaries thereof. The summaries are for the cell-wise posterior: median, lower interval, upper interval, mean, and standard deviation. Note that, in general, the median is a more robust measure of central tendancy than the mean.}
