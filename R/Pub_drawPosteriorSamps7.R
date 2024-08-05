@@ -47,6 +47,7 @@ draw.posterior.samps <- function(inla.fm, B=100, what="params", field="iSpat",n.
   res  <- list()
   res$fieldAtNodes <- sapply( tmp, function(x) x$latent[iSpat.id])
   res$fixedEffects <- sapply( tmp, function(x) tail( x$latent, p.fixed))
+  res$hyperpar <- sapply( tmp, function(x) x$hyperpar)
   
   return( res)
   

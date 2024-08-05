@@ -37,6 +37,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     samples <- list()
     samples$fieldAtNodes <- matrix( object$mod$summary.random[[1]][,"mean"], ncol=1) #the mean SRE at the nodes
     samples$fixedEffects <- matrix( object$mod$summary.fixed[,"mean"], ncol=1) #the fixed effects
+    samples$hyperpar <- matrix( object$mod$summary.hyperpar[,"mean"], ncol=1)
   }
   else{
   
@@ -58,18 +59,32 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     # first batch: the random field
     if( object$control$addRandom){
       samples$fieldAtNodes <- matrix( NA, nrow=nrow( samp.element$fieldAtNodes), ncol=S)
+      rownames( samples$fieldAtNodes) <- paste0("node_",1:nrow( samples$fieldAtNodes))
+      colnames( samples$fieldAtNodes) <- paste0("MCsample_",1:S)
       samples$fieldAtNodes[,(batchStartEnd[1]+1):batchStartEnd[2]] <- samp.element$fieldAtNodes    
     }
     # first batch: the posterior fixed effects
     samples$fixedEffects <- matrix( NA, nrow=nrow( samp.element$fixedEffects), ncol=S)
+    rownames( samples$fixedEffects) <- object$mod$names.fixed
+    colnames( samples$fixedEffects) <- paste0("MCsample_",1:S)
     samples$fixedEffects[,(batchStartEnd[1]+1):batchStartEnd[2]] <- samp.element$fixedEffects
+    
+    # first batch: the posterior hyperparams
+    if( object$control$addRandom){
+      samples$hyperpar <- matrix( NA, nrow=nrow( samp.element$hyperpar), ncol=S)
+      rownames( samples$hyperpar) <- rownames( object$mod$summary.hyper)
+      colnames( samples$hyperpar) <- paste0("MCsample_",1:S)
+      samples$hyperpar[,(batchStartEnd[1]+1):batchStartEnd[2]] <- samp.element$hyperpar
+    }
     
     #if there are multiple batches  (don't want too many batches given for loop)
     if( n.batches > 1){
       for( ii in 2:n.batches){
 	samp.element <- funny(ii)
-	if( object$control$addRandom)
+	if( object$control$addRandom){
 	  samples$fieldAtNodes[,(batchStartEnd[ii]+1):batchStartEnd[ii+1]] <- samp.element$fieldAtNodes
+	  samples$hyperpar[,(batchStartEnd[ii]+1):batchStartEnd[ii+1]] <- samp.element$hyperpar
+	}
 	samples$fixedEffects[,(batchStartEnd[ii]+1):batchStartEnd[ii+1]] <- samp.element$fixedEffects
 	rm( samp.element)
 	gc()
@@ -216,7 +231,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   #sort out extent in case...
   lambdaRaster <- terra::extend( lambdaRaster, terra::ext( covars))  #just in case it is needed -- could be dropped throughout the creation of the raster.
 
-  res <- list( field=lambdaRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, fixed.names=object$mod$names.fixed, predLocats=predcoords, confidence.limits=limitty, quick=quick)
+  res <- list( field=lambdaRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, hyperpar=samples$hyperpar, predLocats=predcoords, confidence.limits=limitty, quick=quick)
   
   return( res)
 }
