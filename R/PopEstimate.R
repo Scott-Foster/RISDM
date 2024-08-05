@@ -11,7 +11,9 @@
 ###############################################################################################
 ###############################################################################################
 
-PopEstimate <- function( preds, probs=c(0.025,0.975), intercept.terms=NULL){
+PopEstimate <- function( preds, intercept.terms=NULL, control=NULL){
+
+  control <- makePopEstiControl( control)
 
   #checking terms
   if( !all( intercept.terms %in% rownames( preds$fixedSamples)))
@@ -28,14 +30,26 @@ PopEstimate <- function( preds, probs=c(0.025,0.975), intercept.terms=NULL){
     tmp <- sweep( x=preds$cell.samples, MARGIN=2, STATS=int.contr, FUN="*")
     preds$cell.samples <- tmp
   }
-
+    
+  #Winsorisation, if requested (default)
+  if( control$winsor){
+    if( control$tail %in% c( "both", "upper")){
+      percentile <- 1-control$percent
+      preds$cell.samples <- t( apply( preds$cell.samples, 1, function(xx){ myPerc <- quantile( xx, percentile); return( replace( xx, xx>myPerc, myPerc))}))
+    }
+    if( control$tail %in% c( "both", "lower")){
+      percentile <- control$percent
+      preds$cell.samples <- t( apply( preds$cell.samples, 1, function(xx){ myPerc <- quantile( xx, percentile); return( replace( xx, xx<myPerc, myPerc))}))
+    }
+  }
+ 
   #summary over cells.
   samplePopN <- colSums( preds$cell.samples)
-  quants <- stats::quantile( samplePopN, probs=probs, na.rm=TRUE)
+  quants <- stats::quantile( samplePopN, probs=control$probs, na.rm=TRUE)
   
   #adding some sampling noise (this is prediction after all).
   samplePopN.pred <- stats::rpois( n=length( samplePopN), lambda=samplePopN)
-  quants.preds <- stats::quantile( samplePopN.pred, probs=probs, na.rm=TRUE)
+  quants.preds <- stats::quantile( samplePopN.pred, probs=control$probs, na.rm=TRUE)
   
   res <- list( mean=mean( samplePopN, na.rm=TRUE), median=stats::median( samplePopN, na.rm=TRUE), interval=quants,
                mean.pred=mean( samplePopN.pred, na.rm=TRUE), median.pred=stats::median( samplePopN.pred, na.rm=TRUE), interval.preds=quants.preds)
