@@ -33,13 +33,18 @@ PopEstimate <- function( preds, intercept.terms=NULL, control=NULL){
     
   #Winsorisation, if requested (default)
   if( control$winsor){
+    my.quants <- apply( preds$cell.samples, 1, stats::quantile, probs=c(control$percent, 1-control$percent))
     if( control$tail %in% c( "both", "upper")){
-      percentile <- 1-control$percent
-      preds$cell.samples <- t( apply( preds$cell.samples, 1, function(xx){ myPerc <- quantile( xx, percentile); return( replace( xx, xx>myPerc, myPerc))}))
+      tmp <- sweep( preds$cell.samples, 1, my.quants[2,], "-")
+      tmp1 <- tmp > 0
+      tmp2 <- sweep( tmp1, 1, my.quants[2,], "*")
+      preds$cell.samples[tmp1==1] <- tmp2[tmp1==1]
     }
-    if( control$tail %in% c( "both", "lower")){
-      percentile <- control$percent
-      preds$cell.samples <- t( apply( preds$cell.samples, 1, function(xx){ myPerc <- quantile( xx, percentile); return( replace( xx, xx<myPerc, myPerc))}))
+    if( control$tail %in% c( "both","lower")){
+      tmp <- sweep( preds$cell.samples, 1, my.quants[1,], "-")  #preds$cell.samples should all be non-negative
+      tmp1 <- tmp < 0
+      tmp2 <- sweep( tmp1, 1, my.quants[1,], "*")
+      preds$cell.samples[tmp1==1] <- tmp2[tmp1==1]
     }
   }
  
