@@ -231,7 +231,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   #sort out extent in case...
   lambdaRaster <- terra::extend( lambdaRaster, terra::ext( covars))  #just in case it is needed -- could be dropped throughout the creation of the raster.
 
-  res <- list( field=lambdaRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, hyperpar=samples$hyperpar, predLocats=predcoords, confidence.limits=limitty, quick=quick)
+  res <- list( field=lambdaRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, predLocats=predcoords, confidence.limits=limitty, quick=quick) #, hyperpar=samples$hyperpar
   
   return( res)
 }
