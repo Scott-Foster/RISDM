@@ -41,6 +41,11 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
     warning( paste0("Covariate rasters: Missing data (NA) present in a partial number of covariates for an observation (or cell). There are ",sum(anyNAs.id)-sum(allNAs.id)," such observations (cells). They are excluded from analysis."))
   #actually unifying the NAs
   tmpXX[anyNAs.id,] <- NA
+  zeroEffort <- !is.na( tmpXX[,habitatArea]) & tmpXX[,habitatArea] == 0
+  if( any( zeroEffort == TRUE))
+    warning( paste0("Habitat area raster: There are ", sum( zeroEffort)," non-NA observations with zero (0) effort. They are excluded from analysis."))
+  tmpXX[zeroEffort,] <- NA
+
   #the model frame for the distribution data
   XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, namy=NULL, includeNA=TRUE) #includeNA to get raster pattern
   #make new formula based on expanded names
@@ -83,6 +88,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
     newCovarBrick <- c( newCovarBrick, covarBrick[[habitatArea]]) #addLayer( newCovarBrick, covarBrick[[habitatArea]])
     names( newCovarBrick)[terra::nlyr( newCovarBrick)] <- habitatArea
     values( newCovarBrick[[habitatArea]])[anyNAs.id] <- NA  #to match other variables.
+    values( newCovarBrick[[habitatArea]])[values( newCovarBrick[[habitatArea]])==0] <- NA  #to match other variables
   }
   #put it in the 'correct' environent
   environment( newCovarBrick) <- environment( covarBrick)

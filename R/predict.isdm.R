@@ -37,7 +37,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     samples <- list()
     samples$fieldAtNodes <- matrix( object$mod$summary.random[[1]][,"mean"], ncol=1) #the mean SRE at the nodes
     samples$fixedEffects <- matrix( object$mod$summary.fixed[,"mean"], ncol=1) #the fixed effects
-    samples$hyperpar <- matrix( object$mod$summary.hyperpar[,"mean"], ncol=1)
+    #samples$hyperpar <- matrix( object$mod$summary.hyperpar[,"mean"], ncol=1)
   }
   else{
   
@@ -228,8 +228,12 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
     lambdaRaster <- tmpRast
     mu.all <- samples <- limitty <- NULL
   }
+
   #sort out extent in case...
   lambdaRaster <- terra::extend( lambdaRaster, terra::ext( covars))  #just in case it is needed -- could be dropped throughout the creation of the raster.
+
+  #zero habitat means zero individuals
+  values( lambdaRaster)[values( covars[[habitatArea]])==0] <- 0
 
   res <- list( field=lambdaRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, predLocats=predcoords, confidence.limits=limitty, quick=quick) #, hyperpar=samples$hyperpar
   

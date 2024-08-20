@@ -53,7 +53,7 @@ MakePPPstack <- function( observs, covarBrick, habitatArea, Mesh, presname="pres
   sampleAreaName <- "cellArea"
   #remove the cells that are not within the study area (masked out)
   observs <- observs[!is.na( observs$count),]  
-  #remove the cells that have zero habitat
+  #remove the cells that have zero habitat -- these should already be removed prior to expanding bases functions (leaving code in anyway)
   observs <- observs[!is.na( observs[,sampleAreaName]) & observs[,sampleAreaName]>0,]
   
   ### This is copied from makeAAStack.  Changes here or there will need to be transfered
