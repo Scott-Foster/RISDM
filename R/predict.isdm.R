@@ -102,8 +102,15 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
 
   #get the coordinates of the prediction points
   predcoords <- terra::crds( covars, na.rm=FALSE)
-  #extract the covariates
   
+  #redefine the formula depending on which effects are to be included in the prediction
+  if( !includeBias)
+    object$biasFormula <- NULL
+  if( is.logical( includeFixed))
+    if( !includeFixed)
+      object$distributionFormula <- NULL
+  
+  #extract the covariates
   #Get expanded data (model matrix) and corresponding formulae
   newInfo <- uniqueVarNames( obsList=list(), covarBrick=covars, distForm=object$distributionFormula, biasForm=object$biasFormula, arteForm=list(), habitatArea=habitatArea, DCsurvID=attr( object, "DCobserverInfo"), coord.names=attr( res, "coord.names"), responseNames=object$responseNames, sampleAreaNames=NULL, stdCovs=object$control$standardiseCovariates, na.action=object$control$na.action)
   #putting it into a data frame
