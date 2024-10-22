@@ -138,7 +138,7 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
     #add in the distribution variables -- data
     XXdist <- terra::extract( newCovarBrick, XX, ID=FALSE)
     #remove the bias terms from the data -- they will have "PO_" as a prefix.
-    XXdist <- XXdist[,!grepl( "PO_", colnames( XXdist))]
+    XXdist <- XXdist[,!grepl( "PO_", colnames( XXdist)),drop=FALSE]
     #combine
     XX <- cbind( XX, XXdist)
 
