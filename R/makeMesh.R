@@ -97,6 +97,7 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
   #add boundary to object
   meshy$risdmBoundary <- boundary
   meshy$hull <- hully
+  meshy$dep.range <- dep.range
   
   return( meshy)
 } 

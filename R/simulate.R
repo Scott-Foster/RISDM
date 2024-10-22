@@ -114,7 +114,7 @@ simulateData.isdm <- function( pop.size=10000,
    
     #data brick for the covariates and random effect
     tmp <- terra::rast( newInfo$covarBrick, nlyrs=1, names="REff")
-    values( tmp) <- REff
+    terra::values( tmp) <- REff
     
     tmp <- terra::mask( tmp, rasterBoundary)
     names( tmp) <- "REff"
