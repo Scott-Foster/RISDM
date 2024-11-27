@@ -55,9 +55,9 @@ simulateData.isdm <- function( pop.size=10000,
     ySeq <- terra::yFromRow( newInfo$covarBrick)#sort( unique( terra::crds( covarBrick)[,2]))
     
     rasterBoundary <- newInfo$covarBrick[[1]]
-    tmpID <- is.na( values( rasterBoundary))
-    values( rasterBoundary)[tmpID,] <- NA
-    values( rasterBoundary)[!tmpID,] <- 1
+    tmpID <- is.na( terra::values( rasterBoundary))
+    terra::values( rasterBoundary)[tmpID,] <- NA
+    terra::values( rasterBoundary)[!tmpID,] <- 1
   }
   else{
     message( "No raster provided. Variables will be simulated.")
