@@ -7,7 +7,7 @@ f <- system.file("ex/test.grd", package="terra")
 r <- terra::rast(f)
 terra::values( r)[ !is.na( terra::values( r))] <- 1
 rm( f)
-dat <- simulateData.isdm( expected.pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))
+dat <- simulateData.isdm( pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))
 terra::crs( dat$covarBrick) <- terra::crs( r)
 
 #dat <- simulateData.isdm( control=list(doPlot=FALSE))

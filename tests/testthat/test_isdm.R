@@ -7,7 +7,7 @@ f <- system.file("ex/meuse.tif", package="terra")
 r <- terra::rast(f)
 terra::values( r)[ !is.na( terra::values( r))] <- 1
 rm( f)
-dat <- simulateData.isdm( expected.pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))
+dat <- simulateData.isdm( pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))
 terra::crs( dat$covarBrick) <- terra::crs( r)
 meshy <- makeMesh( dat$covarBrick[[1]], max.n=c(500, 250), dep.range=25, expans.mult=15, offset=250, max.edge=5, doPlot=FALSE)
 #terra::values( r)[terra::crds(r)[,1] > 179900 & terra::crds(r)[,1] < 180100 & terra::crds(r)[,2]>331400 & terra::crds(r)[,2]<331600] <- NA
@@ -22,8 +22,8 @@ testthat::test_that(
             mesh=meshy,
             responseNames=NULL,
             sampleAreaNames=NULL,
-            distributionFormula=~0+Altitude+Temperature,
-            biasFormula=~1+effortLayer,
+            distributionFormula=~0+var1,
+            biasFormula=~1+biasLinPred,
             artefactFormulas=list( PO=~1),
             control=list( coord.names=c("x","y"), 
                           int.sd=1000, other.sd=10, prior.mean=0,
@@ -37,8 +37,8 @@ testthat::test_that(
                       responseNames=c( DC="somebloodything"),
                       sampleAreaNames=c( DC="transectArea"),
                       DCobserverInfo=list( SurveyID="Survey", Obs1="Obs1", Obs2="Obs2", Both="Both"),
-                      distributionFormula=~0+Altitude+Temperature,
-                      artefactFormulas=list( DC=~1+Survey),
+		      distributionFormula=~0+var1,
+                      artefactFormulas=list( DC=~1),
                       control=list( int.prec=0.01, other.prec=1,
                                     calcICs=FALSE,
                                     prior.range=c(25,0.1), prior.space.sigma=c( 2.5,0.1),
@@ -52,7 +52,7 @@ testthat::test_that(
                       mesh=meshy,
                       responseNames=c( AA="AA"),
                       sampleAreaNames=c( AA="transectArea"),
-                      distributionFormula=~0+Altitude+Temperature,
+                      distributionFormula=~0+var1,
                       artefactFormulas=list( AA=~1),
                       control=list( int.prec=0.01, other.prec=1,
                                     calcICs=FALSE,
@@ -67,7 +67,7 @@ testthat::test_that(
                       mesh=meshy,
                       responseNames=c( PA="PA"),
                       sampleAreaNames=c( PA="transectArea"),
-                      distributionFormula=~0+Altitude+Temperature,
+                      distributionFormula=~0+var1,
                       artefactFormulas=list( PA=~1),
                       control=list( int.prec=0.01, other.prec=1,
                                     calcICs=FALSE,
@@ -86,8 +86,8 @@ testthat::test_that(
                       responseNames=c( AA="AA"),#, PA="PA"),
                       sampleAreaNames=c( PO=NULL, DC="transectArea", AA="transectArea"),#, PA="transectArea"),
                       DCobserverInfo=list( SurveyID="Survey", Obs1="Obs1", Obs2="Obs2", Both="Both"),
-                      distributionFormula=~0+Altitude+Temperature,
-                      biasFormula=~1+effortLayer,
+                      distributionFormula=~0+var1,
+                      biasFormula=~1+biasLinPred,
                       artefactFormulas=list( DC=~1+Survey, AA=~1),#, PA=~1),
                       control=list( int.prec=0.01, other.prec=1,
                                     calcICs=FALSE,
@@ -103,8 +103,8 @@ testthat::test_that(
                       responseNames=c( DC="somebloodything"),
                       sampleAreaNames=c( DC="transectArea"),
                       DCobserverInfo=list( SurveyID="Survey", Obs1="Obs1", Obs2="Obs2", Both="Both"),
-                      distributionFormula=~0+stats::poly( Altitude, degree=2)+Temperature,
-                      artefactFormulas=list( DC=~1+Survey:stats::poly( Altitude, degree=2)),
+                      distributionFormula=~0+stats::poly( var1, degree=2),
+                      artefactFormulas=list( DC=~1+Survey:stats::poly( var1, degree=2)),
                       control=list( int.prec=0.01, other.prec=1,
                                     calcICs=FALSE,
                                     prior.range=c(25,0.1), prior.space.sigma=c( 2.5,0.1),

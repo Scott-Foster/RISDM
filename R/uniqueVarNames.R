@@ -87,8 +87,8 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   if( !is.null( habitatArea)){
     newCovarBrick <- c( newCovarBrick, covarBrick[[habitatArea]]) #addLayer( newCovarBrick, covarBrick[[habitatArea]])
     names( newCovarBrick)[terra::nlyr( newCovarBrick)] <- habitatArea
-    values( newCovarBrick[[habitatArea]])[anyNAs.id] <- NA  #to match other variables.
-    values( newCovarBrick[[habitatArea]])[values( newCovarBrick[[habitatArea]])==0] <- NA  #to match other variables
+    terra::values( newCovarBrick[[habitatArea]])[anyNAs.id] <- NA  #to match other variables.
+    terra::values( newCovarBrick[[habitatArea]])[terra::values( newCovarBrick[[habitatArea]])==0] <- NA  #to match other variables
   }
   #put it in the 'correct' environent
   environment( newCovarBrick) <- environment( covarBrick)

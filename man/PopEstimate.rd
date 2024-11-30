@@ -3,7 +3,7 @@
 \title{Generates an estimate of population size from an isdm}
 \description{This function estimates the number of individuals within the spatial domain which has been predicted. Please be aware that it may only be sensible under very specific scenarios: no preferential sampling (or adjustment for) and a sensible detectability estimate. The latter is only available in RISDM by using double count data.}
 \usage{
- PopEstimate(preds, probs=c(0.025,0.975), intercept.terms=NULL, control=NULL)
+ PopEstimate(preds, intercept.terms=NULL, control=NULL)
 }
 \arguments{
 \item{preds}{An list as generated from \code{predict.isdm}.}

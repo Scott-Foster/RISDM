@@ -254,6 +254,7 @@ simulateData.isdm <- function( pop.size=10000,
     DCdata <- data.frame( x=DC.locats[,1], y=DC.locats[,2], inclusion.probabilities=NA, ID=terra::extract( rasterBoundary, DC.locats, cells=TRUE)$cell)
     n.DC <- nrow( DC.locats)
   }
+  DCdata$Survey <- 1
   #add the transect area
   mySizes <- terra::values( newInfo$covarBrick$myCellSize)[DCdata$ID]
   DCdata$transectArea <- transect.size * mySizes

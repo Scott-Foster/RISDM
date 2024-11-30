@@ -240,7 +240,7 @@ predict.isdm <- function( object, covars, habitatArea=NULL, S=500, intercept.ter
   lambdaRaster <- terra::extend( lambdaRaster, terra::ext( covars))  #just in case it is needed -- could be dropped throughout the creation of the raster.
 
   #zero habitat means zero individuals
-  values( lambdaRaster)[values( covars[[habitatArea]])==0] <- 0
+  terra::values( lambdaRaster)[terra::values( covars[[habitatArea]])==0] <- 0
 
   res <- list( field=lambdaRaster, cell.samples=mu.all, fixedSamples=samples$fixedEffects, predLocats=predcoords, confidence.limits=limitty, quick=quick) #, hyperpar=samples$hyperpar
   
