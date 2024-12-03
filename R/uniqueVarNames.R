@@ -19,7 +19,8 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   #Design matrix/raster for distribution
   tmpXX <- as.data.frame( terra::values( covarBrick))
   #get rid of intercept in distribution formula (and make sure of it)
-  distForm <- stats::update.formula( distForm, ~.-1+0)
+  if( !is.null( distForm))
+    distForm <- stats::update.formula( distForm, ~.-1+0)
   #make sure that all variables in dist form are available
   if( !all( all.vars( distForm) %in% colnames( tmpXX)))
     stop( "There is a variable in the distribution formula that is not present in the covariate raster brick.")
@@ -47,21 +48,28 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
   tmpXX[zeroEffort,] <- NA
 
   #the model frame for the distribution data
-  XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, namy=NULL, includeNA=TRUE) #includeNA to get raster pattern
-  #make new formula based on expanded names
-  newDistForm <- stats::reformulate( colnames( XX))
-  newDistForm <- stats::update.formula( newDistForm, ~.-1)
-  #put it in the 'correct' environment
-  environment( newDistForm) <- environment( distForm)
-  #assign the design matrix spatially
-  newCovarBrick <- terra::rast( covarBrick[[1]], nlyrs=ncol( XX))
-  terra::values( newCovarBrick) <- XX
-  names( newCovarBrick) <- colnames( XX)
-  #put it in the 'correct' environent
-  environment( newCovarBrick) <- environment( covarBrick)
-  if( stdCovs)
-    terra::values( newCovarBrick) <- standardiseThatDesMatrix( terra::values( newCovarBrick))
-
+  if( !is.null( distForm)){
+    XX <- isdm.model.matrix( formmy=distForm, obsy=tmpXX, namy=NULL, includeNA=TRUE) #includeNA to get raster pattern
+    #make new formula based on expanded names
+    newDistForm <- stats::reformulate( colnames( XX))
+    newDistForm <- stats::update.formula( newDistForm, ~.-1)
+    #put it in the 'correct' environment
+    environment( newDistForm) <- environment( distForm)
+    #assign the design matrix spatially
+    newCovarBrick <- terra::rast( covarBrick[[1]], nlyrs=ncol( XX))
+    terra::values( newCovarBrick) <- XX
+    names( newCovarBrick) <- colnames( XX)
+    #put it in the 'correct' environent
+    environment( newCovarBrick) <- environment( covarBrick)
+    if( stdCovs)
+      terra::values( newCovarBrick) <- standardiseThatDesMatrix( terra::values( newCovarBrick))
+  }
+  else {
+    newDistForm <- NULL
+    newCovarBrick <- terra::rast( covarBrick[[1]], nlyrs=0)
+    environment( newCovarBrick) <- environment( covarBrick)
+  }
+  
   ####	Bias formula, if present
   if( !is.null( biasForm)){
     #Design matrix/raster for bias
@@ -85,10 +93,18 @@ uniqueVarNames <- function( obsList, covarBrick, distForm, biasForm, arteForm, h
 
   ####	HabitatArea variable too
   if( !is.null( habitatArea)){
-    newCovarBrick <- c( newCovarBrick, covarBrick[[habitatArea]]) #addLayer( newCovarBrick, covarBrick[[habitatArea]])
-    names( newCovarBrick)[terra::nlyr( newCovarBrick)] <- habitatArea
-    terra::values( newCovarBrick[[habitatArea]])[anyNAs.id] <- NA  #to match other variables.
-    terra::values( newCovarBrick[[habitatArea]])[terra::values( newCovarBrick[[habitatArea]])==0] <- NA  #to match other variables
+    if( !is.null( newDistForm)){#terra::nlyr( newCovarBrick) > 0){
+      newCovarBrick <- c( newCovarBrick, covarBrick[[habitatArea]]) #addLayer( newCovarBrick, covarBrick[[habitatArea]])
+      names( newCovarBrick)[terra::nlyr( newCovarBrick)] <- habitatArea
+    }
+    else
+      newCovarBrick <- covarBrick[[habitatArea]]
+    tmp <- terra::values( newCovarBrick[[habitatArea]])
+    tmp[anyNAs.id] <- NA
+    tmp[tmp==0] <- NA
+    terra::values( newCovarBrick)[,habitatArea] <- tmp
+#    terra::values( newCovarBrick[[habitatArea]])[anyNAs.id] <- NA  #to match other variables.
+#    terra::values( newCovarBrick[[habitatArea]])[terra::values( newCovarBrick[[habitatArea]])==0] <- NA  #to match other variables
   }
   #put it in the 'correct' environent
   environment( newCovarBrick) <- environment( covarBrick)
