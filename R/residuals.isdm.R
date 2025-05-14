@@ -21,7 +21,7 @@ residuals.isdm <- function( object, ...){
   #containers for the residuals
   DCresids <- AAresids <- PAresids <- POresids <- NULL
   #DC residuals
-  if( "DC_Intercept" %in% object$mod$names.fixed){
+  if( any( grepl( "DC_", x$mod$names.fixed))){#"DC_Intercept" %in% object$mod$names.fixed){
     #increment the number of data types.
     numTypes <- numTypes+1
     #get the fitted values as predictions
@@ -42,7 +42,7 @@ residuals.isdm <- function( object, ...){
     #bundle the residuals
     DCresids <- data.frame( fitted=preds, observed=outcomes, residual=stats::qnorm( tmp3))
   }
-  if( "AA_Intercept" %in% object$mod$names.fixed){
+  if( any( grepl( "AA_", x$mod$names.fixed))){#"AA_Intercept" %in% object$mod$names.fixed){
     #increment the number of data types.
     numTypes <- numTypes+1
     #get the fitted values as predictions
@@ -63,7 +63,7 @@ residuals.isdm <- function( object, ...){
     #bundle the residuals
     AAresids <- data.frame( fitted=preds, observed=outcomes, residual=stats::qnorm( tmp3))
   }
-  if( "PA_Intercept" %in% object$mod$names.fixed){
+  if( any( grepl( "DC_", x$mod$names.fixed))){#"PA_Intercept" %in% object$mod$names.fixed){
     #increment the number of data types.
     numTypes <- numTypes+1
     #get the fitted values as predictions
@@ -88,7 +88,7 @@ residuals.isdm <- function( object, ...){
     PAresids <- data.frame( fitted=preds, observed=outcomes, residual=stats::qnorm( tmp3))
   }
   
-  if( "PO_Intercept" %in% object$mod$names.fixed){
+  if( any( grepl( "PO_", x$mod$names.fixed))){#"PO_Intercept" %in% object$mod$names.fixed){
     #increment the number of data types.
     numTypes <- numTypes+1
     #increase the plotting columns to 3 (default is 2)
