@@ -23,7 +23,7 @@ plot.isdm <- function( x, nFigRow=1, ask=TRUE, ...){
   oldPar <- graphics::par( mfrow=c(nFigRow,3), oma=rep( 0,4), mar=c(2,2,2,4))
   
 #  oask <- grDevices::devAskNewPage(FALSE) #don't ask for the first page of plots
-  if( "DC_Intercept" %in% x$mod$names.fixed){
+  if( any( grepl( "DC_", x$mod$names.fixed))){#"DC_Intercept" %in% x$mod$names.fixed){
     plot.new()
     DCresids <- ressy$DC
     plot( DCresids$fitted, DCresids$residual, pch=20, ylab="DC residuals", xlab="DC fitted", main="Double Count")
@@ -31,7 +31,7 @@ plot.isdm <- function( x, nFigRow=1, ask=TRUE, ...){
     stats::qqnorm( DCresids$residual, pch=20, ylab="DC quantile", main="Double Count")
     stats::qqline( DCresids$residual, col='green')
   }
-  if( "AA_Intercept" %in% x$mod$names.fixed){
+  if( any( grepl( "AA_", x$mod$names.fixed))){#"AA_Intercept" %in% x$mod$names.fixed){
     plot.new()
     AAresids <- ressy$AA
     plot( AAresids$fitted, AAresids$residual, pch=20, ylab="AA residuals", xlab="AA fitted", main="Abundance-Absence")
@@ -39,7 +39,7 @@ plot.isdm <- function( x, nFigRow=1, ask=TRUE, ...){
     stats::qqnorm( AAresids$residual, pch=20, ylab="AA quantile", main="Abundance-Absence")
     stats::qqline( AAresids$residual, col='green')
   }
-  if( "PA_Intercept" %in% x$mod$names.fixed){
+  if( any( grepl( "PA_", x$mod$names.fixed))){#"PA_Intercept" %in% x$mod$names.fixed){
     plot.new()
     PAresids <- ressy$PA
     plot( PAresids$fitted, PAresids$residual, pch=20, ylab="PA residuals", xlab="PA fitted", main="Presence-Absence")
@@ -47,7 +47,7 @@ plot.isdm <- function( x, nFigRow=1, ask=TRUE, ...){
     stats::qqnorm( PAresids$residual, pch=20, ylab="PA quantile", main="Presence-Absence")
     stats::qqline( PAresids$residual, col='green')
   }
-  if( "PO_Intercept" %in% x$mod$names.fixed){
+  if( any( grepl( "PO_", x$mod$names.fixed))){#"PO_Intercept" %in% x$mod$names.fixed){
     POresids <- ressy$PO
     terra::plot( POresids$ras, main="Presence-Only", col=colorRamps::matlab.like2(25))
     plot( POresids$POresids$fitted, POresids$POresids$residual, pch=20, ylab="PO residuals", xlab="PO fitted", main="Presence-Only")
