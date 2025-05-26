@@ -40,7 +40,7 @@ testthat::test_that(
     tmp <- PopEstimate( preds=fm$preds, control=list( probs=c(0.0025,0.4,0.6,0.9975)))
     testthat::expect_length( tmp, 6)
     
-    tmp <- PopEstimate( preds=fm$preds, intercept.terms = c( "DC_Intercept","DC_SurveyDCsurvey_3"))
+    tmp <- PopEstimate( preds=fm$preds, intercept.terms = c( "DC_Intercept","DC_logDetectPi"))
     testthat::expect_length( tmp, 6)
   }
 )
