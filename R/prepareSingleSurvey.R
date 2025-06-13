@@ -27,7 +27,8 @@ prepareSingleSurvey <- function( singleDataSet, datasetID, DCcols, survIDname, s
 #    stop( "At least one of the DC data sets has an observer that hasn't seen a single individual. This is currently outside of RISDM's scope. Sorry. Consider adjusting model.")
   
   #the bits and pieces for approximating log( 1-pi)
-  expansPis <- estimatePisDoubleCount( singleDataSet[,DCcols])
+  #expansPis <- estimatePisDoubleCount( singleDataSet[,DCcols])
+  expansPis <- DC_detProbMM( singleDataSet[,DCcols], is_p1_p2_same = TRUE) 
   singleDataSet$pi <- expansPis
 #  singleDataSet$Obs1_pi <- expansPis[1]
 #  singleDataSet$Obs2_pi <- expansPis[2]
