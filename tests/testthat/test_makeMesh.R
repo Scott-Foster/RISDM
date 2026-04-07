@@ -55,6 +55,14 @@ testthat::test_that(
     testthat::expect_s4_class( object=meshy$risdmBoundary$ras$lower.res, class="SpatRaster")
     testthat::expect_type( object=meshy$n, "integer")
     
+    meshy <- makeMesh( dat$covarBrick[[1]], barrier=list(useBarrier=TRUE, range.fraction=0.1))
+    testthat::expect_s3_class(object=meshy, class="inla.mesh")  #make sure an object has been returned.
+    testthat::expect_s4_class( object=meshy$risdmBoundary$ras$lower.res, class="SpatRaster")
+    testthat::expect_type( object=meshy$n, type="integer")
+    testthat::expect_type( object=meshy$barrier, type="list")
+    testthat::expect_type( object=meshy$barrier$triBarrier, type="integer")
+    testthat::expect_type( object=meshy$barrier$range.fraction, type="numeric")
+    
 #    expandRegion is now legacy 12/12/23
 #    #extensions / finer control
 #    meshy <- makeMesh( dat$covarBrick[[1]], doPlot=TRUE, max.n=250, dep.range=500, expandRegion = FALSE)

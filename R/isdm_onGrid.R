@@ -97,13 +97,34 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   #priors etc for fixed effects
   my.control.fixed <- setPriors( control, stck)
 
-  #priors for the spatial model, and build the spatial effects
-  my.spde <- INLA::inla.spde2.pcmatern(mesh = FullMesh$mesh, constr=control$re.constr,
-                              # PC-prior on range: P(practic.range < 0.05) = 0.01
-                              prior.range = control$prior.range,
-                              # PC-prior on sigma: P(sigma > 1) = 0.01
-                              prior.sigma = control$prior.space.sigma)
-
+  #check to see if mesh describes a barrier model
+  if( is.null( mesh$barrier$triBarrier.xy)){
+    #priors for the spatial model, and build the spatial effects
+    my.spde <- INLA::inla.spde2.pcmatern(mesh = FullMesh$mesh, constr=control$re.constr,
+                                # PC-prior on range: P(practic.range < 0.05) = 0.01
+                                prior.range = control$prior.range,
+                                # PC-prior on sigma: P(sigma > 1) = 0.01
+                                prior.sigma = control$prior.space.sigma)
+  }
+  else{
+    #barrier model definition
+    #fix up potential error in barrierModel.define
+#    my.spde <- INLAspacetime::barrierModel.define(
+#                                mesh = mesh, 
+#                                barrier.triangles = mesh$barrier$triBarrier.xy,
+#                                # PC-prior on range: P(practic.range < 0.05) = 0.01
+#                                prior.range = control$prior.range,
+#                                # PC-prior on sigma: P(sigma > 1) = 0.01
+#                                prior.sigma = control$prior.space.sigma,
+#                                range.fraction = mesh$barrier$range.fraction)
+    my.spde = INLAspacetime::barrierModel.define( mesh, barrier.triangles = mesh$barrier$triBarrier.xy,
+                                # PC-prior on range: P(practic.range < 0.05) = 0.01
+                                prior.range = control$prior.range,
+                                # PC-prior on sigma: P(sigma > 1) = 0.01
+                                prior.sigma = control$prior.space.sigma,
+                                range.fraction=mesh$barrier$range.fraction)                             
+  }
+  
   #the INLA call...
   mod <- INLA::inla( fullForm, #the formula (combined distribution and bias formulas)
                family = famLink$fam,  #the families for the different data types.

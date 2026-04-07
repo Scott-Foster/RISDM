@@ -29,6 +29,29 @@ fm <- isdm( observationList=list( POdat=as.data.frame( dat$PO),
                                 n.threads=8,
                                 addRandom=TRUE, 
                                 DCmethod="TaylorsLinApprox"))
+                                
+meshy1 <- makeMesh( dat$covarBrick[[1]], max.n=c(500, 250), dep.range=25, expans.mult=15, 
+                    offset=250, max.edge=5, barrier=list(useBarrier=TRUE, range.fraction=0.1), doPlot=FALSE)  #barrier mesh
+fm1 <- isdm( observationList=list( POdat=as.data.frame( dat$PO), 
+                                        DCdat=as.data.frame( dat$DC),
+                                        AAdat=as.data.frame( dat$AA)),
+                  covars=dat$covarBrick, 
+                  mesh=meshy1,
+                  responseNames=c( AA="AA"),#, PA="PA"),
+                  sampleAreaNames=c( PO=NULL, DC="transectArea", AA="transectArea"),#, PA="transectArea"),
+                  DCobserverInfo=list( SurveyID="Survey", Obs1="Obs1", Obs2="Obs2", Both="Both"),
+                  distributionFormula=~0+var1,
+                  biasFormula=~1+biasLinPred,
+                  artefactFormulas=list( DC=~1, AA=~1),#, PA=~1),
+                  control=list( int.prec=0.01, other.prec=1,
+                                calcICs=FALSE,
+                                #prior.range=c(1000,0.1), prior.space.sigma=c( 2,0.1),
+                                prior.range=c(25,0.1), prior.space.sigma=c( 2.5,0.1),
+                                coord.names=c("x","y"),
+                                n.threads=8,
+                                addRandom=TRUE, 
+                                DCmethod="TaylorsLinApprox"))
+                                
 
 testthat::test_that(
   "Checking the summary for isdm object (and its print)",
@@ -39,5 +62,13 @@ testthat::test_that(
 
     testthat::expect_invisible( print( tmp, digits=6))
     testthat::expect_invisible( print( tmp, digits=1))  #silly
+    
+    testthat::expect_s3_class( summary( fm1), class="summary.isdm")  #checking summary.isdm
+    tmp <- summary( fm1)
+    testthat::expect_invisible( print( tmp))  #checking print.summary.isdm
+
+    testthat::expect_invisible( print( tmp, digits=6))
+    testthat::expect_invisible( print( tmp, digits=1))  #silly
+    
   }
 )

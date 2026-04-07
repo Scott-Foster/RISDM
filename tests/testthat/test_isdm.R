@@ -10,7 +10,8 @@ rm( f)
 dat <- simulateData.isdm( pop.size=200000, rasterBoundary=r, control=list(doPlot=FALSE))
 terra::crs( dat$covarBrick) <- terra::crs( r)
 meshy <- makeMesh( dat$covarBrick[[1]], max.n=c(500, 250), dep.range=25, expans.mult=15, offset=250, max.edge=5, doPlot=FALSE)
-#terra::values( r)[terra::crds(r)[,1] > 179900 & terra::crds(r)[,1] < 180100 & terra::crds(r)[,2]>331400 & terra::crds(r)[,2]<331600] <- NA
+meshy1 <- makeMesh( dat$covarBrick[[1]], max.n=c(500, 250), dep.range=25, expans.mult=15, 
+                    offset=250, max.edge=5, barrier=list(useBarrier=TRUE, range.fraction=0.1), doPlot=FALSE)  #barrier mesh
 
 testthat::test_that(
   "Checking the model fitting ISDM on irregular boundary",
@@ -112,13 +113,31 @@ testthat::test_that(
                                     n.threads=8,
                                     addRandom=TRUE, 
                                     DCmethod="TaylorsLinApprox"))
+    
+    fm1[[7]] <- isdm( observationList=list( DCdat=as.data.frame( dat$DC)),
+                      covars=dat$covarBrick, 
+                      mesh=meshy1,
+                      responseNames=c( DC="somebloodything"),
+                      sampleAreaNames=c( DC="transectArea"),
+                      DCobserverInfo=list( SurveyID="Survey", Obs1="Obs1", Obs2="Obs2", Both="Both"),
+                      distributionFormula=~0+stats::poly( var1, degree=2),
+                      artefactFormulas=list( DC=~1+Survey:stats::poly( var1, degree=2)),
+                      control=list( int.prec=0.01, other.prec=1,
+                                    calcICs=FALSE,
+                                    prior.range=c(25,0.1), prior.space.sigma=c( 2.5,0.1),
+                                    coord.names=c("x","y"),
+                                    n.threads=8,
+                                    addRandom=TRUE, 
+                                    DCmethod="TaylorsLinApprox"))
 				    
-    testthat::expect_length( fm1, 6)
+    testthat::expect_length( fm1, 7)
     testthat::expect_s3_class(object=fm1[[1]], class="isdm")
     testthat::expect_s3_class(object=fm1[[2]], class="isdm")
     testthat::expect_s3_class(object=fm1[[3]], class="isdm")
     testthat::expect_s3_class(object=fm1[[4]], class="isdm")
     testthat::expect_s3_class(object=fm1[[5]], class="isdm")
     testthat::expect_s3_class(object=fm1[[6]], class="isdm")
+    testthat::expect_s3_class(object=fm1[[7]], class="isdm")
+    
   }
 )

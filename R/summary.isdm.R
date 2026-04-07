@@ -59,6 +59,22 @@ summary.isdm <- function( object, ...){
   res$SPATIAL <- if( length( object$mod$summary.hyperpar) != 0) object$mod$summary.hyperpar[,1:5] else NULL
   #marginal logl
   res$marg.lik <- object$mod$mlik[2]
+  #if a barrier model has been used, then transform spatial parameters
+  if( !is.null( object$mesh$barrier$triBarrier.xy)){
+    spatSum <- matrix( NA, nrow=2, ncol=5, dimnames= list(NULL, colnames(object$mod$summary.fixed)[1:5]))
+    ronam <- names( object$mod$marginals.hyperpar)
+    rownames( spatSum) <- gsub( "Theta2", "Stdev", gsub( "Theta1", "Range", ronam))
+    for( ii in 1:2){
+      #mean and variance in terms of raw moments
+      m1 <- INLA::inla.emarginal( function(xx) exp( xx), object$mod$marginals.hyperpar[[ii]])
+      spatSum[ii,"mean"] <- m1
+      m2 <- INLA::inla.emarginal( function(xx) exp( 2*xx), object$mod$marginals.hyperpar[[ii]])
+      spatSum[ii,"sd"] <- sqrt( m2-m1^2)
+      #quantiles, remember that quantiles are preserved under monotonic transformations.
+      spatSum[ii,c("0.025quant","0.5quant","0.975quant")] <- exp( INLA::inla.qmarginal( c(0.025, 0.5, 0.975), object$mod$marginals.hyperpar[[ii]]))
+    }
+    res$SPATIAL <- spatSum
+  }
 
   class( res) <- "summary.isdm"
   return( res)

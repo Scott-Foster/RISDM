@@ -17,7 +17,8 @@
     nodeLocs <- sf::st_sfc( lapply( 1:nrow( mesh$loc), function(xx) sf::st_point( mesh$loc[xx,1:2])))
   #  nodeLocs <- sf::st_multipoint( mesh$loc[,1:2])#sp::SpatialPoints( mesh$loc[,1:2])  #produces a multipoint, which is harder to work with...?!
     #and the bounding hull.
-    dom <- sf::st_polygon( list( rbind( mesh$hull$loc, mesh$hull$loc[1,])))
+#    dom <- sf::st_polygon( list( rbind( mesh$hull$loc, mesh$hull$loc[1,])))
+    dom <- mesh$hull #update to fmesher or inla or something.
   #  dom <- sp::SpatialPolygons( list( sp::Polygons( list( sp::Polygon( mesh$hull$loc)), 1)))
     #buffer the node locations
     #first find the buffer width

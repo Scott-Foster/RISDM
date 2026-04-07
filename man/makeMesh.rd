@@ -3,8 +3,9 @@
 \title{Creates a mesh to fit an \code{\link{isdm}} over.}
 \description{ This is a helper function. It is designed to simplify the creation of a mesh to perform spatial computing over. Hence, it is useful prior to calling \code{\link{isdm}}. The function takes a raster and, using the INLA package in conjunction to some judicious defaults, finds a mesh governed by the arguments. We hope that it simplifies mesh creation, in that it attempts to find `an acceptable' mesh.}
 \usage{
- makeMesh( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans.mult=NULL, hull.res=100, max.edge=NULL, cutoff=NULL, offset=NULL, doPlot=TRUE, ...)
+ makeMesh( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans.mult=NULL, hull.res=100, max.edge=NULL, cutoff=NULL, offset=NULL, barrier=list(useBarrier=FALSE, range.fraction=0.1), doPlot=TRUE, ...)
 }
+
 \arguments{
 \item{ras}{A raster object whose patterns of non-NA values define the analysis domain and whose NA values define the non-domain. The actual contents of the raster do not matter and will be ignored (except whether cells contain an NA or not).}
 \item{max.n}{An integer vector of 2 elements. It describes the maximum number of mesh nodes to place in the inner domain and the outer domain. The default (c500,200) is chosen quite arbitrarily -- users will want to consider this carefully.}
@@ -15,6 +16,7 @@
 \item{max.edge}{A numeric vector of 2 elements. The elements describe the largest allowable edge within the inner domain and the outer domain. The default is NULL, in which case the values of c(0.2,0.5)*dep.range are used. Note that for good results, the max edges in the inner domain should not be large with respect to the dep.range (Bakka).}
 \item{cutoff}{Scalar numeric. This scalar describes the mesh building algorithms starting smallest distance between any two nodes (inner and outer). If NULL (default) a value of 0.2*max.edge is used.}
 \item{offset}{The amount to expand the nonconvex hull defining the inner domain. This amount defines the outer boundary of the outer domain. Default is to extend by the dep.range. Note that this argument is an absolute value, not a multiple (even though the default is dep.range).}
+\item{barrier}{List indicating whether a mesh for a barrier model should be made and how much dependence is specified. These are specified as barrier$userBarrier (Boolean) and range.fraction (numeric) respectively. Note that the actual boundary is taken from the raster in argument ras, and the study region is assumed to be the interior of a non-convex hull around its non-NA elements. See Bakka et al (2019) for details about the barrier model.}
 \item{ doPlot}{Boolean indicating whether the mesh should be plotted. We highly recommend that all meshes are, at some point, to make sure that the mesh is behaving as you think it should be.}
 \item{ ...}{Additional arguments for, and passed directly to, \code{\link{inla.mesh.2d}}. There is no checking of these arguments, but they shouldn't include those listed above.}
 }
@@ -30,7 +32,7 @@
  Note that the arguments are non-independent; sometimes tweaking one will do nothing until another argument it changed. This is a direct result of the underlying function \code{\link{inla.mesh.2d}} being quite smart and sensible and uses these values as limits, not goals. This should be entirely expected given the arguments' names.
 }
 \value{
- An extended inla.mesh object describing the mesh on which to perform computing within the region of interest. The extension has two extra list elements: 1) the boundary to the non-NA entries in the raster; and 2) the nonconvex hull around the non-NA elements.
+ A slightly extended inla.mesh object describing the mesh on which to perform computing within the region of interest. The extension has three extra list elements: 1) the boundary to the non-NA entries in the raster; 2) the nonconvex hull around the non-NA elements; and 3) information for the barrier model's mesh (NULL if not requested).
 }
 
 \seealso{\code{\link{isdm}}, \code{\link{checkMesh}}, \code{\link{inla.mesh.2d}}, \code{\link{inla}}}
@@ -39,6 +41,8 @@
 
 \references{
   Bakka, Haakon 2017, Mesh Creation including Coastlines, accessed 20 January 2022, <https://haakonbakkagit.github.io/btopic104.html#3_The_simplest_mesh>.
+  
+  Bakka, H.; Vanhatalo, J.; Illian, J. B.; Simpson, D. & Rue, H. Non-stationary Gaussian models with physical barriers Spatial Statistics, 2019, 29, 268-288
   
   Krainski, E.; Gómez-Rubio, V.; Bakka, H.; Lenzi, A.; Castro-Camilo, D.; Simpson, D.; Lindgren, F. & Rue, H. Advanced Spatial Modeling with Stochastic Partial Differential Equations Using R and INLA Chapman & Hall/CRC Press, 2019
   
