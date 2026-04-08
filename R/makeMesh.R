@@ -129,9 +129,9 @@ makeMesh <- function( ras, max.n=NULL, dep.range=NULL, expandRegion=TRUE, expans
   if( doPlot){
 #    INLA:::plot.inla.mesh( meshy, asp=1)
     fmesher:::plot.fm_mesh_2d( x=fmesher::fm_as_fm( meshy), xlim=range( meshy$loc[,1], na.rm=TRUE), ylim=range( meshy$loc[,2], na.rm=TRUE))
-    terra::plot( terra::buffer( boundary$poly$lower.res, width=1e-5), add=TRUE, border='green')
 #    sp::plot( boundary$poly$lower.res, add=TRUE, border='green')
     if( !barrier$useBarrier){
+      terra::plot( terra::buffer( boundary$poly$lower.res, width=1e-5), add=TRUE, border='green')
       legend("topright", col=c("blue","green"), legend=c("Nonconvex hull defining inner/outer domains","Boundary of raster values (low res)"), lty=c(1,1), lwd=c(2,2))
     }
     else{
