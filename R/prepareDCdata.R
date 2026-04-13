@@ -46,6 +46,7 @@ prepareDCdata <- function( DCdat, DCobserverInfo, sampAreaDC, DCmethod, coord.na
 ##  colnames( DCdatExpand)[1:2] <- coord.names
 
   attr( DCdatExpand, "nsurvey") <- nsurvey
+  attr( DCdatExpand, "pi") <- sapply( tmp, function(xx) unique( xx$pi))
   
   return( DCdatExpand)
 }

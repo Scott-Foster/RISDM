@@ -44,10 +44,29 @@ summary.isdm <- function( object, ...){
   res$PO_BIAS <- if( length( biasTerms)!=0) object$mod$summary.fixed[biasTerms,1:5] else NULL
   #DC terms
   if( length( DCTerms)!=0) {
-    alpha_id <- grep( "alpha", DCTerms)
-    ord <- order( DCTerms[alpha_id])
-    tmp <- c(DCTerms[-alpha_id], DCTerms[alpha_id[ord]])
-    res$DC_ARTEFACT <- object$mod$summary.fixed[DCTerms,1:5]      
+#    alpha_id <- grep( "alpha", DCTerms)
+#    ord <- order( DCTerms[alpha_id])
+#    tmp <- c(DCTerms[-alpha_id], DCTerms[alpha_id[ord]])
+    res$DC_ARTEFACT <- object$mod$summary.fixed[DCTerms,1:5]   
+    logPisNames <- rownames( res$DC_ARTEFACT)[grep( "DC_logDetectPi",rownames( res$DC_ARTEFACT))]
+    if( length( logPisNames) > 0){
+      piSum <- matrix( NA, nrow=length( logPisNames), ncol=5, dimnames= list(logPisNames, colnames(object$mod$summary.fixed)[1:5]))
+      for( ii in logPisNames){
+        #mean and variance of pi (not log pi)
+        m1 <- INLA::inla.emarginal( function(xx) exp( xx), object$mod$marginals.fixed[[ii]])
+        piSum[ii,"mean"] <- m1
+        m2 <- INLA::inla.emarginal( function(xx) exp( 2*xx), object$mod$marginals.fixed[[ii]])
+        piSum[ii,"sd"] <- sqrt( m2-m1^2)
+        #quantiles, remember that quantiles are preserved under monotonic transformations.
+        piSum[ii,c("0.025quant","0.5quant","0.975quant")] <- exp( INLA::inla.qmarginal( c(0.025, 0.5, 0.975), object$mod$marginals.fixed[[ii]]))
+        res$DC_ARTEFACT[rownames( res$DC_ARTEFACT)==ii,] <- piSum[ii,]
+        rownames( res$DC_ARTEFACT)[rownames( res$DC_ARTEFACT)==ii] <- sub( "DC_log", "DC_", ii)
+      }
+    }
+    else{
+      res$DC_ARTEFACT <- rbind( res$DC_ARTEFACT, c( attr( object, "MoM_pi"), rep( NA, 4)))
+      rownames( res$DC_ARTEFACT)[nrow( res$DC_ARTEFACT)] <- "DC_MoM_pi"
+    }
   }
   else
     res$DC_ARTEFACT <- NULL

@@ -63,15 +63,17 @@ prepareSingleSurvey <- function( singleDataSet, datasetID, DCcols, survIDname, s
   singleDataSet$expansOffset <- singleDataSet$logDetectPi <- NA
   #One observer (not the other)
   singleDataSet$expansOffset[1:(2*n)] <- log( 1-expansPis) + expansPis * log( expansPis) / (1-expansPis)
-  singleDataSet$logDetectPi[1:(2*n)] <- -expansPis / (1-expansPis)
+  #13/Apr/26 added the 1 as log( p*(1-p))=log(p)+log(1-p)
+  singleDataSet$logDetectPi[1:(2*n)] <- 1-expansPis / (1-expansPis)
   #Both
   singleDataSet$expansOffset[2*n+1:n] <- 0
   singleDataSet$logDetectPi[2*n+1:n] <- 2
 
-  #added 1.2.30
-  #the above is for dlog(1-pi) / dlog(pi) only.  Offset and coef are negative of these.
-  singleDataSet$expansOffset <- -singleDataSet$expansOffset
-  singleDataSet$logDetectPi <- -singleDataSet$logDetectPi
+#  #13/Apr/26.  I really don't understand what this is about.  Removed.
+#  #added 1.2.30
+#  #the above is for dlog(1-pi) / dlog(pi) only.  Offset and coef are negative of these.
+#  singleDataSet$expansOffset <- -singleDataSet$expansOffset
+#  singleDataSet$logDetectPi <- -singleDataSet$logDetectPi
   
   #expansOffset already negative. Create the combined offset
   singleDataSet[,sampAreaDC] <- exp( log( singleDataSet[,sampAreaDC]) + singleDataSet$expansOffset)

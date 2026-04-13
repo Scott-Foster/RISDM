@@ -60,11 +60,14 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
     observationList$DCdat <- prepareDCdata( DCdat=observationList$DCdat, DCobserverInfo=DCobserverInfo, sampAreaDC=sampleAreaNames["DC"], DCmethod=control$DCmethod, coord.names=control$coord.names)
     #add terms to the formula for the Taylor series approach.  But not if method is 'plugin'
     if( control$DCmethod == "TaylorsLinApprox"){
+      MMpi <- NULL
       if( attr( observationList$DCdat, "nsurvey") > 1)
-	artefactFormulas$DC <- update( artefactFormulas$DC, paste0("~.+", DCobserverInfo$SurveyID,":logDetectPi"))
+        artefactFormulas$DC <- update( artefactFormulas$DC, paste0("~.+", DCobserverInfo$SurveyID,":logDetectPi"))
       else
-	artefactFormulas$DC <- update( artefactFormulas$DC, "~.+logDetectPi")
+        artefactFormulas$DC <- update( artefactFormulas$DC, "~.+logDetectPi")
     }
+    else
+      MMpi <- attr( observationList$DCdat, "pi")
   }
 
   #make variable names in artefact models unique -- so that factor levels etc are not shared between data types
@@ -139,7 +142,7 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
 #               weights=loglWts,  #currently not used but could be if Berman-Turner implemented.
                offset = INLA::inla.stack.data(stck)$offy,
                num.threads = control$n.threads,
-               control.compute = list(config=TRUE, waic = control$calcICs, dic = control$calcICs, return.marginals = FALSE, return.marginals.predictor = FALSE),
+               control.compute = list(config=TRUE, waic = control$calcICs, dic = control$calcICs, hyperpar=TRUE, return.marginals = TRUE, return.marginals.predictor = FALSE),
 	       control.inla = list( tolerance=control$coverg.tol, control.vb=list(enable=control$vb.correction)),
 	       safe=TRUE,
 	       inla.mode=control$inla.mode,
@@ -157,9 +160,10 @@ isdm <- function( observationList=list( POdat=NULL, PAdat=NULL, AAdat=NULL, DCda
   if( exists( "DCobserverInfo")){
     attr( res, "DCobserverInfo") <- DCobserverInfo
     attr( res, "DCSurveyIDLevels") <- unique( observationList$DCdat[,DCobserverInfo$SurveyID])
+    attr( res, "MoM_pi") <- unlist( ifelse( exists( "MMpi"), list(MMpi), list(NULL)))
   }
   else
-    attr( res, "DCobserverInfo") <- attr( res, "DCSurveyIDLevels") <- NULL
+    attr( res, "DCobserverInfo") <- attr( res, "DCSurveyIDLevels") <- attr( res, "MoM_pi") <- NULL
   attr( res, "n.threads") <- control$n.threads
   attr( res, "coord.names") <- control$coord.names
 
