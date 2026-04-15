@@ -48,7 +48,7 @@ summary.isdm <- function( object, ...){
 #    ord <- order( DCTerms[alpha_id])
 #    tmp <- c(DCTerms[-alpha_id], DCTerms[alpha_id[ord]])
     res$DC_ARTEFACT <- object$mod$summary.fixed[DCTerms,1:5]   
-    logPisNames <- rownames( res$DC_ARTEFACT)[grep( "DC_logDetectPi",rownames( res$DC_ARTEFACT))]
+    logPisNames <- rownames( res$DC_ARTEFACT)[grep( "logDetectPi",rownames( res$DC_ARTEFACT))]
     if( length( logPisNames) > 0){
       piSum <- matrix( NA, nrow=length( logPisNames), ncol=5, dimnames= list(logPisNames, colnames(object$mod$summary.fixed)[1:5]))
       for( ii in logPisNames){
@@ -60,12 +60,15 @@ summary.isdm <- function( object, ...){
         #quantiles, remember that quantiles are preserved under monotonic transformations.
         piSum[ii,c("0.025quant","0.5quant","0.975quant")] <- exp( INLA::inla.qmarginal( c(0.025, 0.5, 0.975), object$mod$marginals.fixed[[ii]]))
         res$DC_ARTEFACT[rownames( res$DC_ARTEFACT)==ii,] <- piSum[ii,]
-        rownames( res$DC_ARTEFACT)[rownames( res$DC_ARTEFACT)==ii] <- sub( "DC_log", "DC_", ii)
+        rownames( res$DC_ARTEFACT)[rownames( res$DC_ARTEFACT)==ii] <- sub( "logDetect", "Detect", ii)
       }
     }
     else{
-      res$DC_ARTEFACT <- rbind( res$DC_ARTEFACT, c( attr( object, "MoM_pi"), rep( NA, 4)))
-      rownames( res$DC_ARTEFACT)[nrow( res$DC_ARTEFACT)] <- "DC_MoM_pi"
+      tmp <- matrix( NA, nrow=length( attr( object, "MoM_pi")), ncol=5)
+      tmp[,1] <- attr( object, "MoM_pi")
+      rownames( tmp) <- paste("MoM_pi",1:nrow( tmp))
+      colnames( tmp) <- colnames( res$DC_ARTEFACT)
+      res$DC_ARTEFACT <- rbind( res$DC_ARTEFACT, tmp)
     }
   }
   else
